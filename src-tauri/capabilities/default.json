@@ -58,6 +58,71 @@
           "name": "ps",
           "cmd": "ps",
           "args": true
+        },
+        {
+          "name": "code",
+          "cmd": "code",
+          "args": true
+        },
+        {
+          "name": "code-insiders",
+          "cmd": "code-insiders",
+          "args": true
+        },
+        {
+          "name": "open",
+          "cmd": "open",
+          "args": true
+        },
+        {
+          "name": "osascript",
+          "cmd": "osascript",
+          "args": true
+        },
+        {
+          "name": "xdg-open",
+          "cmd": "xdg-open",
+          "args": true
+        },
+        {
+          "name": "gnome-terminal",
+          "cmd": "gnome-terminal",
+          "args": true
+        },
+        {
+          "name": "konsole",
+          "cmd": "konsole",
+          "args": true
+        },
+        {
+          "name": "xterm",
+          "cmd": "xterm",
+          "args": true
+        },
+        {
+          "name": "alacritty",
+          "cmd": "alacritty",
+          "args": true
+        },
+        {
+          "name": "nautilus",
+          "cmd": "nautilus",
+          "args": true
+        },
+        {
+          "name": "dolphin",
+          "cmd": "dolphin",
+          "args": true
+        },
+        {
+          "name": "thunar",
+          "cmd": "thunar",
+          "args": true
+        },
+        {
+          "name": "pcmanfm",
+          "cmd": "pcmanfm",
+          "args": true
         }
       ]
     }
