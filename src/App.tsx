@@ -172,9 +172,11 @@ function App() {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-2xl">
-                              {getRuntimeIcon(project.runtime)}
-                            </span>
+                            <i
+                              className={`text-2xl text-white ${getRuntimeIcon(
+                                project.runtime
+                              )}`}
+                            ></i>
                             <h3 className="text-base font-semibold text-gray-100 truncate">
                               {project.name}
                             </h3>
