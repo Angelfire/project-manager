@@ -3,13 +3,13 @@ import { Project } from "../types";
 export const getRuntimeIcon = (runtime: string): string => {
   switch (runtime) {
     case "Node.js":
-      return "🟢";
+      return "nf nf-md-nodejs";
     case "Deno":
-      return "🦕";
+      return "nf nf-dev-denojs";
     case "Bun":
-      return "🥟";
+      return "nf nf-dev-bun";
     default:
-      return "📦";
+      return "nf nf-oct-package";
   }
 };
 
