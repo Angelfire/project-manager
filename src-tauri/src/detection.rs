@@ -1,4 +1,5 @@
 use crate::types::Project;
+use crate::project_info::enrich_project_info;
 use std::fs;
 use std::path::PathBuf;
 
@@ -87,28 +88,40 @@ pub fn scan_directory(path: String) -> Result<Vec<Project>, String> {
                         let package_manager = detect_package_manager(&project_path);
                         let framework = detect_framework(&project_path);
                         let port = crate::port::detect_port(&project_path);
-                        projects.push(Project {
+                        let mut project = Project {
                             name: entry.file_name().to_string_lossy().to_string(),
                             path: project_path.to_string_lossy().to_string(),
                             runtime: "Node.js".to_string(),
                             package_manager: Some(package_manager),
                             port,
                             framework: Some(framework),
-                        });
+                            runtime_version: None,
+                            scripts: None,
+                            size: None,
+                            modified: None,
+                        };
+                        project = enrich_project_info(project);
+                        projects.push(project);
                     }
                     // Check for Deno projects
                     else if project_path.join("deno.json").exists()
                         || project_path.join("deno.jsonc").exists()
                     {
                         let port = crate::port::detect_port_deno(&project_path);
-                        projects.push(Project {
+                        let mut project = Project {
                             name: entry.file_name().to_string_lossy().to_string(),
                             path: project_path.to_string_lossy().to_string(),
                             runtime: "Deno".to_string(),
                             package_manager: None,
                             port,
                             framework: Some("deno".to_string()),
-                        });
+                            runtime_version: None,
+                            scripts: None,
+                            size: None,
+                            modified: None,
+                        };
+                        project = enrich_project_info(project);
+                        projects.push(project);
                     }
                     // Check for Bun projects
                     else if project_path.join("bun.lockb").exists()
@@ -116,14 +129,20 @@ pub fn scan_directory(path: String) -> Result<Vec<Project>, String> {
                     {
                         let framework = detect_framework(&project_path);
                         let port = crate::port::detect_port(&project_path);
-                        projects.push(Project {
+                        let mut project = Project {
                             name: entry.file_name().to_string_lossy().to_string(),
                             path: project_path.to_string_lossy().to_string(),
                             runtime: "Bun".to_string(),
                             package_manager: Some("bun".to_string()),
                             port,
                             framework: Some(framework),
-                        });
+                            runtime_version: None,
+                            scripts: None,
+                            size: None,
+                            modified: None,
+                        };
+                        project = enrich_project_info(project);
+                        projects.push(project);
                     }
                 }
             }

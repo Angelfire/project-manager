@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
   Folder,
@@ -11,6 +11,15 @@ import {
   FolderOpen,
   Terminal,
   Circle,
+  Filter,
+  ArrowUpDown,
+  Info,
+  Calendar,
+  HardDrive,
+  Code,
+  MoreVertical,
+  FileCode,
+  Copy,
 } from "lucide-react";
 import { useProjects } from "./hooks/useProjects";
 import {
@@ -19,9 +28,26 @@ import {
   getRuntimeTopBar,
 } from "./utils/runtime";
 import { openProjectInBrowser } from "./services/projectService";
+import { invoke } from "@tauri-apps/api/core";
+
+type SortOption = "name" | "modified" | "size";
+type FilterOption = {
+  runtime: string | null;
+  framework: string | null;
+  status: "all" | "running" | "stopped";
+};
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("name");
+  const [sortAscending, setSortAscending] = useState(true);
+  const [filters, setFilters] = useState<FilterOption>({
+    runtime: null,
+    framework: null,
+    status: "all",
+  });
+  const [showFilters, setShowFilters] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const {
     selectedDirectory,
     setSelectedDirectory,
@@ -52,9 +78,142 @@ function App() {
     }
   };
 
-  const filteredProjects = projects.filter((project) =>
-    project.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // Get unique runtimes and frameworks for filter options
+  const uniqueRuntimes = Array.from(new Set(projects.map((p) => p.runtime)));
+  const uniqueFrameworks = Array.from(
+    new Set(
+      projects.map((p) => p.framework).filter((f): f is string => f !== null)
+    )
   );
+
+  // Filter projects
+  const filteredProjects = projects
+    .filter((project) => {
+      // Search filter
+      if (!project.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+
+      // Runtime filter
+      if (filters.runtime && project.runtime !== filters.runtime) {
+        return false;
+      }
+
+      // Framework filter
+      if (filters.framework && project.framework !== filters.framework) {
+        return false;
+      }
+
+      // Status filter
+      const isRunning = runningProjects.has(project.path);
+      if (filters.status === "running" && !isRunning) {
+        return false;
+      }
+      if (filters.status === "stopped" && isRunning) {
+        return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortBy) {
+        case "name":
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case "modified":
+          const aModified = a.modified || 0;
+          const bModified = b.modified || 0;
+          comparison = aModified - bModified;
+          break;
+        case "size":
+          const aSize = a.size || 0;
+          const bSize = b.size || 0;
+          comparison = aSize - bSize;
+          break;
+      }
+
+      return sortAscending ? comparison : -comparison;
+    });
+
+  const formatFileSize = (bytes: number | null): string => {
+    if (!bytes) return "Unknown";
+    const sizes = ["B", "KB", "MB", "GB"];
+    if (bytes === 0) return "0 B";
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
+  };
+
+  const formatDate = (timestamp: number | null): string => {
+    if (!timestamp) return "Unknown";
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const handleOpenInEditor = async (path: string) => {
+    try {
+      await invoke("open_in_editor", { path });
+      setOpenMenu(null);
+    } catch (error) {
+      console.error("Error opening in editor:", error);
+      alert("Failed to open in editor: " + error);
+    }
+  };
+
+  const handleOpenInTerminal = async (path: string) => {
+    try {
+      await invoke("open_in_terminal", { path });
+      setOpenMenu(null);
+    } catch (error) {
+      console.error("Error opening in terminal:", error);
+      alert("Failed to open in terminal: " + error);
+    }
+  };
+
+  const handleOpenInFinder = async (path: string) => {
+    try {
+      await invoke("open_in_finder", { path });
+      setOpenMenu(null);
+    } catch (error) {
+      console.error("Error opening in Finder:", error);
+      alert("Failed to open in Finder: " + error);
+    }
+  };
+
+  const handleCopyPath = async (path: string) => {
+    try {
+      await navigator.clipboard.writeText(path);
+      setOpenMenu(null);
+      // Optional: show a toast notification
+    } catch (error) {
+      console.error("Error copying path:", error);
+      alert("Failed to copy path: " + error);
+    }
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        openMenu &&
+        !(event.target as Element).closest(".quick-actions-menu")
+      ) {
+        setOpenMenu(null);
+      }
+    };
+
+    if (openMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [openMenu]);
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -136,25 +295,128 @@ function App() {
 
         {!loading && projects.length > 0 && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-100">
-                  Projects
-                </h2>
-                <p className="text-gray-500 text-sm mt-1">
-                  {filteredProjects.length} of {projects.length}
-                </p>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-100">
+                    Projects
+                  </h2>
+                  <p className="text-gray-500 text-sm mt-1">
+                    {filteredProjects.length} of {projects.length}
+                  </p>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:w-56">
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full px-4 py-2 pl-10 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all text-sm"
+                    />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                  </div>
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`px-4 py-1 border rounded-lg transition-colors flex items-center gap-2 ${
+                      showFilters
+                        ? "bg-gray-800 border-gray-700 text-gray-300"
+                        : "bg-gray-800/50 border-gray-800 text-gray-400 hover:bg-gray-800 hover:text-gray-300"
+                    }`}
+                  >
+                    <Filter className="w-4 h-4" />
+                    Filters
+                  </button>
+                  <div className="relative">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as SortOption)}
+                      className="px-4 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all text-sm appearance-none pr-8"
+                    >
+                      <option value="name">Sort by Name</option>
+                      <option value="modified">Sort by Date</option>
+                      <option value="size">Sort by Size</option>
+                    </select>
+                    <button
+                      onClick={() => setSortAscending(!sortAscending)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                      title={sortAscending ? "Ascending" : "Descending"}
+                    >
+                      <ArrowUpDown className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="relative w-full sm:w-56">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 pl-10 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all text-sm"
-                />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
-              </div>
+
+              {showFilters && (
+                <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+                        Runtime
+                      </label>
+                      <select
+                        value={filters.runtime || ""}
+                        onChange={(e) =>
+                          setFilters({
+                            ...filters,
+                            runtime: e.target.value || null,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 text-sm focus:ring-1 focus:ring-gray-700 focus:border-gray-700"
+                      >
+                        <option value="">All Runtimes</option>
+                        {uniqueRuntimes.map((runtime) => (
+                          <option key={runtime} value={runtime}>
+                            {runtime}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+                        Framework
+                      </label>
+                      <select
+                        value={filters.framework || ""}
+                        onChange={(e) =>
+                          setFilters({
+                            ...filters,
+                            framework: e.target.value || null,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 text-sm focus:ring-1 focus:ring-gray-700 focus:border-gray-700"
+                      >
+                        <option value="">All Frameworks</option>
+                        {uniqueFrameworks.map((framework) => (
+                          <option key={framework} value={framework}>
+                            {framework}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+                        Status
+                      </label>
+                      <select
+                        value={filters.status}
+                        onChange={(e) =>
+                          setFilters({
+                            ...filters,
+                            status: e.target.value as FilterOption["status"],
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 text-sm focus:ring-1 focus:ring-gray-700 focus:border-gray-700"
+                      >
+                        <option value="all">All Status</option>
+                        <option value="running">Running</option>
+                        <option value="stopped">Stopped</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -223,6 +485,41 @@ function App() {
                         ) : null}
                       </div>
 
+                      {/* Project Information */}
+                      <div className="space-y-2 mb-4 text-xs text-gray-500">
+                        {project.runtime_version && (
+                          <div className="flex items-center gap-2">
+                            <Info className="w-3.5 h-3.5" />
+                            <span>
+                              {project.runtime} {project.runtime_version}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-4 flex-wrap">
+                          {project.modified && (
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-3.5 h-3.5" />
+                              <span>{formatDate(project.modified)}</span>
+                            </div>
+                          )}
+                          {project.size && (
+                            <div className="flex items-center gap-2">
+                              <HardDrive className="w-3.5 h-3.5" />
+                              <span>{formatFileSize(project.size)}</span>
+                            </div>
+                          )}
+                          {project.scripts &&
+                            Object.keys(project.scripts).length > 0 && (
+                              <div className="flex items-center gap-2">
+                                <Code className="w-3.5 h-3.5" />
+                                <span>
+                                  {Object.keys(project.scripts).length} scripts
+                                </span>
+                              </div>
+                            )}
+                        </div>
+                      </div>
+
                       <div className="flex gap-2">
                         {isRunning ? (
                           <>
@@ -280,15 +577,123 @@ function App() {
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                             </button>
+                            <div className="relative quick-actions-menu">
+                              <button
+                                onClick={() =>
+                                  setOpenMenu(
+                                    openMenu === project.path
+                                      ? null
+                                      : project.path
+                                  )
+                                }
+                                className="p-3 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded border border-gray-700 transition-colors flex items-center gap-2"
+                                title="Quick actions"
+                              >
+                                <MoreVertical className="w-3.5 h-3.5" />
+                              </button>
+                              {openMenu === project.path && (
+                                <div className="absolute right-0 bottom-full mb-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 quick-actions-menu">
+                                  <button
+                                    onClick={() =>
+                                      handleOpenInEditor(project.path)
+                                    }
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-t-lg"
+                                  >
+                                    <FileCode className="w-4 h-4" />
+                                    Open in Editor
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleOpenInTerminal(project.path)
+                                    }
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+                                  >
+                                    <Terminal className="w-4 h-4" />
+                                    Open in Terminal
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleOpenInFinder(project.path)
+                                    }
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+                                  >
+                                    <FolderOpen className="w-4 h-4" />
+                                    Open in Finder
+                                  </button>
+                                  <button
+                                    onClick={() => handleCopyPath(project.path)}
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-b-lg"
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                    Copy Path
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </>
                         ) : (
-                          <button
-                            onClick={() => runProject(project)}
-                            className="flex-1 px-3 py-2 bg-green-950/40 hover:bg-green-950/60 text-green-300 text-sm font-medium rounded border border-green-900/30 transition-colors flex items-center justify-center gap-2"
-                          >
-                            <Play className="w-3.5 h-3.5" />
-                            Run
-                          </button>
+                          <>
+                            <button
+                              onClick={() => runProject(project)}
+                              className="flex-1 px-3 py-2 bg-green-950/40 hover:bg-green-950/60 text-green-300 text-sm font-medium rounded border border-green-900/30 transition-colors flex items-center justify-center gap-2"
+                            >
+                              <Play className="w-3.5 h-3.5" />
+                              Run
+                            </button>
+                            <div className="relative quick-actions-menu">
+                              <button
+                                onClick={() =>
+                                  setOpenMenu(
+                                    openMenu === project.path
+                                      ? null
+                                      : project.path
+                                  )
+                                }
+                                className="p-3 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded border border-gray-700 transition-colors flex items-center gap-2"
+                                title="Quick actions"
+                              >
+                                <MoreVertical className="w-3.5 h-3.5" />
+                              </button>
+                              {openMenu === project.path && (
+                                <div className="absolute right-0 bottom-full mb-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 quick-actions-menu">
+                                  <button
+                                    onClick={() =>
+                                      handleOpenInEditor(project.path)
+                                    }
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-t-lg"
+                                  >
+                                    <FileCode className="w-4 h-4" />
+                                    Open in Editor
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleOpenInTerminal(project.path)
+                                    }
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+                                  >
+                                    <Terminal className="w-4 h-4" />
+                                    Open in Terminal
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleOpenInFinder(project.path)
+                                    }
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+                                  >
+                                    <FolderOpen className="w-4 h-4" />
+                                    Open in Finder
+                                  </button>
+                                  <button
+                                    onClick={() => handleCopyPath(project.path)}
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-b-lg"
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                    Copy Path
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </>
                         )}
                       </div>
                     </div>
