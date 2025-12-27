@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
   Folder,
@@ -11,15 +11,12 @@ import {
   FolderOpen,
   Terminal,
   Circle,
-  Filter,
   ArrowUpDown,
   Info,
   Calendar,
   HardDrive,
   Code,
-  MoreVertical,
-  FileCode,
-  Copy,
+  Filter,
 } from "lucide-react";
 import { useProjects } from "./hooks/useProjects";
 import {
@@ -28,14 +25,11 @@ import {
   getRuntimeTopBar,
 } from "./utils/runtime";
 import { openProjectInBrowser } from "./services/projectService";
-import { invoke } from "@tauri-apps/api/core";
+import { ProjectFilters, type FilterOption } from "./components/ProjectFilters";
+import { QuickActionsMenu } from "./components/QuickActionsMenu";
+import { useProjectFilters } from "./hooks/useProjectFilters";
 
 type SortOption = "name" | "modified" | "size";
-type FilterOption = {
-  runtime: string | null;
-  framework: string | null;
-  status: "all" | "running" | "stopped";
-};
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,7 +41,6 @@ function App() {
     status: "all",
   });
   const [showFilters, setShowFilters] = useState(false);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const {
     selectedDirectory,
     setSelectedDirectory,
@@ -78,64 +71,15 @@ function App() {
     }
   };
 
-  // Get unique runtimes and frameworks for filter options
-  const uniqueRuntimes = Array.from(new Set(projects.map((p) => p.runtime)));
-  const uniqueFrameworks = Array.from(
-    new Set(
-      projects.map((p) => p.framework).filter((f): f is string => f !== null)
-    )
-  );
-
-  // Filter projects
-  const filteredProjects = projects
-    .filter((project) => {
-      // Search filter
-      if (!project.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-        return false;
-      }
-
-      // Runtime filter
-      if (filters.runtime && project.runtime !== filters.runtime) {
-        return false;
-      }
-
-      // Framework filter
-      if (filters.framework && project.framework !== filters.framework) {
-        return false;
-      }
-
-      // Status filter
-      const isRunning = runningProjects.has(project.path);
-      if (filters.status === "running" && !isRunning) {
-        return false;
-      }
-      if (filters.status === "stopped" && isRunning) {
-        return false;
-      }
-
-      return true;
-    })
-    .sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortBy) {
-        case "name":
-          comparison = a.name.localeCompare(b.name);
-          break;
-        case "modified":
-          const aModified = a.modified || 0;
-          const bModified = b.modified || 0;
-          comparison = aModified - bModified;
-          break;
-        case "size":
-          const aSize = a.size || 0;
-          const bSize = b.size || 0;
-          comparison = aSize - bSize;
-          break;
-      }
-
-      return sortAscending ? comparison : -comparison;
-    });
+  const { uniqueRuntimes, uniqueFrameworks, filteredProjects } =
+    useProjectFilters(
+      projects,
+      searchTerm,
+      filters,
+      sortBy,
+      sortAscending,
+      runningProjects
+    );
 
   const formatFileSize = (bytes: number | null): string => {
     if (!bytes) return "Unknown";
@@ -154,66 +98,6 @@ function App() {
       day: "numeric",
     });
   };
-
-  const handleOpenInEditor = async (path: string) => {
-    try {
-      await invoke("open_in_editor", { path });
-      setOpenMenu(null);
-    } catch (error) {
-      console.error("Error opening in editor:", error);
-      alert("Failed to open in editor: " + error);
-    }
-  };
-
-  const handleOpenInTerminal = async (path: string) => {
-    try {
-      await invoke("open_in_terminal", { path });
-      setOpenMenu(null);
-    } catch (error) {
-      console.error("Error opening in terminal:", error);
-      alert("Failed to open in terminal: " + error);
-    }
-  };
-
-  const handleOpenInFinder = async (path: string) => {
-    try {
-      await invoke("open_in_finder", { path });
-      setOpenMenu(null);
-    } catch (error) {
-      console.error("Error opening in Finder:", error);
-      alert("Failed to open in Finder: " + error);
-    }
-  };
-
-  const handleCopyPath = async (path: string) => {
-    try {
-      await navigator.clipboard.writeText(path);
-      setOpenMenu(null);
-      // Optional: show a toast notification
-    } catch (error) {
-      console.error("Error copying path:", error);
-      alert("Failed to copy path: " + error);
-    }
-  };
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        openMenu &&
-        !(event.target as Element).closest(".quick-actions-menu")
-      ) {
-        setOpenMenu(null);
-      }
-    };
-
-    if (openMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [openMenu]);
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -349,73 +233,12 @@ function App() {
               </div>
 
               {showFilters && (
-                <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
-                        Runtime
-                      </label>
-                      <select
-                        value={filters.runtime || ""}
-                        onChange={(e) =>
-                          setFilters({
-                            ...filters,
-                            runtime: e.target.value || null,
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 text-sm focus:ring-1 focus:ring-gray-700 focus:border-gray-700"
-                      >
-                        <option value="">All Runtimes</option>
-                        {uniqueRuntimes.map((runtime) => (
-                          <option key={runtime} value={runtime}>
-                            {runtime}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
-                        Framework
-                      </label>
-                      <select
-                        value={filters.framework || ""}
-                        onChange={(e) =>
-                          setFilters({
-                            ...filters,
-                            framework: e.target.value || null,
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 text-sm focus:ring-1 focus:ring-gray-700 focus:border-gray-700"
-                      >
-                        <option value="">All Frameworks</option>
-                        {uniqueFrameworks.map((framework) => (
-                          <option key={framework} value={framework}>
-                            {framework}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
-                        Status
-                      </label>
-                      <select
-                        value={filters.status}
-                        onChange={(e) =>
-                          setFilters({
-                            ...filters,
-                            status: e.target.value as FilterOption["status"],
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 text-sm focus:ring-1 focus:ring-gray-700 focus:border-gray-700"
-                      >
-                        <option value="all">All Status</option>
-                        <option value="running">Running</option>
-                        <option value="stopped">Stopped</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
+                <ProjectFilters
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  uniqueRuntimes={uniqueRuntimes}
+                  uniqueFrameworks={uniqueFrameworks}
+                />
               )}
             </div>
 
@@ -577,59 +400,7 @@ function App() {
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                             </button>
-                            <div className="relative quick-actions-menu">
-                              <button
-                                onClick={() =>
-                                  setOpenMenu(
-                                    openMenu === project.path
-                                      ? null
-                                      : project.path
-                                  )
-                                }
-                                className="p-3 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded border border-gray-700 transition-colors flex items-center gap-2"
-                                title="Quick actions"
-                              >
-                                <MoreVertical className="w-3.5 h-3.5" />
-                              </button>
-                              {openMenu === project.path && (
-                                <div className="absolute right-0 bottom-full mb-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 quick-actions-menu">
-                                  <button
-                                    onClick={() =>
-                                      handleOpenInEditor(project.path)
-                                    }
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-t-lg"
-                                  >
-                                    <FileCode className="w-4 h-4" />
-                                    Open in Editor
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleOpenInTerminal(project.path)
-                                    }
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
-                                  >
-                                    <Terminal className="w-4 h-4" />
-                                    Open in Terminal
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleOpenInFinder(project.path)
-                                    }
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
-                                  >
-                                    <FolderOpen className="w-4 h-4" />
-                                    Open in Finder
-                                  </button>
-                                  <button
-                                    onClick={() => handleCopyPath(project.path)}
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-b-lg"
-                                  >
-                                    <Copy className="w-4 h-4" />
-                                    Copy Path
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                            <QuickActionsMenu projectPath={project.path} />
                           </>
                         ) : (
                           <>
@@ -640,59 +411,7 @@ function App() {
                               <Play className="w-3.5 h-3.5" />
                               Run
                             </button>
-                            <div className="relative quick-actions-menu">
-                              <button
-                                onClick={() =>
-                                  setOpenMenu(
-                                    openMenu === project.path
-                                      ? null
-                                      : project.path
-                                  )
-                                }
-                                className="p-3 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded border border-gray-700 transition-colors flex items-center gap-2"
-                                title="Quick actions"
-                              >
-                                <MoreVertical className="w-3.5 h-3.5" />
-                              </button>
-                              {openMenu === project.path && (
-                                <div className="absolute right-0 bottom-full mb-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 quick-actions-menu">
-                                  <button
-                                    onClick={() =>
-                                      handleOpenInEditor(project.path)
-                                    }
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-t-lg"
-                                  >
-                                    <FileCode className="w-4 h-4" />
-                                    Open in Editor
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleOpenInTerminal(project.path)
-                                    }
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
-                                  >
-                                    <Terminal className="w-4 h-4" />
-                                    Open in Terminal
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleOpenInFinder(project.path)
-                                    }
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
-                                  >
-                                    <FolderOpen className="w-4 h-4" />
-                                    Open in Finder
-                                  </button>
-                                  <button
-                                    onClick={() => handleCopyPath(project.path)}
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-b-lg"
-                                  >
-                                    <Copy className="w-4 h-4" />
-                                    Copy Path
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                            <QuickActionsMenu projectPath={project.path} />
                           </>
                         )}
                       </div>
