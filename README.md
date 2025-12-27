@@ -31,6 +31,15 @@ A desktop application built with Tauri, React, and TypeScript to manage and run 
 - 🔌 **Port Detection**: Automatically detects and displays the port when a project is running
 - 🌐 **Browser Integration**: Open projects directly in your browser
 
+### Logs & Monitoring
+
+- 📋 **Real-time Logs**: View stdout and stderr output from running projects
+- 🔍 **Log Search**: Search through logs with a built-in search function
+- 📥 **Export Logs**: Export logs to a text file for analysis
+- 🗑️ **Clear Logs**: Clear log history for any project
+- 📊 **Log History**: Maintains up to 1000 log entries per project
+- ⏱️ **Timestamped Entries**: Each log entry includes a precise timestamp
+
 ### Quick Actions
 - 📝 **Open in Editor**: Open project in VS Code or default editor
 - 💻 **Open in Terminal**: Open terminal in project directory
@@ -99,7 +108,13 @@ npm run tauri build
 7. Click "Run" to start a project
 8. Click "Stop" to stop a running project
 9. Click the external link icon to open the project in your browser
-10. Click the three-dot menu (⋮) for quick actions:
+10. Click the logs icon (📄) to view project logs:
+    - View real-time stdout and stderr output
+    - Search through logs using the search bar
+    - Export logs to a text file using the download button
+    - Clear log history using the trash button
+    - Logs are available when a project is running or has previous log history
+11. Click the three-dot menu (⋮) for quick actions:
     - **Open in Editor**: Opens the project in VS Code or your default editor
     - **Open in Terminal**: Opens a terminal window in the project directory
     - **Open in Finder**: Opens the project folder in your system file manager
@@ -117,6 +132,7 @@ Each project card displays:
 - **Project Size**: Total size of the project directory
 - **Last Modified**: Date when the project was last modified
 - **Port**: The port number when the project is running
+- **Logs**: Access project logs by clicking the logs icon (📄) button
 
 ## Technologies
 

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Child } from "@tauri-apps/plugin-shell";
 import { invoke } from "@tauri-apps/api/core";
-import { Project } from "../types";
+import { Project, LogEntry } from "../types";
 import {
   scanProjects,
   createProjectCommand,
@@ -15,6 +15,7 @@ export const useProjects = () => {
   const [loading, setLoading] = useState(false);
   const [runningProjects, setRunningProjects] = useState<Set<string>>(new Set());
   const [processes, setProcesses] = useState<Map<string, Child>>(new Map());
+  const [logs, setLogs] = useState<Map<string, LogEntry[]>>(new Map());
 
   const loadProjects = async (path: string) => {
     setLoading(true);
@@ -29,16 +30,49 @@ export const useProjects = () => {
     }
   };
 
+  const addLog = useCallback((projectPath: string, type: "stdout" | "stderr", content: string) => {
+    const logEntry: LogEntry = {
+      id: `${Date.now()}-${Math.random()}`,
+      timestamp: Date.now(),
+      type,
+      content,
+      projectPath,
+    };
+
+    setLogs((prev) => {
+      const newMap = new Map(prev);
+      const projectLogs = newMap.get(projectPath) || [];
+      // Keep only the last 1000 log entries per project
+      const updatedLogs = [...projectLogs, logEntry].slice(-1000);
+      newMap.set(projectPath, updatedLogs);
+      return newMap;
+    });
+  }, []);
+
   const runProject = async (project: Project) => {
     if (runningProjects.has(project.path)) {
       return;
     }
 
     setRunningProjects((prev) => new Set(prev).add(project.path));
+    // Clear previous logs when starting a new run
+    setLogs((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(project.path, []);
+      return newMap;
+    });
 
     try {
       const command = createProjectCommand(project);
+      addLog(project.path, "stdout", `[${new Date().toLocaleTimeString()}] Starting ${project.name}...\n`);
+      
       const child = await command.spawn();
+      
+      addLog(project.path, "stdout", `[${new Date().toLocaleTimeString()}] Process started (PID: ${child.pid || "unknown"})\n`);
+      
+      // Note: Tauri shell plugin v2 doesn't expose stdout/stderr streams directly
+      // We'll add basic log entries for process lifecycle events
+      // Full stdout/stderr capture would require a different approach or Tauri plugin update
 
       setProcesses((prev) => {
         const newMap = new Map(prev);
@@ -66,6 +100,7 @@ export const useProjects = () => {
       }
     } catch (error) {
       console.error("Error running project:", error);
+      addLog(project.path, "stderr", `Error running project: ${error}`);
       alert("Error running project: " + error);
       setRunningProjects((prev) => {
         const newSet = new Set(prev);
@@ -138,6 +173,18 @@ export const useProjects = () => {
     );
   };
 
+  const getProjectLogs = useCallback((projectPath: string): LogEntry[] => {
+    return logs.get(projectPath) || [];
+  }, [logs]);
+
+  const clearProjectLogs = useCallback((projectPath: string) => {
+    setLogs((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(projectPath, []);
+      return newMap;
+    });
+  }, []);
+
   return {
     selectedDirectory,
     setSelectedDirectory,
@@ -146,9 +193,12 @@ export const useProjects = () => {
     loading,
     runningProjects,
     processes,
+    logs,
     loadProjects,
     runProject,
     stopProject,
+    getProjectLogs,
+    clearProjectLogs,
   };
 };
 

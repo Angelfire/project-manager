@@ -10,6 +10,12 @@
     "opener:default",
     "dialog:default",
     "dialog:allow-open",
+    "dialog:allow-save",
+    "fs:default",
+    "fs:allow-write-file",
+    "fs:allow-write-text-file",
+    "fs:allow-read-file",
+    "fs:write-all",
     "shell:allow-kill",
     {
       "identifier": "shell:allow-spawn",
