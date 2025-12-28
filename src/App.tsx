@@ -17,6 +17,7 @@ import {
   HardDrive,
   Code,
   Filter,
+  FileText,
 } from "lucide-react";
 import { useProjects } from "./hooks/useProjects";
 import {
@@ -27,6 +28,7 @@ import {
 import { openProjectInBrowser } from "./services/projectService";
 import { ProjectFilters, type FilterOption } from "./components/ProjectFilters";
 import { QuickActionsMenu } from "./components/QuickActionsMenu";
+import { ProjectLogs } from "./components/ProjectLogs";
 import { useProjectFilters } from "./hooks/useProjectFilters";
 
 type SortOption = "name" | "modified" | "size";
@@ -41,6 +43,7 @@ function App() {
     status: "all",
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [openLogsFor, setOpenLogsFor] = useState<string | null>(null);
   const {
     selectedDirectory,
     setSelectedDirectory,
@@ -49,6 +52,8 @@ function App() {
     loading,
     runningProjects,
     processes,
+    getProjectLogs,
+    clearProjectLogs,
     loadProjects,
     runProject,
     stopProject,
@@ -400,6 +405,13 @@ function App() {
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                             </button>
+                            <button
+                              onClick={() => setOpenLogsFor(project.path)}
+                              className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded border border-gray-700 transition-colors flex items-center justify-center gap-2"
+                              title="View logs"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                            </button>
                             <QuickActionsMenu projectPath={project.path} />
                           </>
                         ) : (
@@ -411,6 +423,15 @@ function App() {
                               <Play className="w-3.5 h-3.5" />
                               Run
                             </button>
+                            {getProjectLogs(project.path).length > 0 && (
+                              <button
+                                onClick={() => setOpenLogsFor(project.path)}
+                                className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded border border-gray-700 transition-colors flex items-center justify-center gap-2"
+                                title="View logs"
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                             <QuickActionsMenu projectPath={project.path} />
                           </>
                         )}
@@ -452,6 +473,22 @@ function App() {
               Select Directory
             </button>
           </div>
+        )}
+
+        {/* Logs Modal */}
+        {openLogsFor && (
+          <ProjectLogs
+            projectName={
+              projects.find((p) => p.path === openLogsFor)?.name || "Unknown"
+            }
+            projectPath={openLogsFor}
+            logs={getProjectLogs(openLogsFor)}
+            isOpen={true}
+            onClose={() => setOpenLogsFor(null)}
+            onClear={() => {
+              clearProjectLogs(openLogsFor);
+            }}
+          />
         )}
       </div>
     </div>

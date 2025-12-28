@@ -11,3 +11,18 @@ export interface Project {
   modified: number | null;
 }
 
+export interface LogEntry {
+  id: string;
+  timestamp: number;
+  type: "stdout" | "stderr";
+  content: string;
+  projectPath: string;
+}
+
+export interface FilterOption {
+  runtime: string;
+  framework: string;
+  status: "all" | "running" | "stopped";
+}
+
+export type SortOption = "name" | "modified" | "size";

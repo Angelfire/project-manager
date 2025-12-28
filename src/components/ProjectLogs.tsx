@@ -1,0 +1,218 @@
+import { useState, useRef, useEffect } from "react";
+import { X, Search, Trash2, Download } from "lucide-react";
+import { save } from "@tauri-apps/plugin-dialog";
+import { writeTextFile } from "@tauri-apps/plugin-fs";
+import { LogEntry } from "../types";
+
+interface ProjectLogsProps {
+  projectName: string;
+  projectPath: string;
+  logs: LogEntry[];
+  isOpen: boolean;
+  onClose: () => void;
+  onClear: () => void;
+}
+
+export function ProjectLogs({
+  projectName,
+  projectPath,
+  logs,
+  isOpen,
+  onClose,
+  onClear,
+}: ProjectLogsProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [autoScroll, setAutoScroll] = useState(true);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+  const logsContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new logs arrive
+  useEffect(() => {
+    if (autoScroll && logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [logs, autoScroll]);
+
+  // Handle scroll to detect if user scrolled up
+  const handleScroll = () => {
+    if (logsContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } =
+        logsContainerRef.current;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+      setAutoScroll(isAtBottom);
+    }
+  };
+
+  const filteredLogs = logs.filter((log) =>
+    log.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const formatTimestamp = (timestamp: number): string => {
+    const date = new Date(timestamp);
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+    const milliseconds = date.getMilliseconds().toString().padStart(3, "0");
+    return `${hours}:${minutes}:${seconds}.${milliseconds}`;
+  };
+
+  const exportLogs = async () => {
+    try {
+      if (logs.length === 0) {
+        alert("No logs to export");
+        return;
+      }
+
+      const logText = logs
+        .map(
+          (log) =>
+            `[${formatTimestamp(log.timestamp)}] [${log.type.toUpperCase()}] ${
+              log.content
+            }`
+        )
+        .join("\n");
+
+      // Sanitize project name for filename
+      const sanitizedName = projectName
+        .replace(/[^a-z0-9]/gi, "_")
+        .toLowerCase();
+      const fileName = `${sanitizedName}-logs-${Date.now()}.txt`;
+
+      const filePath = await save({
+        defaultPath: fileName,
+        filters: [
+          {
+            name: "Text Files",
+            extensions: ["txt"],
+          },
+        ],
+      });
+
+      if (filePath) {
+        await writeTextFile(filePath, logText);
+        console.log(`Logs exported successfully to: ${filePath}`);
+        // Show success message
+        alert(`Logs exported successfully to:\n${filePath}`);
+      } else {
+        // User cancelled the save dialog
+        console.log("Export cancelled by user");
+      }
+    } catch (error) {
+      console.error("Error exporting logs:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      alert(`Failed to export logs:\n${errorMessage}`);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-gray-900 rounded-lg border border-gray-800 w-full max-w-4xl h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-800">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-100">
+              Logs: {projectName}
+            </h2>
+            <p className="text-xs text-gray-500 font-mono mt-1 truncate">
+              {projectPath}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportLogs}
+              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors"
+              title="Export logs"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onClear}
+              className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded transition-colors"
+              title="Clear logs"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Search bar */}
+        <div className="p-4 border-b border-gray-800">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+            <input
+              type="text"
+              placeholder="Search logs..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 text-sm"
+            />
+          </div>
+          <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+            <span>
+              {filteredLogs.length} of {logs.length} log entries
+            </span>
+            {!autoScroll && (
+              <button
+                onClick={() => {
+                  setAutoScroll(true);
+                  logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="text-blue-400 hover:text-blue-300"
+              >
+                Scroll to bottom
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Logs container */}
+        <div
+          ref={logsContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto p-4 font-mono text-xs"
+        >
+          {filteredLogs.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              {searchTerm ? "No logs match your search" : "No logs yet"}
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {filteredLogs.map((log) => (
+                <div
+                  key={log.id}
+                  className={`flex gap-2 ${
+                    log.type === "stderr" ? "text-red-400" : "text-gray-300"
+                  }`}
+                >
+                  <span className="text-gray-600 shrink-0">
+                    [{formatTimestamp(log.timestamp)}]
+                  </span>
+                  <span
+                    className={`shrink-0 ${
+                      log.type === "stderr" ? "text-red-500" : "text-green-500"
+                    }`}
+                  >
+                    [{log.type.toUpperCase()}]
+                  </span>
+                  <span className="flex-1 wrap-break-words whitespace-pre-wrap">
+                    {log.content}
+                  </span>
+                </div>
+              ))}
+              <div ref={logsEndRef} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
