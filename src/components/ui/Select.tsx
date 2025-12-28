@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { ChevronDown, Check } from "lucide-react";
+import { cn } from "../../utils/cn";
 
 interface SelectProps {
   value: string;
@@ -72,19 +73,25 @@ export function Select({
   };
 
   return (
-    <div ref={selectRef} className={`relative ${className}`}>
+    <div ref={selectRef} className={cn("relative", className)}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between px-3 py-2 h-9 rounded-md border border-gray-800 bg-gray-800/50 text-gray-300 text-sm font-medium transition-colors hover:bg-gray-800 hover:border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2 focus:ring-offset-gray-900"
       >
-        <span className={selectedLabel ? "text-gray-100" : "text-gray-500"}>
+        <span
+          className={cn({
+            "text-gray-100": selectedLabel,
+            "text-gray-500": !selectedLabel,
+          })}
+        >
           {selectedLabel || placeholder}
         </span>
         <ChevronDown
-          className={`h-4 w-4 text-gray-400 transition-transform ${
-            isOpen ? "transform rotate-180" : ""
-          }`}
+          className={cn(
+            "h-4 w-4 text-gray-400 transition-transform",
+            isOpen && "transform rotate-180"
+          )}
         />
       </button>
       {isOpen && (
@@ -97,16 +104,19 @@ export function Select({
                   <div
                     key={child.props.value}
                     onClick={() => handleSelect(child.props.value)}
-                    className={`relative flex items-center px-2 py-1.5 text-sm rounded-sm cursor-pointer select-none outline-none transition-colors ${
-                      isSelected
-                        ? "bg-gray-700 text-gray-100"
-                        : "text-gray-300 hover:bg-gray-700/50 hover:text-gray-100"
-                    }`}
+                    className={cn(
+                      "relative flex items-center px-2 py-1.5 text-sm rounded-sm cursor-pointer select-none outline-none transition-colors",
+                      {
+                        "bg-gray-700 text-gray-100": isSelected,
+                        "text-gray-300 hover:bg-gray-700/50 hover:text-gray-100":
+                          !isSelected,
+                      }
+                    )}
                   >
                     {isSelected && (
                       <Check className="mr-2 h-4 w-4 text-gray-100" />
                     )}
-                    <span className={isSelected ? "ml-0" : "ml-6"}>
+                    <span className={cn({ "ml-0": isSelected, "ml-6": !isSelected })}>
                       {child.props.children}
                     </span>
                   </div>

@@ -7,6 +7,7 @@ import {
   Copy,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
+import { Button } from "./ui/Button";
 
 interface QuickActionsMenuProps {
   projectPath: string;
@@ -73,39 +74,40 @@ export function QuickActionsMenu({ projectPath }: QuickActionsMenuProps) {
 
   return (
     <div className="relative quick-actions-menu">
-      <button
+      <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-3 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded border border-gray-700 transition-colors flex items-center gap-2"
+        variant="icon"
+        size="sm"
+        icon={MoreVertical}
+        className="p-3"
         title="Quick actions"
-      >
-        <MoreVertical className="w-3.5 h-3.5" />
-      </button>
+      />
       {isOpen && (
         <div className="absolute right-0 bottom-full mb-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 quick-actions-menu">
           <button
             onClick={handleOpenInEditor}
-            className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-t-lg"
+            className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-t-lg transition-colors"
           >
             <FileCode className="w-4 h-4" />
             Open in Editor
           </button>
           <button
             onClick={handleOpenInTerminal}
-            className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+            className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 transition-colors"
           >
             <Terminal className="w-4 h-4" />
             Open in Terminal
           </button>
           <button
             onClick={handleOpenInFinder}
-            className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+            className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 transition-colors"
           >
             <FolderOpen className="w-4 h-4" />
             Open in Finder
           </button>
           <button
             onClick={handleCopyPath}
-            className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-b-lg"
+            className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-b-lg transition-colors"
           >
             <Copy className="w-4 h-4" />
             Copy Path
