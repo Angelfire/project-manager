@@ -1,6 +1,7 @@
+use crate::error::AppError;
 use std::process::Command as StdCommand;
 
-pub fn kill_process_tree(pid: u32) -> Result<(), String> {
+pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
     // Unix (macOS/Linux): kill the process and all its children
     // First, find all child processes recursively
     let mut all_pids = vec![pid];
@@ -10,17 +11,15 @@ pub fn kill_process_tree(pid: u32) -> Result<(), String> {
     for _level in 0..3 {
         let mut next_level = Vec::new();
         for parent_pid in &current_level {
-            if let Ok(pgrep_output) = StdCommand::new("pgrep")
+            let pgrep_output = StdCommand::new("pgrep")
                 .args(&["-P", &parent_pid.to_string()])
-                .output()
-            {
-                if let Ok(child_pids_str) = String::from_utf8(pgrep_output.stdout) {
-                    for child_pid_line in child_pids_str.lines() {
-                        if let Ok(child_pid) = child_pid_line.trim().parse::<u32>() {
-                            all_pids.push(child_pid);
-                            next_level.push(child_pid);
-                        }
-                    }
+                .output()?;
+
+            let child_pids_str = String::from_utf8(pgrep_output.stdout)?;
+            for child_pid_line in child_pids_str.lines() {
+                if let Ok(child_pid) = child_pid_line.trim().parse::<u32>() {
+                    all_pids.push(child_pid);
+                    next_level.push(child_pid);
                 }
             }
         }
@@ -32,45 +31,42 @@ pub fn kill_process_tree(pid: u32) -> Result<(), String> {
 
     // Kill all found processes (children first, then parent)
     for process_pid in all_pids.iter().rev() {
-        let _ = StdCommand::new("kill")
+        StdCommand::new("kill")
             .args(&["-9", &process_pid.to_string()])
-            .output();
+            .output()?;
     }
 
     // Verify that the main process was terminated
     // Try to kill the process group as well
-    let _ = StdCommand::new("kill")
+    StdCommand::new("kill")
         .args(&["-9", &format!("-{}", pid)])
-        .output();
+        .output()?;
 
     Ok(())
 }
 
-pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, String> {
+pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
     // Unix (macOS/Linux): use lsof to find the port
     // First try with the PID directly
     let output = StdCommand::new("lsof")
         .args(&["-Pan", "-p", &pid.to_string(), "-iTCP", "-sTCP:LISTEN"])
-        .output();
+        .output()?;
 
-    if let Ok(output_result) = output {
-        if let Ok(output_str) = String::from_utf8(output_result.stdout) {
-            for line in output_str.lines().skip(1) {
-                // Format: COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME
-                // Example: node 12345 user 30u IPv4 0x... TCP *:4321 (LISTEN)
-                let parts: Vec<&str> = line.split_whitespace().collect();
-                if parts.len() >= 9 {
-                    // Search in the NAME column that contains the port
-                    let name_part = parts[8];
-                    if name_part.contains(':') {
-                        if let Some(port_str) = name_part.split(':').last() {
-                            // Can have format *:4321 or localhost:4321
-                            let port_str = port_str.split(' ').next().unwrap_or(port_str);
-                            if let Ok(port) = port_str.parse::<u16>() {
-                                if port > 0 {
-                                    return Ok(Some(port));
-                                }
-                            }
+    let output_str = String::from_utf8(output.stdout)?;
+    for line in output_str.lines().skip(1) {
+        // Format: COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME
+        // Example: node 12345 user 30u IPv4 0x... TCP *:4321 (LISTEN)
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() >= 9 {
+            // Search in the NAME column that contains the port
+            let name_part = parts[8];
+            if name_part.contains(':') {
+                if let Some(port_str) = name_part.split(':').last() {
+                    // Can have format *:4321 or localhost:4321
+                    let port_str = port_str.split(' ').next().unwrap_or(port_str);
+                    if let Ok(port) = port_str.parse::<u16>() {
+                        if port > 0 {
+                            return Ok(Some(port));
                         }
                     }
                 }
@@ -87,17 +83,15 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, String> {
     for _level in 0..3 {
         let mut next_level_pids = Vec::new();
         for parent_pid in &current_level_pids {
-            if let Ok(pgrep_output) = StdCommand::new("pgrep")
+            let pgrep_output = StdCommand::new("pgrep")
                 .args(&["-P", &parent_pid.to_string()])
-                .output()
-            {
-                if let Ok(child_pids_str) = String::from_utf8(pgrep_output.stdout) {
-                    for child_pid_line in child_pids_str.lines() {
-                        if let Ok(child_pid) = child_pid_line.trim().parse::<u32>() {
-                            all_child_pids.push(child_pid);
-                            next_level_pids.push(child_pid);
-                        }
-                    }
+                .output()?;
+
+            let child_pids_str = String::from_utf8(pgrep_output.stdout)?;
+            for child_pid_line in child_pids_str.lines() {
+                if let Ok(child_pid) = child_pid_line.trim().parse::<u32>() {
+                    all_child_pids.push(child_pid);
+                    next_level_pids.push(child_pid);
                 }
             }
         }
@@ -112,7 +106,7 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, String> {
 
     // Search for ports in all found child processes
     for child_pid in &all_child_pids {
-        if let Ok(lsof_output) = StdCommand::new("lsof")
+        let lsof_output = StdCommand::new("lsof")
             .args(&[
                 "-Pan",
                 "-p",
@@ -120,21 +114,19 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, String> {
                 "-iTCP",
                 "-sTCP:LISTEN",
             ])
-            .output()
-        {
-            if let Ok(lsof_str) = String::from_utf8(lsof_output.stdout) {
-                for line in lsof_str.lines().skip(1) {
-                    let parts: Vec<&str> = line.split_whitespace().collect();
-                    if parts.len() >= 9 {
-                        let name_part = parts[8];
-                        if name_part.contains(':') {
-                            if let Some(port_str) = name_part.split(':').last() {
-                                let port_str = port_str.split(' ').next().unwrap_or(port_str);
-                                if let Ok(port) = port_str.parse::<u16>() {
-                                    if port > 0 {
-                                        return Ok(Some(port));
-                                    }
-                                }
+            .output()?;
+
+        let lsof_str = String::from_utf8(lsof_output.stdout)?;
+        for line in lsof_str.lines().skip(1) {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 9 {
+                let name_part = parts[8];
+                if name_part.contains(':') {
+                    if let Some(port_str) = name_part.split(':').last() {
+                        let port_str = port_str.split(' ').next().unwrap_or(port_str);
+                        if let Ok(port) = port_str.parse::<u16>() {
+                            if port > 0 {
+                                return Ok(Some(port));
                             }
                         }
                     }
@@ -155,40 +147,32 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, String> {
     // child_pids_for_check is already cloned above
 
     for test_port in test_ports {
-        if let Ok(lsof_output) = StdCommand::new("lsof")
+        let lsof_output = StdCommand::new("lsof")
             .args(&["-ti", &format!(":{}", test_port)])
-            .output()
-        {
-            if let Ok(pid_str) = String::from_utf8(lsof_output.stdout) {
-                for pid_line in pid_str.lines() {
-                    if let Ok(listening_pid) = pid_line.trim().parse::<u32>() {
-                        // Verify if this PID is the same or is in the list of child processes
-                        if listening_pid == pid || child_pids_for_check.contains(&listening_pid) {
+            .output()?;
+
+        let pid_str = String::from_utf8(lsof_output.stdout)?;
+        for pid_line in pid_str.lines() {
+            if let Ok(listening_pid) = pid_line.trim().parse::<u32>() {
+                // Verify if this PID is the same or is in the list of child processes
+                if listening_pid == pid || child_pids_for_check.contains(&listening_pid) {
+                    return Ok(Some(test_port));
+                }
+                // Verify recursively the PPID (up to 5 levels)
+                let mut current_pid = listening_pid;
+                for _depth in 0..5 {
+                    let ppid_output = StdCommand::new("ps")
+                        .args(&["-o", "ppid=", "-p", &current_pid.to_string()])
+                        .output()?;
+
+                    let ppid_str = String::from_utf8(ppid_output.stdout)?;
+                    if let Ok(ppid) = ppid_str.trim().parse::<u32>() {
+                        if ppid == pid || child_pids_for_check.contains(&ppid) {
                             return Ok(Some(test_port));
                         }
-                        // Verify recursively the PPID (up to 5 levels)
-                        let mut current_pid = listening_pid;
-                        for _depth in 0..5 {
-                            if let Ok(ppid_output) = StdCommand::new("ps")
-                                .args(&["-o", "ppid=", "-p", &current_pid.to_string()])
-                                .output()
-                            {
-                                if let Ok(ppid_str) = String::from_utf8(ppid_output.stdout) {
-                                    if let Ok(ppid) = ppid_str.trim().parse::<u32>() {
-                                        if ppid == pid || child_pids_for_check.contains(&ppid) {
-                                            return Ok(Some(test_port));
-                                        }
-                                        current_pid = ppid;
-                                    } else {
-                                        break;
-                                    }
-                                } else {
-                                    break;
-                                }
-                            } else {
-                                break;
-                            }
-                        }
+                        current_pid = ppid;
+                    } else {
+                        break;
                     }
                 }
             }

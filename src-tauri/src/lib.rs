@@ -1,4 +1,6 @@
 mod detection;
+mod error;
+mod menu;
 mod port;
 mod process;
 mod project_info;
@@ -7,32 +9,32 @@ mod types;
 
 #[tauri::command]
 fn scan_directory(path: String) -> Result<Vec<types::Project>, String> {
-    detection::scan_directory(path)
+    detection::scan_directory(path).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn kill_process_tree(pid: u32) -> Result<(), String> {
-    process::kill_process_tree(pid)
+    process::kill_process_tree(pid).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, String> {
-    process::detect_port_by_pid(pid)
+    process::detect_port_by_pid(pid).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn open_in_editor(path: String) -> Result<(), String> {
-    quick_actions::open_in_editor(path)
+    quick_actions::open_in_editor(path).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn open_in_terminal(path: String) -> Result<(), String> {
-    quick_actions::open_in_terminal(path)
+    quick_actions::open_in_terminal(path).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn open_in_finder(path: String) -> Result<(), String> {
-    quick_actions::open_in_finder(path)
+    quick_actions::open_in_finder(path).map_err(|e| e.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -50,6 +52,10 @@ pub fn run() {
             open_in_terminal,
             open_in_finder
         ])
+        .setup(|app| {
+            menu::setup_menu(app)?;
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -3,6 +3,8 @@ import { X, Search, Trash2, Download } from "lucide-react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { LogEntry } from "../types";
+import { Button } from "./ui/Button";
+import { cn } from "../utils/cn";
 
 interface ProjectLogsProps {
   projectName: string;
@@ -121,26 +123,29 @@ export function ProjectLogs({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <Button
               onClick={exportLogs}
-              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors"
+              variant="ghost"
+              size="sm"
+              icon={Download}
+              className="p-2"
               title="Export logs"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            <button
+            />
+            <Button
               onClick={onClear}
-              className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded transition-colors"
+              variant="ghost"
+              size="sm"
+              icon={Trash2}
+              className="p-2 hover:text-red-400"
               title="Clear logs"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-            <button
+            />
+            <Button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+              variant="ghost"
+              size="sm"
+              icon={X}
+              className="p-2"
+            />
           </div>
         </div>
 
@@ -189,17 +194,19 @@ export function ProjectLogs({
               {filteredLogs.map((log) => (
                 <div
                   key={log.id}
-                  className={`flex gap-2 ${
-                    log.type === "stderr" ? "text-red-400" : "text-gray-300"
-                  }`}
+                  className={cn("flex gap-2", {
+                    "text-red-400": log.type === "stderr",
+                    "text-gray-300": log.type === "stdout",
+                  })}
                 >
                   <span className="text-gray-600 shrink-0">
                     [{formatTimestamp(log.timestamp)}]
                   </span>
                   <span
-                    className={`shrink-0 ${
-                      log.type === "stderr" ? "text-red-500" : "text-green-500"
-                    }`}
+                    className={cn("shrink-0", {
+                      "text-red-500": log.type === "stderr",
+                      "text-green-500": log.type === "stdout",
+                    })}
                   >
                     [{log.type.toUpperCase()}]
                   </span>

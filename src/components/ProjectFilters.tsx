@@ -1,3 +1,5 @@
+import { Select, SelectItem } from "./ui/Select";
+
 export type FilterOption = {
   runtime: string | null;
   framework: string | null;
@@ -24,64 +26,64 @@ export function ProjectFilters({
           <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
             Runtime
           </label>
-          <select
+          <Select
             value={filters.runtime || ""}
-            onChange={(e) =>
+            onChange={(value) =>
               onFiltersChange({
                 ...filters,
-                runtime: e.target.value || null,
+                runtime: value || null,
               })
             }
-            className="w-full px-3 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 text-sm focus:ring-1 focus:ring-gray-700 focus:border-gray-700"
+            placeholder="All Runtimes"
           >
-            <option value="">All Runtimes</option>
+            <SelectItem value="">All Runtimes</SelectItem>
             {uniqueRuntimes.map((runtime) => (
-              <option key={runtime} value={runtime}>
+              <SelectItem key={runtime} value={runtime}>
                 {runtime}
-              </option>
+              </SelectItem>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
             Framework
           </label>
-          <select
+          <Select
             value={filters.framework || ""}
-            onChange={(e) =>
+            onChange={(value) =>
               onFiltersChange({
                 ...filters,
-                framework: e.target.value || null,
+                framework: value || null,
               })
             }
-            className="w-full px-3 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 text-sm focus:ring-1 focus:ring-gray-700 focus:border-gray-700"
+            placeholder="All Frameworks"
           >
-            <option value="">All Frameworks</option>
+            <SelectItem value="">All Frameworks</SelectItem>
             {uniqueFrameworks.map((framework) => (
-              <option key={framework} value={framework}>
+              <SelectItem key={framework} value={framework}>
                 {framework}
-              </option>
+              </SelectItem>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
             Status
           </label>
-          <select
+          <Select
             value={filters.status}
-            onChange={(e) =>
+            onChange={(value) =>
               onFiltersChange({
                 ...filters,
-                status: e.target.value as FilterOption["status"],
+                status: value as FilterOption["status"],
               })
             }
-            className="w-full px-3 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 text-sm focus:ring-1 focus:ring-gray-700 focus:border-gray-700"
+            placeholder="All Status"
           >
-            <option value="all">All Status</option>
-            <option value="running">Running</option>
-            <option value="stopped">Stopped</option>
-          </select>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="running">Running</SelectItem>
+            <SelectItem value="stopped">Stopped</SelectItem>
+          </Select>
         </div>
       </div>
     </div>

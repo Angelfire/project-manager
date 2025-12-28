@@ -41,6 +41,7 @@ A desktop application built with Tauri, React, and TypeScript to manage and run 
 - ⏱️ **Timestamped Entries**: Each log entry includes a precise timestamp
 
 ### Quick Actions
+
 - 📝 **Open in Editor**: Open project in VS Code or default editor
 - 💻 **Open in Terminal**: Open terminal in project directory
 - 📂 **Open in Finder**: Open project folder in system file manager
@@ -100,7 +101,7 @@ npm run tauri build
 ## Usage
 
 1. Open the application
-2. Click "Select Directory" and choose the folder containing your projects
+2. Click "Select" and choose the folder containing your projects
 3. The application will automatically scan and display all found projects
 4. Use the search bar to find specific projects
 5. Use filters to narrow down projects by runtime, framework, or status
