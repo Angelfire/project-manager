@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "project-manager",
+  "productName": "Project Manager",
   "version": "0.1.0",
   "identifier": "com.andresbedoyag.project-manager",
   "build": {
@@ -36,6 +36,19 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "resources": [],
+    "copyright": "© 2025 Andrés Bedoya",
+    "category": "DeveloperTool",
+    "shortDescription": "Manage and run your Node.js, Deno and Bun projects",
+    "longDescription": "Project Manager - A desktop application to manage and run your development projects. Built with Tauri, React, and TypeScript.",
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.13",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "providerShortName": null,
+      "entitlements": null
+    }
   }
 }
