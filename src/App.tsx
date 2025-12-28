@@ -10,7 +10,6 @@ import {
   ExternalLink,
   Loader2,
   FolderOpen,
-  Terminal,
   ArrowUpDown,
   Info,
   Calendar,
@@ -20,6 +19,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useProjects } from "./hooks/useProjects";
+import runstackIcon from "./assets/runstack.png";
 import {
   getRuntimeIcon,
   getRuntimeColor,
@@ -108,16 +108,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-950">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto py-8 max-w-7xl">
         <header className="mb-10">
           <div className="flex items-center gap-4">
-            <div className="p-2.5 bg-gray-800 rounded-lg">
-              <Terminal className="w-6 h-6 text-gray-400" />
-            </div>
+            <img src={runstackIcon} alt="RunStack" className="size-16" />
+
             <div>
-              <h1 className="text-3xl font-semibold text-gray-100">
-                RunStack
-              </h1>
+              <h1 className="text-3xl font-semibold text-gray-100">RunStack</h1>
               <p className="text-gray-500 text-sm mt-1">
                 Manage and run your Node.js, Deno and Bun projects
               </p>
@@ -129,7 +126,7 @@ function App() {
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wide">
-                <FolderOpen className="w-4 h-4" />
+                <FolderOpen className="size-4" />
                 Directory
               </label>
               <div className="relative">
@@ -140,7 +137,7 @@ function App() {
                   placeholder="Select a directory..."
                   className="w-full px-4 py-2 pl-10 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all"
                 />
-                <Folder className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                <Folder className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
               </div>
             </div>
             <div className="flex gap-2 items-end">
@@ -173,8 +170,8 @@ function App() {
 
         {loading && (
           <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-800 rounded-lg mb-4">
-              <Loader2 className="w-6 h-6 text-gray-500 animate-spin" />
+            <div className="inline-flex items-center justify-center size-12 bg-gray-800 rounded-lg mb-4">
+              <Loader2 className="size-6 text-gray-500 animate-spin" />
             </div>
             <p className="text-gray-400 font-medium">Scanning projects...</p>
             <p className="text-gray-600 text-sm mt-1">Please wait</p>
@@ -202,7 +199,7 @@ function App() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full px-4 py-2 pl-10 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all text-sm"
                     />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
                   </div>
                   <Button
                     onClick={() => setShowFilters(!showFilters)}
@@ -334,7 +331,7 @@ function App() {
                       <div className="space-y-2 mb-4 text-xs text-gray-500">
                         {project.runtime_version && (
                           <div className="flex items-center gap-2">
-                            <Info className="w-3.5 h-3.5" />
+                            <Info className="size-3.5" />
                             <span>
                               {project.runtime} {project.runtime_version}
                             </span>
@@ -343,20 +340,20 @@ function App() {
                         <div className="flex items-center gap-4 flex-wrap">
                           {project.modified && (
                             <div className="flex items-center gap-2">
-                              <Calendar className="w-3.5 h-3.5" />
+                              <Calendar className="size-3.5" />
                               <span>{formatDate(project.modified)}</span>
                             </div>
                           )}
                           {project.size && (
                             <div className="flex items-center gap-2">
-                              <HardDrive className="w-3.5 h-3.5" />
+                              <HardDrive className="size-3.5" />
                               <span>{formatFileSize(project.size)}</span>
                             </div>
                           )}
                           {project.scripts &&
                             Object.keys(project.scripts).length > 0 && (
                               <div className="flex items-center gap-2">
-                                <Code className="w-3.5 h-3.5" />
+                                <Code className="size-3.5" />
                                 <span>
                                   {Object.keys(project.scripts).length} scripts
                                 </span>
@@ -467,8 +464,8 @@ function App() {
 
         {!loading && selectedDirectory && projects.length === 0 && (
           <div className="bg-gray-900 rounded-lg border border-gray-800 p-12 text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-800 rounded-lg mb-4">
-              <FolderOpen className="w-6 h-6 text-gray-600" />
+            <div className="inline-flex items-center justify-center size-12 bg-gray-800 rounded-lg mb-4">
+              <FolderOpen className="size-6 text-gray-600" />
             </div>
             <p className="text-gray-400 font-medium">No projects found</p>
             <p className="text-gray-600 text-sm mt-1">Try another directory</p>
@@ -477,8 +474,8 @@ function App() {
 
         {!selectedDirectory && (
           <div className="bg-gray-900 rounded-lg border border-gray-800 p-12 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-gray-800 rounded-lg mb-6">
-              <Folder className="w-7 h-7 text-gray-500" />
+            <div className="inline-flex items-center justify-center size-14 bg-gray-800 rounded-lg mb-6">
+              <Folder className="size-7 text-gray-500" />
             </div>
             <h3 className="text-lg font-semibold text-gray-100 mb-2">
               Welcome

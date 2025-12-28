@@ -89,7 +89,7 @@ export function Select({
         </span>
         <ChevronDown
           className={cn(
-            "h-4 w-4 text-gray-400 transition-transform",
+            "size-4 text-gray-400 transition-transform",
             isOpen && "transform rotate-180"
           )}
         />
@@ -114,9 +114,14 @@ export function Select({
                     )}
                   >
                     {isSelected && (
-                      <Check className="mr-2 h-4 w-4 text-gray-100" />
+                      <Check className="mr-2 size-4 text-gray-100" />
                     )}
-                    <span className={cn({ "ml-0": isSelected, "ml-6": !isSelected })}>
+                    <span
+                      className={cn({
+                        "ml-0": isSelected,
+                        "ml-6": !isSelected,
+                      })}
+                    >
                       {child.props.children}
                     </span>
                   </div>

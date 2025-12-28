@@ -88,28 +88,28 @@ export function QuickActionsMenu({ projectPath }: QuickActionsMenuProps) {
             onClick={handleOpenInEditor}
             className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-t-lg transition-colors"
           >
-            <FileCode className="w-4 h-4" />
+            <FileCode className="size-4" />
             Open in Editor
           </button>
           <button
             onClick={handleOpenInTerminal}
             className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 transition-colors"
           >
-            <Terminal className="w-4 h-4" />
+            <Terminal className="size-4" />
             Open in Terminal
           </button>
           <button
             onClick={handleOpenInFinder}
             className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 transition-colors"
           >
-            <FolderOpen className="w-4 h-4" />
+            <FolderOpen className="size-4" />
             Open in Finder
           </button>
           <button
             onClick={handleCopyPath}
             className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2 rounded-b-lg transition-colors"
           >
-            <Copy className="w-4 h-4" />
+            <Copy className="size-4" />
             Copy Path
           </button>
         </div>

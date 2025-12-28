@@ -152,7 +152,7 @@ export function ProjectLogs({
         {/* Search bar */}
         <div className="p-4 border-b border-gray-800">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
             <input
               type="text"
               placeholder="Search logs..."
