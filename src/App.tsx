@@ -29,6 +29,7 @@ import { openProjectInBrowser } from "./services/projectService";
 import { ProjectFilters, type FilterOption } from "./components/ProjectFilters";
 import { QuickActionsMenu } from "./components/QuickActionsMenu";
 import { ProjectLogs } from "./components/ProjectLogs";
+import { Select, SelectItem } from "./components/ui/Select";
 import { useProjectFilters } from "./hooks/useProjectFilters";
 
 type SortOption = "name" | "modified" | "size";
@@ -216,19 +217,20 @@ function App() {
                     <Filter className="w-4 h-4" />
                     Filters
                   </button>
-                  <div className="relative">
-                    <select
+                  <div className="flex items-center gap-2">
+                    <Select
                       value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as SortOption)}
-                      className="px-4 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all text-sm appearance-none pr-8"
+                      onChange={(value) => setSortBy(value as SortOption)}
+                      placeholder="Sort by..."
+                      className="w-45"
                     >
-                      <option value="name">Sort by Name</option>
-                      <option value="modified">Sort by Date</option>
-                      <option value="size">Sort by Size</option>
-                    </select>
+                      <SelectItem value="name">Sort by Name</SelectItem>
+                      <SelectItem value="modified">Sort by Date</SelectItem>
+                      <SelectItem value="size">Sort by Size</SelectItem>
+                    </Select>
                     <button
                       onClick={() => setSortAscending(!sortAscending)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                      className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors"
                       title={sortAscending ? "Ascending" : "Descending"}
                     >
                       <ArrowUpDown className="w-4 h-4" />
