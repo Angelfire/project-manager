@@ -11,7 +11,6 @@ import {
   Loader2,
   FolderOpen,
   Terminal,
-  Circle,
   ArrowUpDown,
   Info,
   Calendar,
@@ -117,7 +116,7 @@ function App() {
             </div>
             <div>
               <h1 className="text-3xl font-semibold text-gray-100">
-                Project Manager
+                RunStack
               </h1>
               <p className="text-gray-500 text-sm mt-1">
                 Manage and run your Node.js, Deno and Bun projects
@@ -276,12 +275,29 @@ function App() {
                           </p>
                         </div>
                         <div className="flex items-center gap-1.5 ml-3 shrink-0">
-                          <Circle
-                            className={cn("w-2.5 h-2.5", {
-                              "fill-green-500 text-green-500": isRunning,
-                              "fill-gray-700 text-gray-700": !isRunning,
+                          <span
+                            className={cn("relative flex", {
+                              "size-2.5": true,
                             })}
-                          />
+                          >
+                            {isRunning && (
+                              <span
+                                className={cn(
+                                  "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
+                                  "bg-green-400"
+                                )}
+                              />
+                            )}
+                            <span
+                              className={cn(
+                                "relative inline-flex rounded-full size-2.5",
+                                {
+                                  "bg-green-500": isRunning,
+                                  "bg-gray-700": !isRunning,
+                                }
+                              )}
+                            />
+                          </span>
                           <span
                             className={cn("text-xs font-medium", {
                               "text-green-400": isRunning,

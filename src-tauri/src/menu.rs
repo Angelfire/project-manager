@@ -10,19 +10,19 @@ pub fn setup_menu(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     {
         let app_menu = Submenu::with_items(
             app,
-            "Project Manager",
+            "RunStack",
             true,
             &[
-                &MenuItem::with_id(app, "about", "About Project Manager", true, None::<&str>)?,
+                &MenuItem::with_id(app, "about", "About RunStack", true, None::<&str>)?,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::hide(app, Some("Hide Project Manager"))?,
+                &PredefinedMenuItem::hide(app, Some("Hide RunStack"))?,
                 &PredefinedMenuItem::hide_others(app, Some("Hide Others"))?,
                 &PredefinedMenuItem::show_all(app, Some("Show All"))?,
                 &PredefinedMenuItem::separator(app)?,
                 &MenuItem::with_id(
                     app,
                     "quit",
-                    "Quit Project Manager",
+                    "Quit RunStack",
                     true,
                     Some("CmdOrCtrl+Q"),
                 )?,
@@ -69,7 +69,7 @@ async fn show_about_dialog(app: &AppHandle) {
     let _ = app
         .dialog()
         .message(message)
-        .title("About Project Manager")
+        .title("About RunStack")
         .kind(MessageDialogKind::Info)
         .blocking_show();
 }

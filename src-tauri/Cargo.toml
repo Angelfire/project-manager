@@ -1,11 +1,11 @@
 [package]
-name = "project-manager"
+name = "runstack"
 version = "0.1.0"
 description = "A desktop application to manage and run Node.js, Deno, and Bun projects"
 authors = ["Andrés Bedoya <github.com/Angelfire>"]
 license = "MIT"
 edition = "2021"
-repository = "https://github.com/Angelfire/project-manager"
+repository = "https://github.com/Angelfire/runstack"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,7 +13,7 @@ repository = "https://github.com/Angelfire/project-manager"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "project_manager_lib"
+name = "runstack_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

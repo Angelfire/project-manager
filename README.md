@@ -1,4 +1,4 @@
-# Project Manager
+# RunStack
 
 A desktop application built with Tauri, React, and TypeScript to manage and run Node.js, Deno, and Bun projects from a single place.
 
@@ -75,7 +75,7 @@ fnm default lts-latest
 
 ```bash
 git clone <repository-url>
-cd project-manager
+cd runstack
 ```
 
 2. Install dependencies:
