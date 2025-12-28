@@ -1,5 +1,6 @@
-use crate::types::Project;
+use crate::error::AppError;
 use crate::project_info::enrich_project_info;
+use crate::types::Project;
 use std::fs;
 use std::path::PathBuf;
 
@@ -68,87 +69,88 @@ pub fn detect_framework(path: &PathBuf) -> String {
     "node".to_string()
 }
 
-pub fn scan_directory(path: String) -> Result<Vec<Project>, String> {
+pub fn scan_directory(path: String) -> Result<Vec<Project>, AppError> {
     let dir = PathBuf::from(&path);
 
     if !dir.exists() || !dir.is_dir() {
-        return Err("Directory does not exist".to_string());
+        return Err(AppError::NotFound(format!(
+            "Directory does not exist: {}",
+            path
+        )));
     }
 
     let mut projects = Vec::new();
 
-    if let Ok(entries) = fs::read_dir(&dir) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                let project_path = entry.path();
+    let entries = fs::read_dir(&dir)?;
 
-                if project_path.is_dir() {
-                    // Check for Node.js projects
-                    if project_path.join("package.json").exists() {
-                        let package_manager = detect_package_manager(&project_path);
-                        let framework = detect_framework(&project_path);
-                        let port = crate::port::detect_port(&project_path);
-                        let mut project = Project {
-                            name: entry.file_name().to_string_lossy().to_string(),
-                            path: project_path.to_string_lossy().to_string(),
-                            runtime: "Node.js".to_string(),
-                            package_manager: Some(package_manager),
-                            port,
-                            framework: Some(framework),
-                            runtime_version: None,
-                            scripts: None,
-                            size: None,
-                            modified: None,
-                        };
-                        project = enrich_project_info(project);
-                        projects.push(project);
-                    }
-                    // Check for Deno projects
-                    else if project_path.join("deno.json").exists()
-                        || project_path.join("deno.jsonc").exists()
-                    {
-                        let port = crate::port::detect_port_deno(&project_path);
-                        let mut project = Project {
-                            name: entry.file_name().to_string_lossy().to_string(),
-                            path: project_path.to_string_lossy().to_string(),
-                            runtime: "Deno".to_string(),
-                            package_manager: None,
-                            port,
-                            framework: Some("deno".to_string()),
-                            runtime_version: None,
-                            scripts: None,
-                            size: None,
-                            modified: None,
-                        };
-                        project = enrich_project_info(project);
-                        projects.push(project);
-                    }
-                    // Check for Bun projects
-                    else if project_path.join("bun.lockb").exists()
-                        || project_path.join("bunfig.toml").exists()
-                    {
-                        let framework = detect_framework(&project_path);
-                        let port = crate::port::detect_port(&project_path);
-                        let mut project = Project {
-                            name: entry.file_name().to_string_lossy().to_string(),
-                            path: project_path.to_string_lossy().to_string(),
-                            runtime: "Bun".to_string(),
-                            package_manager: Some("bun".to_string()),
-                            port,
-                            framework: Some(framework),
-                            runtime_version: None,
-                            scripts: None,
-                            size: None,
-                            modified: None,
-                        };
-                        project = enrich_project_info(project);
-                        projects.push(project);
-                    }
-                }
+    for entry in entries {
+        let entry = entry?;
+        let project_path = entry.path();
+
+        if project_path.is_dir() {
+            // Check for Node.js projects
+            if project_path.join("package.json").exists() {
+                let package_manager = detect_package_manager(&project_path);
+                let framework = detect_framework(&project_path);
+                let port = crate::port::detect_port(&project_path);
+                let mut project = Project {
+                    name: entry.file_name().to_string_lossy().to_string(),
+                    path: project_path.to_string_lossy().to_string(),
+                    runtime: "Node.js".to_string(),
+                    package_manager: Some(package_manager),
+                    port,
+                    framework: Some(framework),
+                    runtime_version: None,
+                    scripts: None,
+                    size: None,
+                    modified: None,
+                };
+                project = enrich_project_info(project);
+                projects.push(project);
+            }
+            // Check for Deno projects
+            else if project_path.join("deno.json").exists()
+                || project_path.join("deno.jsonc").exists()
+            {
+                let port = crate::port::detect_port_deno(&project_path);
+                let mut project = Project {
+                    name: entry.file_name().to_string_lossy().to_string(),
+                    path: project_path.to_string_lossy().to_string(),
+                    runtime: "Deno".to_string(),
+                    package_manager: None,
+                    port,
+                    framework: Some("deno".to_string()),
+                    runtime_version: None,
+                    scripts: None,
+                    size: None,
+                    modified: None,
+                };
+                project = enrich_project_info(project);
+                projects.push(project);
+            }
+            // Check for Bun projects
+            else if project_path.join("bun.lockb").exists()
+                || project_path.join("bunfig.toml").exists()
+            {
+                let framework = detect_framework(&project_path);
+                let port = crate::port::detect_port(&project_path);
+                let mut project = Project {
+                    name: entry.file_name().to_string_lossy().to_string(),
+                    path: project_path.to_string_lossy().to_string(),
+                    runtime: "Bun".to_string(),
+                    package_manager: Some("bun".to_string()),
+                    port,
+                    framework: Some(framework),
+                    runtime_version: None,
+                    scripts: None,
+                    size: None,
+                    modified: None,
+                };
+                project = enrich_project_info(project);
+                projects.push(project);
             }
         }
     }
 
     Ok(projects)
 }
-

@@ -1,9 +1,11 @@
 [package]
 name = "project-manager"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "A desktop application to manage and run Node.js, Deno, and Bun projects"
+authors = ["Andrés Bedoya <github.com/Angelfire>"]
+license = "MIT"
 edition = "2021"
+repository = "https://github.com/Angelfire/project-manager"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

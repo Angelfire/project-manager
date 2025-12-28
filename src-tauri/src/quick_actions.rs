@@ -1,6 +1,7 @@
+use crate::error::AppError;
 use std::process::Command as StdCommand;
 
-pub fn open_in_editor(path: String) -> Result<(), String> {
+pub fn open_in_editor(path: String) -> Result<(), AppError> {
     // Try VS Code first, then fallback to system default
     let commands = vec![
         ("code", vec![path.clone()]),
@@ -8,10 +9,7 @@ pub fn open_in_editor(path: String) -> Result<(), String> {
     ];
 
     for (cmd, args) in commands {
-        if let Ok(mut child) = StdCommand::new(cmd)
-            .args(&args)
-            .spawn()
-        {
+        if let Ok(mut child) = StdCommand::new(cmd).args(&args).spawn() {
             let _ = child.wait();
             return Ok(());
         }
@@ -20,22 +18,20 @@ pub fn open_in_editor(path: String) -> Result<(), String> {
     // Fallback: try to open with system default editor
     #[cfg(target_os = "macos")]
     {
-        let _ = StdCommand::new("open")
+        StdCommand::new("open")
             .args(&["-a", "TextEdit", &path])
-            .output();
+            .output()?;
     }
 
     #[cfg(target_os = "linux")]
     {
-        let _ = StdCommand::new("xdg-open")
-            .arg(&path)
-            .output();
+        StdCommand::new("xdg-open").arg(&path).output()?;
     }
 
     Ok(())
 }
 
-pub fn open_in_terminal(path: String) -> Result<(), String> {
+pub fn open_in_terminal(path: String) -> Result<(), AppError> {
     #[cfg(target_os = "macos")]
     {
         // macOS: open Terminal.app with the path
@@ -46,9 +42,9 @@ pub fn open_in_terminal(path: String) -> Result<(), String> {
              end tell",
             path.replace("'", "'\"'\"'")
         );
-        let _ = StdCommand::new("osascript")
+        StdCommand::new("osascript")
             .args(&["-e", &script])
-            .output();
+            .output()?;
     }
 
     #[cfg(target_os = "linux")]
@@ -57,7 +53,10 @@ pub fn open_in_terminal(path: String) -> Result<(), String> {
         let terminals = vec![
             ("gnome-terminal", vec!["--working-directory", &path]),
             ("konsole", vec!["--workdir", &path]),
-            ("xterm", vec!["-e", "bash", "-c", &format!("cd '{}' && exec bash", path)]),
+            (
+                "xterm",
+                vec!["-e", "bash", "-c", &format!("cd '{}' && exec bash", path)],
+            ),
             ("alacritty", vec!["--working-directory", &path]),
         ];
 
@@ -71,13 +70,13 @@ pub fn open_in_terminal(path: String) -> Result<(), String> {
     Ok(())
 }
 
-pub fn open_in_finder(path: String) -> Result<(), String> {
+pub fn open_in_finder(path: String) -> Result<(), AppError> {
     #[cfg(target_os = "macos")]
     {
-        let _ = StdCommand::new("open")
+        StdCommand::new("open")
             .arg(&path)
             .output()
-            .map_err(|e| format!("Failed to open in Finder: {}", e))?;
+            .map_err(|e| AppError::CommandError(format!("Failed to open in Finder: {}", e)))?;
     }
 
     #[cfg(target_os = "linux")]
@@ -100,4 +99,3 @@ pub fn open_in_finder(path: String) -> Result<(), String> {
 
     Ok(())
 }
-
