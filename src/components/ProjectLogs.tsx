@@ -3,7 +3,7 @@ import { X, Search, Trash2, Download } from "lucide-react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { LogEntry } from "../types";
-import { Button } from "./ui/Button";
+import { Button } from "./ui/button";
 import { cn } from "../utils/cn";
 
 interface ProjectLogsProps {

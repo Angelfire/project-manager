@@ -29,8 +29,8 @@ import { openProjectInBrowser } from "./services/projectService";
 import { ProjectFilters, type FilterOption } from "./components/ProjectFilters";
 import { QuickActionsMenu } from "./components/QuickActionsMenu";
 import { ProjectLogs } from "./components/ProjectLogs";
-import { Select, SelectItem } from "./components/ui/Select";
-import { Button } from "./components/ui/Button";
+import { Select, SelectItem } from "./components/ui/select";
+import { Button } from "./components/ui/button";
 import { useProjectFilters } from "./hooks/useProjectFilters";
 
 type SortOption = "name" | "modified" | "size";
@@ -135,7 +135,7 @@ function App() {
                   value={selectedDirectory || ""}
                   readOnly
                   placeholder="Select a directory..."
-                  className="w-full px-4 py-2 pl-10 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all"
+                  className="w-full px-4 py-2 pl-10 border text-sm border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all"
                 />
                 <Folder className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
               </div>
@@ -204,7 +204,7 @@ function App() {
                   <Button
                     onClick={() => setShowFilters(!showFilters)}
                     variant={showFilters ? "primary" : "secondary"}
-                    size="sm"
+                    size="md"
                     icon={Filter}
                   >
                     Filters

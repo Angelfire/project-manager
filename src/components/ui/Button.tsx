@@ -33,9 +33,9 @@ const variantStyles: Record<ButtonVariant, string> = {
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "px-3 py-2 text-sm",
-  md: "px-4 py-2.5 text-sm",
-  lg: "px-6 py-3 text-base",
+  sm: "h-8 px-3 text-sm has-[>svg]:px-2.5",
+  md: "h-9 px-4 text-sm has-[>svg]:px-3",
+  lg: "h-10 px-6 text-base has-[>svg]:px-4",
 };
 
 const iconSizeStyles: Record<ButtonSize, string> = {
@@ -44,7 +44,7 @@ const iconSizeStyles: Record<ButtonSize, string> = {
   lg: "size-5",
 };
 
-export function Button({
+function Button({
   variant = "primary",
   size = "md",
   icon: Icon,
@@ -55,8 +55,12 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseStyles =
-    "font-medium rounded-lg transition-colors flex items-center justify-center gap-2";
+  const baseStyles = cn(
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-all",
+    "outline-none focus-visible:ring-2 focus-visible:ring-gray-600 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900",
+    "disabled:pointer-events-none disabled:opacity-50",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  );
 
   // Special handling for icon-only buttons
   const isIconOnly = variant === "icon" && !children && Icon;
@@ -65,12 +69,12 @@ export function Button({
     baseStyles,
     variantStyles[variant],
     {
-      "p-2": isIconOnly,
-      "p-3": variant === "icon" && children,
+      "size-9": isIconOnly && size === "md",
+      "size-8": isIconOnly && size === "sm",
+      "size-10": isIconOnly && size === "lg",
       [sizeStyles[size]]: !isIconOnly && variant !== "icon",
     },
     {
-      "opacity-50 cursor-not-allowed": disabled,
       "flex-1 w-full": fullWidth,
     },
     className
@@ -81,10 +85,12 @@ export function Button({
       {Icon && iconPosition === "left" && (
         <Icon className={iconSizeStyles[size]} />
       )}
-      {children && <span>{children}</span>}
+      {children}
       {Icon && iconPosition === "right" && (
         <Icon className={iconSizeStyles[size]} />
       )}
     </button>
   );
 }
+
+export { Button };
