@@ -55,6 +55,7 @@ A desktop application built with Tauri, React, and TypeScript to manage and run 
 - 🎭 **Nerd Font Icons**: Uses Nerd Fonts for runtime icons
 - 📱 **Responsive Design**: Works on different screen sizes
 - ⚡ **Fast Performance**: Built with Rust backend for optimal performance
+- 🔔 **Toast Notifications**: Non-intrusive toast notifications for user feedback (success, error, warning, info)
 
 ## Requirements
 
@@ -142,7 +143,9 @@ Each project card displays:
 - **Frontend**: React 19, TypeScript, Tailwind CSS 4
 - **Backend**: Rust, Tauri 2
 - **Build**: Vite
-- **Icons**: Nerd Fonts
+- **Icons**: Nerd Fonts, Lucide React
+- **Notifications**: Sonner (toast notifications)
+- **UI Components**: Radix UI primitives (Dropdown Menu, Select)
 
 ## Recommended IDE Setup
 
@@ -150,7 +153,7 @@ Each project card displays:
 
 ## Testing
 
-The project uses Vitest for testing React components. Tests are located in `src/components/__tests__/`.
+The project uses Vitest for testing React components.
 
 ### Running Tests
 
@@ -165,14 +168,10 @@ npm run test:run
 npm run test:ui
 ```
 
-**Note**: Tests for UI components in `src/components/ui/` are excluded (for now).
-
 ## TODO
 
 ### High Priority
 
-- [ ] **Replace `alert()` calls**: Replace all `alert()` calls with a better notification system (e.g., toast notifications, custom modal dialogs, or a notification component)
-  - Currently used in: `QuickActionsMenu.tsx` (4 instances), `ProjectLogs.tsx` (3 instances), `useProjects.ts` (2 instances), `projectService.ts` (2 instances)
 - [ ] **Add Tauri backend tests**: Implement tests for Rust backend functions using Rust's testing framework
   - Test project detection logic
   - Test process management functions

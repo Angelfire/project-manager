@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Project } from "../types";
 import { getDefaultPortForFramework } from "../utils/runtime";
+import { toastError, toastWarning } from "../utils/toast";
 
 export const scanProjects = async (path: string): Promise<Project[]> => {
   const foundProjects = await invoke<Project[]>("scan_directory", { path });
@@ -88,7 +89,7 @@ export const openInBrowser = async (port: number | null): Promise<void> => {
       await openUrl(`http://localhost:${port}`);
     } catch (error) {
       console.error("Error opening browser:", error);
-      alert("Error opening browser: " + error);
+      toastError("Error opening browser", String(error));
     }
   }
 };
@@ -136,7 +137,7 @@ export const openProjectInBrowser = async (
     if (defaultPort) {
       await openInBrowser(defaultPort);
     } else {
-      alert("Port not available. The server may be starting...");
+      toastWarning("Port not available", "The server may be starting...");
     }
   } else {
     // Use the detected port
