@@ -2,6 +2,8 @@
 
 A desktop application built with Tauri, React, and TypeScript to manage and run Node.js, Deno, and Bun projects from a single place.
 
+<img width="1512" height="1012" alt="Screenshot 2025-12-28 at 15 12 35" src="https://github.com/user-attachments/assets/a91e5d32-f716-484e-9849-7f93ad15b915" />
+
 ## Features
 
 ### Core Functionality
