@@ -1,4 +1,4 @@
-import { Select, SelectItem } from "./ui/Select";
+import { Select, SelectItem } from "./ui/select";
 
 export type FilterOption = {
   runtime: string | null;
@@ -27,16 +27,16 @@ export function ProjectFilters({
             Runtime
           </label>
           <Select
-            value={filters.runtime || ""}
+            value={filters.runtime || "__all__"}
             onChange={(value) =>
               onFiltersChange({
                 ...filters,
-                runtime: value || null,
+                runtime: value === "__all__" ? null : value,
               })
             }
             placeholder="All Runtimes"
           >
-            <SelectItem value="">All Runtimes</SelectItem>
+            <SelectItem value="__all__">All Runtimes</SelectItem>
             {uniqueRuntimes.map((runtime) => (
               <SelectItem key={runtime} value={runtime}>
                 {runtime}
@@ -49,16 +49,16 @@ export function ProjectFilters({
             Framework
           </label>
           <Select
-            value={filters.framework || ""}
+            value={filters.framework || "__all__"}
             onChange={(value) =>
               onFiltersChange({
                 ...filters,
-                framework: value || null,
+                framework: value === "__all__" ? null : value,
               })
             }
             placeholder="All Frameworks"
           >
-            <SelectItem value="">All Frameworks</SelectItem>
+            <SelectItem value="__all__">All Frameworks</SelectItem>
             {uniqueFrameworks.map((framework) => (
               <SelectItem key={framework} value={framework}>
                 {framework}
