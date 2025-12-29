@@ -25,7 +25,7 @@ import {
   getRuntimeColor,
   getRuntimeTopBar,
 } from "./utils/runtime";
-import { openProjectInBrowser } from "./services/projectService";
+import { openProjectInBrowser, detectPort } from "./services/projectService";
 import { ProjectFilters, type FilterOption } from "./components/ProjectFilters";
 import { QuickActionsMenu } from "./components/QuickActionsMenu";
 import { ProjectLogs } from "./components/ProjectLogs";
@@ -381,9 +381,6 @@ function App() {
                                 if (process?.pid && !project.port) {
                                   // Try to detect the port before opening
                                   try {
-                                    const { detectPort } = await import(
-                                      "./services/projectService"
-                                    );
                                     const detectedPort = await detectPort(
                                       process.pid,
                                       1,
