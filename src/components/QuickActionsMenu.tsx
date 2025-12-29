@@ -79,7 +79,7 @@ export function QuickActionsMenu({ projectPath }: QuickActionsMenuProps) {
         variant="icon"
         size="sm"
         icon={MoreVertical}
-        className="p-3"
+        className="px-2 py-3"
         title="Quick actions"
       />
       {isOpen && (
