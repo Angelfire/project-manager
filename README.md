@@ -148,6 +148,128 @@ Each project card displays:
 
 - [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
 
+## Testing
+
+The project uses Vitest for testing React components. Tests are located in `src/components/__tests__/`.
+
+### Running Tests
+
+```bash
+# Run tests in watch mode
+npm test
+
+# Run tests once
+npm run test:run
+
+# Run tests with UI
+npm run test:ui
+```
+
+**Note**: Tests for UI components in `src/components/ui/` are excluded (for now).
+
+## TODO
+
+### High Priority
+
+- [ ] **Replace `alert()` calls**: Replace all `alert()` calls with a better notification system (e.g., toast notifications, custom modal dialogs, or a notification component)
+  - Currently used in: `QuickActionsMenu.tsx` (4 instances), `ProjectLogs.tsx` (3 instances), `useProjects.ts` (2 instances), `projectService.ts` (2 instances)
+- [ ] **Add Tauri backend tests**: Implement tests for Rust backend functions using Rust's testing framework
+  - Test project detection logic
+  - Test process management functions
+  - Test port detection
+  - Test quick actions (open in editor, terminal, finder)
+- [ ] **Improve logo**: Get a better, more professional logo for the application
+  - Current logo is a placeholder PNG
+  - Consider SVG format for better scalability
+  - Ensure logo works well at different sizes (app icon, header, etc.)
+
+### Medium Priority
+
+- [ ] **Error handling improvements**: Implement a centralized error handling system
+  - Create a custom error boundary component
+  - Improve error messages and user feedback
+  - Add error logging/reporting
+- [ ] **Accessibility improvements**: Enhance accessibility features
+  - Add ARIA labels where missing
+  - Improve keyboard navigation
+  - Add focus management
+  - Ensure screen reader compatibility
+- [ ] **Performance optimizations**: Optimize application performance
+  - Implement virtual scrolling for large project lists
+  - Optimize re-renders with React.memo where appropriate
+  - Lazy load components
+  - Optimize bundle size
+- [ ] **Internationalization (i18n)**: Add support for multiple languages
+  - Extract all user-facing strings
+  - Implement i18n solution (e.g., react-i18next)
+  - Add language switcher in settings
+- [ ] **Settings/Preferences**: Add a settings page
+  - Allow users to configure default editor
+  - Configure default terminal
+  - Set default port ranges
+  - Customize theme (if multiple themes are added)
+- [ ] **Project templates**: Add ability to create new projects from templates
+  - Support for common frameworks (React, Vue, Svelte, etc.)
+  - Template selection UI
+  - Project initialization
+
+### Low Priority
+
+- [ ] **Keyboard shortcuts**: Add keyboard shortcuts for common actions
+  - Run project: `Cmd/Ctrl + R`
+  - Stop project: `Cmd/Ctrl + S`
+  - Open in browser: `Cmd/Ctrl + B`
+  - Search: `Cmd/Ctrl + F`
+- [ ] **Project favorites**: Allow users to mark projects as favorites
+  - Star/favorite icon on project cards
+  - Filter by favorites
+  - Persist favorites in local storage
+- [ ] **Dark/Light theme toggle**: Add support for light theme (currently only dark theme)
+- [ ] **Export/Import configuration**: Allow users to export and import project configurations
+- [ ] **Statistics dashboard**: Add a dashboard showing project statistics
+  - Total projects
+  - Projects by runtime
+  - Projects by framework
+  - Most used package managers
+- [ ] **Recent projects**: Show recently opened/run projects
+- [ ] **Project health checks**: Add health check indicators
+  - Check if dependencies are installed
+  - Check if project builds successfully
+  - Show warnings for outdated dependencies
+- [ ] **CI/CD integration**: Add ability to run CI/CD commands from the app
+- [ ] **Git integration**: Show git status and branch information
+  - Display current branch
+  - Show uncommitted changes
+  - Quick git actions (commit, push, pull)
+
+### Technical Debt
+
+- [ ] **Code organization**: Further modularize large components
+  - Split `App.tsx` if it grows larger
+  - Extract more reusable hooks
+  - Create more utility functions
+- [ ] **Type safety**: Improve TypeScript types
+  - Add stricter types where possible
+  - Remove any `any` types
+  - Add JSDoc comments for better documentation
+- [ ] **Documentation**: Improve code documentation
+  - Add JSDoc comments to all exported functions
+  - Document complex logic
+  - Add inline comments where needed
+- [ ] **Dependency updates**: Keep dependencies up to date
+  - Regularly update npm packages
+  - Update Rust dependencies
+  - Monitor for security vulnerabilities
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. When contributing:
+
+1. Follow the existing code style
+2. Add tests for new features
+3. Update the README if needed
+4. Ensure all tests pass before submitting
+
 ## License
 
 MIT
