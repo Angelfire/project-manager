@@ -1,4 +1,10 @@
-import { CircleCheck, Info, Loader2, X, TriangleAlert } from "lucide-react";
+import {
+  CircleCheck,
+  CircleX,
+  Info,
+  Loader2,
+  TriangleAlert,
+} from "lucide-react";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 const Toaster = ({ ...props }: ToasterProps) => {
@@ -21,7 +27,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         success: <CircleCheck className="size-4" />,
         info: <Info className="size-4" />,
         warning: <TriangleAlert className="size-4" />,
-        error: <X className="size-4" />,
+        error: <CircleX className="size-4" />,
         loading: <Loader2 className="size-4 animate-spin" />,
       }}
       position="top-right"
