@@ -2,7 +2,7 @@
 name = "runstack"
 version = "0.1.0"
 description = "A desktop application to manage and run Node.js, Deno, and Bun projects"
-authors = ["Andrés Bedoya <github.com/Angelfire>"]
+authors = ["Andrés Bedoya Garcés <github.com/Angelfire>"]
 license = "MIT"
 edition = "2021"
 repository = "https://github.com/Angelfire/runstack"

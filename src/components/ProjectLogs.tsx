@@ -5,6 +5,7 @@ import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { LogEntry } from "../types";
 import { Button } from "./ui/button";
 import { cn } from "../utils/cn";
+import { toastError, toastInfo, toastSuccess } from "../utils/toast";
 
 interface ProjectLogsProps {
   projectName: string;
@@ -61,7 +62,7 @@ export function ProjectLogs({
   const exportLogs = async () => {
     try {
       if (logs.length === 0) {
-        alert("No logs to export");
+        toastInfo("No logs to export");
         return;
       }
 
@@ -93,8 +94,7 @@ export function ProjectLogs({
       if (filePath) {
         await writeTextFile(filePath, logText);
         console.log(`Logs exported successfully to: ${filePath}`);
-        // Show success message
-        alert(`Logs exported successfully to:\n${filePath}`);
+        toastSuccess("Logs exported successfully", filePath);
       } else {
         // User cancelled the save dialog
         console.log("Export cancelled by user");
@@ -103,7 +103,7 @@ export function ProjectLogs({
       console.error("Error exporting logs:", error);
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      alert(`Failed to export logs:\n${errorMessage}`);
+      toastError("Failed to export logs", errorMessage);
     }
   };
 

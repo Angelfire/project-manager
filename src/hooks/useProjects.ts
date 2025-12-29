@@ -8,6 +8,7 @@ import {
   detectPort,
   killProcessByPort,
 } from "../services/projectService";
+import { toastError } from "../utils/toast";
 
 export const useProjects = () => {
   const [selectedDirectory, setSelectedDirectory] = useState<string | null>(null);
@@ -24,7 +25,7 @@ export const useProjects = () => {
       setProjects(foundProjects);
     } catch (error) {
       console.error("Error scanning directory:", error);
-      alert("Error scanning directory: " + error);
+      toastError("Error scanning directory", String(error));
     } finally {
       setLoading(false);
     }
@@ -101,7 +102,7 @@ export const useProjects = () => {
     } catch (error) {
       console.error("Error running project:", error);
       addLog(project.path, "stderr", `Error running project: ${error}`);
-      alert("Error running project: " + error);
+      toastError("Error running project", String(error));
       setRunningProjects((prev) => {
         const newSet = new Set(prev);
         newSet.delete(project.path);

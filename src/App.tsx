@@ -32,6 +32,7 @@ import { ProjectLogs } from "./components/ProjectLogs";
 import { Select, SelectItem } from "./components/ui/select";
 import { Button } from "./components/ui/button";
 import { useProjectFilters } from "./hooks/useProjectFilters";
+import { Toaster } from "./components/ui/toaster";
 
 type SortOption = "name" | "modified" | "size";
 
@@ -501,6 +502,7 @@ function App() {
             }}
           />
         )}
+        <Toaster />
       </div>
     </div>
   );

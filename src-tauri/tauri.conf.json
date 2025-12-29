@@ -38,7 +38,7 @@
       "icons/icon.ico"
     ],
     "resources": [],
-    "copyright": "© 2025 Andrés Bedoya",
+    "copyright": "© 2025 Andrés Bedoya Garcés",
     "category": "DeveloperTool",
     "shortDescription": "Manage and run your Node.js, Deno and Bun projects",
     "longDescription": "RunStack - A desktop application to manage and run your development projects. Built with Tauri, React, and TypeScript.",
