@@ -94,7 +94,8 @@ export function ProjectLogs({
       if (filePath) {
         await writeTextFile(filePath, logText);
         console.log(`Logs exported successfully to: ${filePath}`);
-        toastSuccess("Logs exported successfully", filePath);
+        const exportedFileName = filePath.split(/[\\/]/).pop() ?? filePath;
+        toastSuccess("Logs exported successfully", `Saved as ${exportedFileName}`);
       } else {
         // User cancelled the save dialog
         console.log("Export cancelled by user");
