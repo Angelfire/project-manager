@@ -33,6 +33,7 @@ import { Select, SelectItem } from "./components/ui/select";
 import { Button } from "./components/ui/button";
 import { useProjectFilters } from "./hooks/useProjectFilters";
 import { Toaster } from "./components/ui/toaster";
+import { toastError } from "./utils/toast";
 
 type SortOption = "name" | "modified" | "size";
 
@@ -75,7 +76,7 @@ function App() {
         loadProjects(selected);
       }
     } catch (error) {
-      console.error("Error selecting directory:", error);
+      toastError("Error selecting directory", String(error));
     }
   };
 
@@ -401,11 +402,8 @@ function App() {
                                       );
                                       return;
                                     }
-                                  } catch (error) {
-                                    console.error(
-                                      "Error detecting port:",
-                                      error
-                                    );
+                                  } catch {
+                                    // Port detection failed, will use default port
                                   }
                                 }
                                 await openProjectInBrowser(project, processes);

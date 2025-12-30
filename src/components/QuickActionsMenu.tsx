@@ -24,7 +24,6 @@ export function QuickActionsMenu({ projectPath }: QuickActionsMenuProps) {
     try {
       await invoke("open_in_editor", { path: projectPath });
     } catch (error) {
-      console.error("Error opening in editor:", error);
       toastError("Failed to open in editor", String(error));
     }
   };
@@ -33,7 +32,6 @@ export function QuickActionsMenu({ projectPath }: QuickActionsMenuProps) {
     try {
       await invoke("open_in_terminal", { path: projectPath });
     } catch (error) {
-      console.error("Error opening in terminal:", error);
       toastError("Failed to open in terminal", String(error));
     }
   };
@@ -42,7 +40,6 @@ export function QuickActionsMenu({ projectPath }: QuickActionsMenuProps) {
     try {
       await invoke("open_in_finder", { path: projectPath });
     } catch (error) {
-      console.error("Error opening in Finder:", error);
       toastError("Failed to open in Finder", String(error));
     }
   };
@@ -52,7 +49,6 @@ export function QuickActionsMenu({ projectPath }: QuickActionsMenuProps) {
       await navigator.clipboard.writeText(projectPath);
       toastSuccess("Path copied to clipboard");
     } catch (error) {
-      console.error("Error copying path:", error);
       toastError("Failed to copy path", String(error));
     }
   };

@@ -31,4 +31,3 @@ vi.mock("@tauri-apps/plugin-opener", () => ({
 vi.mock("@tauri-apps/plugin-shell", () => ({
   Command: vi.fn(),
 }));
-

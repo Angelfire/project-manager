@@ -1,4 +1,4 @@
-import { Command } from "@tauri-apps/plugin-shell";
+import { Command, Child } from "@tauri-apps/plugin-shell";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Project } from "../types";
@@ -64,13 +64,10 @@ export const detectPort = async (
       });
 
       if (detectedPort) {
-        console.log(`✅ Detected port ${detectedPort} (attempt ${i + 1})`);
         return detectedPort;
-      } else {
-        console.log(`⏳ Port not detected yet (attempt ${i + 1}/${attempts})`);
       }
-    } catch (error) {
-      console.error(`❌ Error detecting port (attempt ${i + 1}/${attempts}):`, error);
+    } catch {
+      // Ignore port detection errors, will retry
     }
 
     // Esperar antes del siguiente intento (excepto en el último)
@@ -79,7 +76,6 @@ export const detectPort = async (
     }
   }
 
-  console.warn(`⚠️ Could not detect port after ${attempts} attempts`);
   return null;
 };
 
@@ -88,7 +84,6 @@ export const openInBrowser = async (port: number | null): Promise<void> => {
     try {
       await openUrl(`http://localhost:${port}`);
     } catch (error) {
-      console.error("Error opening browser:", error);
       toastError("Error opening browser", String(error));
     }
   }
@@ -96,24 +91,22 @@ export const openInBrowser = async (port: number | null): Promise<void> => {
 
 export const killProcessByPort = async (port: number): Promise<void> => {
   try {
-    console.log(`🔍 Looking for process on port: ${port}`);
     const killPortCommand = Command.create("lsof", ["-ti", `:${port}`]);
     const portProcess = await killPortCommand.execute();
     if (portProcess.stdout) {
       const pid = parseInt(portProcess.stdout.trim());
       if (!isNaN(pid)) {
-        console.log(`🔪 Killing process on port ${port} (PID: ${pid})`);
         await invoke("kill_process_tree", { pid });
       }
     }
-  } catch (portError) {
-    console.error("❌ Error killing by port:", portError);
+  } catch {
+    // Ignore errors when killing by port
   }
 };
 
 export const openProjectInBrowser = async (
   project: Project,
-  processes: Map<string, any>
+  processes: Map<string, Child>
 ): Promise<void> => {
   // Wait a moment if the port hasn't been detected yet
   if (!project.port) {
@@ -128,8 +121,8 @@ export const openProjectInBrowser = async (
           await openInBrowser(detectedPort);
           return;
         }
-      } catch (error) {
-        console.error("Error detecting port:", error);
+      } catch {
+        // Port detection failed, will use default port
       }
     }
     // If not detected, use the default port
@@ -144,4 +137,3 @@ export const openProjectInBrowser = async (
     await openInBrowser(project.port);
   }
 };
-

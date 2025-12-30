@@ -47,7 +47,9 @@ describe("toast utilities", () => {
 
     it("returns the toast id", () => {
       const mockId = "toast-123";
-      vi.mocked(sonner.toast.success).mockReturnValue(mockId as any);
+      vi.mocked(sonner.toast.success).mockReturnValue(
+        mockId as string | number
+      );
 
       const result = toastSuccess("Test");
 
@@ -146,7 +148,9 @@ describe("toast utilities", () => {
 
     it("returns the toast id", () => {
       const mockId = "loading-toast-456";
-      vi.mocked(sonner.toast.loading).mockReturnValue(mockId as any);
+      vi.mocked(sonner.toast.loading).mockReturnValue(
+        mockId as string | number
+      );
 
       const result = toastLoading("Loading");
 
@@ -186,16 +190,16 @@ describe("toast utilities", () => {
       const messages = {
         loading: "Loading...",
         success: "Done!",
-        error: (err: Error) => `Error: ${err.message}`,
+        error: (err: unknown) =>
+          `Error: ${err instanceof Error ? err.message : String(err)}`,
       };
 
       toastPromise(promise, messages);
 
       expect(sonner.toast.promise).toHaveBeenCalledWith(promise, messages);
-      
+
       // Catch the rejection to avoid unhandled promise rejection warning
       promise.catch(() => {});
     });
   });
 });
-

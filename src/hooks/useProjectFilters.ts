@@ -21,7 +21,9 @@ export function useProjectFilters(
     () =>
       Array.from(
         new Set(
-          projects.map((p) => p.framework).filter((f): f is string => f !== null)
+          projects
+            .map((p) => p.framework)
+            .filter((f): f is string => f !== null)
         )
       ),
     [projects]
@@ -63,16 +65,18 @@ export function useProjectFilters(
           case "name":
             comparison = a.name.localeCompare(b.name);
             break;
-          case "modified":
+          case "modified": {
             const aModified = a.modified || 0;
             const bModified = b.modified || 0;
             comparison = aModified - bModified;
             break;
-          case "size":
+          }
+          case "size": {
             const aSize = a.size || 0;
             const bSize = b.size || 0;
             comparison = aSize - bSize;
             break;
+          }
         }
 
         return sortAscending ? comparison : -comparison;
@@ -85,4 +89,3 @@ export function useProjectFilters(
     filteredProjects,
   };
 }
-

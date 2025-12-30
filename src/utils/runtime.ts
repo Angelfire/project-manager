@@ -62,4 +62,3 @@ export const getDefaultPortForFramework = (project: Project): number | null => {
       return 3000; // Generic default port
   }
 };
-
