@@ -1,0 +1,25 @@
+# Dependencies
+node_modules
+dist
+build
+target
+
+# Generated files
+*.min.js
+*.min.css
+
+# Lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Tauri
+src-tauri/target
+src-tauri/gen
+
+# Coverage
+coverage
+
+# Logs
+*.log
+

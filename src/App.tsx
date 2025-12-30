@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback, lazy, Suspense } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { cn } from "./utils/cn";
+import { cn } from "@/utils/cn";
 import {
   Folder,
   Play,
@@ -18,21 +18,28 @@ import {
   Filter,
   FileText,
 } from "lucide-react";
-import { useProjects } from "./hooks/useProjects";
-import runstackIcon from "./assets/runstack.png";
+import { useProjects } from "@/hooks/useProjects";
+import runstackIcon from "@/assets/runstack.png";
 import {
   getRuntimeIcon,
   getRuntimeColor,
   getRuntimeTopBar,
-} from "./utils/runtime";
-import { openProjectInBrowser, detectPort } from "./services/projectService";
-import { ProjectFilters, type FilterOption } from "./components/ProjectFilters";
-import { QuickActionsMenu } from "./components/QuickActionsMenu";
-import { ProjectLogs } from "./components/ProjectLogs";
-import { Select, SelectItem } from "./components/ui/select";
-import { Button } from "./components/ui/button";
-import { useProjectFilters } from "./hooks/useProjectFilters";
-import { Toaster } from "./components/ui/toaster";
+} from "@/utils/runtime";
+import { openProjectInBrowser, detectPort } from "@/services/projectService";
+import { ProjectFilters, type FilterOption } from "@/components/ProjectFilters";
+import { QuickActionsMenu } from "@/components/QuickActionsMenu";
+
+// Lazy load heavy components
+const ProjectLogs = lazy(() =>
+  import("@/components/ProjectLogs").then((module) => ({
+    default: module.ProjectLogs,
+  }))
+);
+import { Select, SelectItem } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { useProjectFilters } from "@/hooks/useProjectFilters";
+import { Toaster } from "@/components/ui/toaster";
+import { toastError } from "@/utils/toast";
 
 type SortOption = "name" | "modified" | "size";
 
@@ -62,7 +69,37 @@ function App() {
     stopProject,
   } = useProjects();
 
-  const selectDirectory = async () => {
+  const { uniqueRuntimes, uniqueFrameworks, filteredProjects } =
+    useProjectFilters(
+      projects,
+      searchTerm,
+      filters,
+      sortBy,
+      sortAscending,
+      runningProjects
+    );
+
+  // Memoize expensive formatting functions
+  const formatFileSize = useCallback((bytes: number | null): string => {
+    if (!bytes) return "Unknown";
+    const sizes = ["B", "KB", "MB", "GB"];
+    if (bytes === 0) return "0 B";
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
+  }, []);
+
+  const formatDate = useCallback((timestamp: number | null): string => {
+    if (!timestamp) return "Unknown";
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }, []);
+
+  // Memoize handlers that are passed as props
+  const handleSelectDirectory = useCallback(async () => {
     try {
       const selected = await open({
         directory: true,
@@ -75,37 +112,21 @@ function App() {
         loadProjects(selected);
       }
     } catch (error) {
-      console.error("Error selecting directory:", error);
+      toastError("Error selecting directory", String(error));
     }
-  };
+  }, [loadProjects, setSelectedDirectory]);
 
-  const { uniqueRuntimes, uniqueFrameworks, filteredProjects } =
-    useProjectFilters(
-      projects,
-      searchTerm,
-      filters,
-      sortBy,
-      sortAscending,
-      runningProjects
-    );
+  const handleToggleFilters = useCallback(() => {
+    setShowFilters((prev) => !prev);
+  }, []);
 
-  const formatFileSize = (bytes: number | null): string => {
-    if (!bytes) return "Unknown";
-    const sizes = ["B", "KB", "MB", "GB"];
-    if (bytes === 0) return "0 B";
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
-  };
+  const handleSortChange = useCallback((value: string) => {
+    setSortBy(value as SortOption);
+  }, []);
 
-  const formatDate = (timestamp: number | null): string => {
-    if (!timestamp) return "Unknown";
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  const handleSortDirectionToggle = useCallback(() => {
+    setSortAscending((prev) => !prev);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -143,7 +164,7 @@ function App() {
             </div>
             <div className="flex gap-2 items-end">
               <Button
-                onClick={selectDirectory}
+                onClick={handleSelectDirectory}
                 variant="primary"
                 size="md"
                 icon={Folder}
@@ -203,7 +224,7 @@ function App() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
                   </div>
                   <Button
-                    onClick={() => setShowFilters(!showFilters)}
+                    onClick={handleToggleFilters}
                     variant={showFilters ? "primary" : "secondary"}
                     size="md"
                     icon={Filter}
@@ -213,7 +234,7 @@ function App() {
                   <div className="flex items-center gap-2">
                     <Select
                       value={sortBy}
-                      onChange={(value) => setSortBy(value as SortOption)}
+                      onChange={handleSortChange}
                       placeholder="Sort by..."
                       className="w-45"
                     >
@@ -222,7 +243,7 @@ function App() {
                       <SelectItem value="size">Sort by Size</SelectItem>
                     </Select>
                     <Button
-                      onClick={() => setSortAscending(!sortAscending)}
+                      onClick={handleSortDirectionToggle}
                       variant="ghost"
                       size="sm"
                       icon={ArrowUpDown}
@@ -401,11 +422,8 @@ function App() {
                                       );
                                       return;
                                     }
-                                  } catch (error) {
-                                    console.error(
-                                      "Error detecting port:",
-                                      error
-                                    );
+                                  } catch {
+                                    // Port detection failed, will use default port
                                   }
                                 }
                                 await openProjectInBrowser(project, processes);
@@ -486,18 +504,29 @@ function App() {
 
         {/* Logs Modal */}
         {openLogsFor && (
-          <ProjectLogs
-            projectName={
-              projects.find((p) => p.path === openLogsFor)?.name || "Unknown"
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 bg-gray-950/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div className="bg-gray-900 rounded-lg border border-gray-800 p-8">
+                  <Loader2 className="size-8 text-gray-500 animate-spin mx-auto mb-4" />
+                  <p className="text-gray-400 text-sm">Loading logs...</p>
+                </div>
+              </div>
             }
-            projectPath={openLogsFor}
-            logs={getProjectLogs(openLogsFor)}
-            isOpen={true}
-            onClose={() => setOpenLogsFor(null)}
-            onClear={() => {
-              clearProjectLogs(openLogsFor);
-            }}
-          />
+          >
+            <ProjectLogs
+              projectName={
+                projects.find((p) => p.path === openLogsFor)?.name || "Unknown"
+              }
+              projectPath={openLogsFor}
+              logs={getProjectLogs(openLogsFor)}
+              isOpen={true}
+              onClose={() => setOpenLogsFor(null)}
+              onClear={() => {
+                clearProjectLogs(openLogsFor);
+              }}
+            />
+          </Suspense>
         )}
         <Toaster />
       </div>

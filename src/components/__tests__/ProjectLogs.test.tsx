@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { ProjectLogs } from "../ProjectLogs";
-import type { LogEntry } from "../../types";
+import { ProjectLogs } from "@/components/ProjectLogs";
+import type { LogEntry } from "@/types";
 
 // Mock Tauri plugins
 vi.mock("@tauri-apps/plugin-dialog", () => ({

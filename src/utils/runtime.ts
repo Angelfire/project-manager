@@ -1,4 +1,4 @@
-import { Project } from "../types";
+import { Project } from "@/types";
 
 export const getRuntimeIcon = (runtime: string): string => {
   switch (runtime) {
@@ -62,4 +62,3 @@ export const getDefaultPortForFramework = (project: Project): number | null => {
       return 3000; // Generic default port
   }
 };
-

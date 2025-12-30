@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QuickActionsMenu } from "../QuickActionsMenu";
+import { QuickActionsMenu } from "@/components/QuickActionsMenu";
 import * as tauriCore from "@tauri-apps/api/core";
-import * as toastUtils from "../../utils/toast";
+import * as toastUtils from "@/utils/toast";
 
 // Mock Tauri APIs
 vi.mock("@tauri-apps/api/core", () => ({

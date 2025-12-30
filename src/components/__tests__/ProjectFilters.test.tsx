@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { ProjectFilters, type FilterOption } from "../ProjectFilters";
+import { ProjectFilters, type FilterOption } from "@/components/ProjectFilters";
 
 describe("ProjectFilters", () => {
   const mockFilters: FilterOption = {
