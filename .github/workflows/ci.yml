@@ -48,6 +48,7 @@ jobs:
         uses: codecov/codecov-action@v4
         if: matrix.node-version == '24.x'
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/coverage-final.json
           flags: unittests
           name: codecov-umbrella
