@@ -63,10 +63,10 @@ export const tauriApi = {
     },
 
     /**
-     * Open a path in the system file manager (Finder on macOS)
+     * Open a path in the system file manager
      * @param path - Path to open
      */
-    openInFinder: (path: string): Promise<void> => {
+    openInFileManager: (path: string): Promise<void> => {
       return invoke<void>("open_in_finder", { path });
     },
   },

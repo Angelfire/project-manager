@@ -39,11 +39,11 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
     }
   }, [projectPath]);
 
-  const handleOpenInFinder = useCallback(async () => {
+  const handleOpenInFileManager = useCallback(async () => {
     try {
-      await tauriApi.quickActions.openInFinder(projectPath);
+      await tauriApi.quickActions.openInFileManager(projectPath);
     } catch (error) {
-      toastError("Failed to open in Finder", String(error));
+      toastError("Failed to open in file manager", String(error));
     }
   }, [projectPath]);
 
@@ -76,9 +76,9 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
           <Terminal className="size-4" />
           Open in Terminal
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleOpenInFinder}>
+        <DropdownMenuItem onClick={handleOpenInFileManager}>
           <FolderOpen className="size-4" />
-          Open in Finder
+          Open in File Manager
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleCopyPath}>
           <Copy className="size-4" />
