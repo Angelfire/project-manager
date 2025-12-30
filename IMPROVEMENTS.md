@@ -238,10 +238,20 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### 20. **Optimizaciones de Rendimiento**
 
-- [ ] **React.memo**: Memoizar componentes pesados
-- [ ] **useMemo/useCallback**: Optimizar re-renders
+- [x] **React.memo**: ✅ Memoizar componentes pesados
+  - `QuickActionsMenu` - Memoizado (se renderiza en cada proyecto)
+  - `ProjectFilters` - Memoizado (se renderiza frecuentemente)
+  - `ProjectLogs` - Memoizado (componente pesado con muchos logs)
+- [x] **useMemo/useCallback**: ✅ Optimizar re-renders
+  - Handlers memoizados en `App.tsx` (selectDirectory, toggleFilters, etc.)
+  - `formatFileSize` y `formatDate` memoizados
+  - `filteredLogs` memoizado en `ProjectLogs`
+  - Handlers memoizados en `QuickActionsMenu` y `ProjectFilters`
 - [ ] **Virtual scrolling**: Para listas grandes de proyectos
-- [ ] **Lazy loading**: Cargar componentes bajo demanda
+  - Requiere librería adicional (react-window o react-virtuoso)
+- [x] **Lazy loading**: ✅ Cargar componentes bajo demanda
+  - `ProjectLogs` cargado con `React.lazy()` y `Suspense`
+  - Fallback de loading implementado
 - [ ] **Image optimization**: Optimizar imágenes y assets
 
 ## 🧹 Code Quality

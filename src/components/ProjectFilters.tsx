@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { Select, SelectItem } from "@/components/ui/select";
 
 export type FilterOption = {
@@ -13,7 +14,7 @@ interface ProjectFiltersProps {
   uniqueFrameworks: string[];
 }
 
-export function ProjectFilters({
+export const ProjectFilters = memo(function ProjectFilters({
   filters,
   onFiltersChange,
   uniqueRuntimes,
@@ -28,12 +29,14 @@ export function ProjectFilters({
           </label>
           <Select
             value={filters.runtime || "__all__"}
-            onChange={(value) =>
-              onFiltersChange({
-                ...filters,
-                runtime: value === "__all__" ? null : value,
-              })
-            }
+            onChange={useCallback(
+              (value) =>
+                onFiltersChange({
+                  ...filters,
+                  runtime: value === "__all__" ? null : value,
+                }),
+              [filters, onFiltersChange]
+            )}
             placeholder="All Runtimes"
           >
             <SelectItem value="__all__">All Runtimes</SelectItem>
@@ -50,12 +53,14 @@ export function ProjectFilters({
           </label>
           <Select
             value={filters.framework || "__all__"}
-            onChange={(value) =>
-              onFiltersChange({
-                ...filters,
-                framework: value === "__all__" ? null : value,
-              })
-            }
+            onChange={useCallback(
+              (value) =>
+                onFiltersChange({
+                  ...filters,
+                  framework: value === "__all__" ? null : value,
+                }),
+              [filters, onFiltersChange]
+            )}
             placeholder="All Frameworks"
           >
             <SelectItem value="__all__">All Frameworks</SelectItem>
@@ -72,12 +77,14 @@ export function ProjectFilters({
           </label>
           <Select
             value={filters.status}
-            onChange={(value) =>
-              onFiltersChange({
-                ...filters,
-                status: value as FilterOption["status"],
-              })
-            }
+            onChange={useCallback(
+              (value) =>
+                onFiltersChange({
+                  ...filters,
+                  status: value as FilterOption["status"],
+                }),
+              [filters, onFiltersChange]
+            )}
             placeholder="All Status"
           >
             <SelectItem value="all">All Status</SelectItem>
@@ -88,4 +95,4 @@ export function ProjectFilters({
       </div>
     </div>
   );
-}
+});

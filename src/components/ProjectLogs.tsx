@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { memo, useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { X, Search, Trash2, Download } from "lucide-react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
@@ -16,7 +16,7 @@ interface ProjectLogsProps {
   onClear: () => void;
 }
 
-export function ProjectLogs({
+export const ProjectLogs = memo(function ProjectLogs({
   projectName,
   projectPath,
   logs,
@@ -37,29 +37,35 @@ export function ProjectLogs({
   }, [logs, autoScroll]);
 
   // Handle scroll to detect if user scrolled up
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     if (logsContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } =
         logsContainerRef.current;
       const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
       setAutoScroll(isAtBottom);
     }
-  };
+  }, []);
 
-  const filteredLogs = logs.filter((log) =>
-    log.content.toLowerCase().includes(searchTerm.toLowerCase())
+  // Memoize filtered logs to avoid re-filtering on every render
+  const filteredLogs = useMemo(
+    () =>
+      logs.filter((log) =>
+        log.content.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [logs, searchTerm]
   );
 
-  const formatTimestamp = (timestamp: number): string => {
+  // Memoize format function
+  const formatTimestamp = useCallback((timestamp: number): string => {
     const date = new Date(timestamp);
     const hours = date.getHours().toString().padStart(2, "0");
     const minutes = date.getMinutes().toString().padStart(2, "0");
     const seconds = date.getSeconds().toString().padStart(2, "0");
     const milliseconds = date.getMilliseconds().toString().padStart(3, "0");
     return `${hours}:${minutes}:${seconds}.${milliseconds}`;
-  };
+  }, []);
 
-  const exportLogs = async () => {
+  const exportLogs = useCallback(async () => {
     try {
       if (logs.length === 0) {
         toastInfo("No logs to export");
@@ -104,7 +110,7 @@ export function ProjectLogs({
         error instanceof Error ? error.message : String(error);
       toastError("Failed to export logs", errorMessage);
     }
-  };
+  }, [logs, projectName, formatTimestamp]);
 
   if (!isOpen) return null;
 
@@ -221,4 +227,4 @@ export function ProjectLogs({
       </div>
     </div>
   );
-}
+});

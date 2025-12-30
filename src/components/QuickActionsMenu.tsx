@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import {
   MoreVertical,
   FileCode,
@@ -19,39 +20,41 @@ interface QuickActionsMenuProps {
   projectPath: string;
 }
 
-export function QuickActionsMenu({ projectPath }: QuickActionsMenuProps) {
-  const handleOpenInEditor = async () => {
+export const QuickActionsMenu = memo(function QuickActionsMenu({
+  projectPath,
+}: QuickActionsMenuProps) {
+  const handleOpenInEditor = useCallback(async () => {
     try {
       await invoke("open_in_editor", { path: projectPath });
     } catch (error) {
       toastError("Failed to open in editor", String(error));
     }
-  };
+  }, [projectPath]);
 
-  const handleOpenInTerminal = async () => {
+  const handleOpenInTerminal = useCallback(async () => {
     try {
       await invoke("open_in_terminal", { path: projectPath });
     } catch (error) {
       toastError("Failed to open in terminal", String(error));
     }
-  };
+  }, [projectPath]);
 
-  const handleOpenInFinder = async () => {
+  const handleOpenInFinder = useCallback(async () => {
     try {
       await invoke("open_in_finder", { path: projectPath });
     } catch (error) {
       toastError("Failed to open in Finder", String(error));
     }
-  };
+  }, [projectPath]);
 
-  const handleCopyPath = async () => {
+  const handleCopyPath = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(projectPath);
       toastSuccess("Path copied to clipboard");
     } catch (error) {
       toastError("Failed to copy path", String(error));
     }
-  };
+  }, [projectPath]);
 
   return (
     <DropdownMenu>
@@ -84,4 +87,4 @@ export function QuickActionsMenu({ projectPath }: QuickActionsMenuProps) {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
