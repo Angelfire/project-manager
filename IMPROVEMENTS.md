@@ -59,14 +59,11 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### 4. **Cobertura de Tests**
 
-- [ ] **Vitest coverage**: Configurar reporte de cobertura
-  ```typescript
-  coverage: {
-    provider: 'v8',
-    reporter: ['text', 'json', 'html'],
-    exclude: ['node_modules/', 'src/test/']
-  }
-  ```
+- [x] **Vitest coverage**: ✅ Configurado reporte de cobertura
+  - Provider: `v8` (instalado `@vitest/coverage-v8`)
+  - Reporters: `text`, `json`, `html`
+  - Excluye: `node_modules/`, `src/test/`, `src-tauri/`, archivos de configuración y tests
+  - Scripts agregados: `test:coverage` y `test:coverage:ui`
 - [ ] **Tests de integración**: Agregar tests E2E con Playwright o similar
 - [ ] **Tests de Rust**: Implementar tests unitarios para el backend
   - Tests en `src-tauri/src/**/*.rs`
