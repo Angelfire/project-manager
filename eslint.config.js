@@ -85,7 +85,6 @@ export default [
       "node_modules",
       "src-tauri",
       "*.config.js",
-      "eslint.config.js",
     ],
   },
 ];
