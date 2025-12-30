@@ -6,7 +6,6 @@ import {
   FolderOpen,
   Copy,
 } from "lucide-react";
-import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toastError, toastSuccess } from "@/utils/toast";
+import { tauriApi } from "@/api/tauri";
 
 interface QuickActionsMenuProps {
   projectPath: string;
@@ -25,7 +25,7 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
 }: QuickActionsMenuProps) {
   const handleOpenInEditor = useCallback(async () => {
     try {
-      await invoke("open_in_editor", { path: projectPath });
+      await tauriApi.quickActions.openInEditor(projectPath);
     } catch (error) {
       toastError("Failed to open in editor", String(error));
     }
@@ -33,17 +33,17 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
 
   const handleOpenInTerminal = useCallback(async () => {
     try {
-      await invoke("open_in_terminal", { path: projectPath });
+      await tauriApi.quickActions.openInTerminal(projectPath);
     } catch (error) {
       toastError("Failed to open in terminal", String(error));
     }
   }, [projectPath]);
 
-  const handleOpenInFinder = useCallback(async () => {
+  const handleOpenInFileManager = useCallback(async () => {
     try {
-      await invoke("open_in_finder", { path: projectPath });
+      await tauriApi.quickActions.openInFileManager(projectPath);
     } catch (error) {
-      toastError("Failed to open in Finder", String(error));
+      toastError("Failed to open in file manager", String(error));
     }
   }, [projectPath]);
 
@@ -76,9 +76,9 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
           <Terminal className="size-4" />
           Open in Terminal
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleOpenInFinder}>
+        <DropdownMenuItem onClick={handleOpenInFileManager}>
           <FolderOpen className="size-4" />
-          Open in Finder
+          Open in File Manager
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleCopyPath}>
           <Copy className="size-4" />

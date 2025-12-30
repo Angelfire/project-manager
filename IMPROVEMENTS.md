@@ -6,14 +6,6 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### 1. **Configuración de Herramientas de Calidad de Código**
 
-- [x] **ESLint**: ✅ Configurado para TypeScript/React
-  - Detectar errores comunes
-  - Enforce coding standards
-  - Integración con Prettier
-- [x] **Prettier**: ✅ Configurado para formateo automático
-  - `.prettierrc` con reglas consistentes
-  - `.prettierignore` para excluir archivos
-  - Integración con editor (format on save)
 - [ ] **Husky**: Git hooks para asegurar calidad antes de commit
   - Pre-commit hooks para linting y tests
   - Commit message linting (commitlint)
@@ -37,28 +29,10 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 - [ ] **CONTRIBUTING.md**: Guía para contribuidores
 - [ ] **.project.md**: Documentación del proyecto (opcional)
 
-### 3. **Configuración de TypeScript**
-
-- [x] **TypeScript strict mode mejorado**: ✅ Configurado
-  - `strict: true` - Habilitado
-  - `noUnusedLocals: true` - Detecta variables locales no usadas
-  - `noUnusedParameters: true` - Detecta parámetros no usados
-  - `noImplicitReturns: true` - Requiere return explícito
-  - `noFallthroughCasesInSwitch: true` - Previene fallthrough en switch
-  - `noUncheckedIndexedAccess: true` - Acceso seguro a arrays/objetos
-- [x] **Path aliases**: ✅ Configurado en `tsconfig.json` y `vite.config.ts`
-  - `@/*` → `./src/*` (cubre todos los subdirectorios automáticamente)
-  - Uso: `@/components/...`, `@/utils/...`, `@/hooks/...`, etc.
-
 ## 🧪 Testing y Calidad
 
 ### 4. **Cobertura de Tests**
 
-- [x] **Vitest coverage**: ✅ Configurado reporte de cobertura
-  - Provider: `v8` (instalado `@vitest/coverage-v8`)
-  - Reporters: `text`, `json`, `html`
-  - Excluye: `node_modules/`, `src/test/`, `src-tauri/`, archivos de configuración y tests
-  - Scripts agregados: `test:coverage` y `test:coverage:ui`
 - [ ] **Tests de integración**: Agregar tests E2E con Playwright o similar
 - [ ] **Tests de Rust**: Implementar tests unitarios para el backend
   - Tests en `src-tauri/src/**/*.rs`
@@ -92,25 +66,9 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 - [ ] **State management**: Evaluar si necesita Zustand o Jotai
   - Para estado global complejo
   - Persistencia de preferencias
-- [ ] **API layer**: Crear capa de abstracción para Tauri commands
-  ```typescript
-  // src/api/tauri.ts
-  export const tauriApi = {
-    projects: {
-      scan: (path: string) => invoke<Project[]>("scan_directory", { path }),
-      // ...
-    },
-  };
-  ```
 
 ### 7. **Error Handling Mejorado**
 
-- [x] **Error boundaries**: ✅ Implementar React Error Boundaries
-  - Componente `ErrorBoundary` creado en `src/components/ErrorBoundary.tsx`
-  - Integrado en `main.tsx` para capturar errores globales
-  - UI de error con opciones para recuperar o recargar
-  - Integración con toast notifications
-  - Detalles de error disponibles en modo desarrollo
 - [ ] **Error types centralizados**: Expandir `AppError` enum
 - [ ] **Error logging**: Integrar sistema de logging estructurado
   - `tracing` en Rust
@@ -134,12 +92,6 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### 9. **Componentes UI**
 
-- [ ] **shadcn/ui components**: Considerar más componentes
-  - Dialog/Modal
-  - Tooltip
-  - Popover
-  - Tabs
-  - Accordion
 - [ ] **Theme system**: Sistema de temas más robusto
   - Variables CSS para colores
   - Soporte para light/dark mode
@@ -233,20 +185,6 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### 20. **Optimizaciones de Rendimiento**
 
-- [x] **React.memo**: ✅ Memoizar componentes pesados
-  - `QuickActionsMenu` - Memoizado (se renderiza en cada proyecto)
-  - `ProjectFilters` - Memoizado (se renderiza frecuentemente)
-  - `ProjectLogs` - Memoizado (componente pesado con muchos logs)
-- [x] **useMemo/useCallback**: ✅ Optimizar re-renders
-  - Handlers memoizados en `App.tsx` (selectDirectory, toggleFilters, etc.)
-  - `formatFileSize` y `formatDate` memoizados
-  - `filteredLogs` memoizado en `ProjectLogs`
-  - Handlers memoizados en `QuickActionsMenu` y `ProjectFilters`
-- [ ] **Virtual scrolling**: Para listas grandes de proyectos
-  - Requiere librería adicional (react-window o react-virtuoso)
-- [x] **Lazy loading**: ✅ Cargar componentes bajo demanda
-  - `ProjectLogs` cargado con `React.lazy()` y `Suspense`
-  - Fallback de loading implementado
 - [ ] **Image optimization**: Optimizar imágenes y assets
 
 ## 🧹 Code Quality

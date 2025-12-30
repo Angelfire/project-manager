@@ -1,12 +1,12 @@
 import { Command, Child } from "@tauri-apps/plugin-shell";
-import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Project } from "@/types";
 import { getDefaultPortForFramework } from "@/utils/runtime";
 import { toastError, toastWarning } from "@/utils/toast";
+import { tauriApi } from "@/api/tauri";
 
 export const scanProjects = async (path: string): Promise<Project[]> => {
-  const foundProjects = await invoke<Project[]>("scan_directory", { path });
+  const foundProjects = await tauriApi.projects.scan(path);
   // Clear ports when scanning (they will be detected dynamically when executed)
   return foundProjects.map((p) => ({
     ...p,
@@ -59,9 +59,7 @@ export const detectPort = async (
 
   for (let i = 0; i < attempts; i++) {
     try {
-      const detectedPort = await invoke<number | null>("detect_port_by_pid", {
-        pid,
-      });
+      const detectedPort = await tauriApi.processes.detectPort(pid);
 
       if (detectedPort) {
         return detectedPort;
@@ -96,7 +94,7 @@ export const killProcessByPort = async (port: number): Promise<void> => {
     if (portProcess.stdout) {
       const pid = parseInt(portProcess.stdout.trim());
       if (!isNaN(pid)) {
-        await invoke("kill_process_tree", { pid });
+        await tauriApi.processes.killTree(pid);
       }
     }
   } catch {
@@ -114,9 +112,7 @@ export const openProjectInBrowser = async (
     const process = processes.get(project.path);
     if (process?.pid) {
       try {
-        const detectedPort = await invoke<number | null>("detect_port_by_pid", {
-          pid: process.pid,
-        });
+        const detectedPort = await tauriApi.processes.detectPort(process.pid);
         if (detectedPort) {
           await openInBrowser(detectedPort);
           return;

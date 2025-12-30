@@ -33,8 +33,8 @@ fn open_in_terminal(path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn open_in_finder(path: String) -> Result<(), String> {
-    quick_actions::open_in_finder(path).map_err(|e| e.to_string())
+fn open_in_file_manager(path: String) -> Result<(), String> {
+    quick_actions::open_in_file_manager(path).map_err(|e| e.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -50,7 +50,7 @@ pub fn run() {
             detect_port_by_pid,
             open_in_editor,
             open_in_terminal,
-            open_in_finder
+            open_in_file_manager
         ])
         .setup(|app| {
             menu::setup_menu(app)?;

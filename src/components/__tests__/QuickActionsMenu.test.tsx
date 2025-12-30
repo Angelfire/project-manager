@@ -61,7 +61,7 @@ describe("QuickActionsMenu", () => {
     await waitFor(() => {
       expect(screen.getByText("Open in Editor")).toBeInTheDocument();
       expect(screen.getByText("Open in Terminal")).toBeInTheDocument();
-      expect(screen.getByText("Open in Finder")).toBeInTheDocument();
+      expect(screen.getByText("Open in File Manager")).toBeInTheDocument();
       expect(screen.getByText("Copy Path")).toBeInTheDocument();
     });
   });
@@ -114,7 +114,7 @@ describe("QuickActionsMenu", () => {
     });
   });
 
-  it("calls invoke with correct path when 'Open in Finder' is clicked", async () => {
+  it("calls invoke with correct path when 'Open in File Manager' is clicked", async () => {
     const user = userEvent.setup();
     const mockInvoke = vi.mocked(tauriCore.invoke);
     mockInvoke.mockResolvedValue(undefined);
@@ -125,14 +125,14 @@ describe("QuickActionsMenu", () => {
     await user.click(triggerButton);
 
     await waitFor(() => {
-      expect(screen.getByText("Open in Finder")).toBeInTheDocument();
+      expect(screen.getByText("Open in File Manager")).toBeInTheDocument();
     });
 
-    const finderItem = screen.getByText("Open in Finder");
-    await user.click(finderItem);
+    const fileManagerItem = screen.getByText("Open in File Manager");
+    await user.click(fileManagerItem);
 
     await waitFor(() => {
-      expect(mockInvoke).toHaveBeenCalledWith("open_in_finder", {
+      expect(mockInvoke).toHaveBeenCalledWith("open_in_file_manager", {
         path: mockProjectPath,
       });
     });
@@ -282,7 +282,7 @@ describe("QuickActionsMenu", () => {
     });
   });
 
-  it("shows error toast when 'Open in Finder' fails", async () => {
+  it("shows error toast when 'Open in File Manager' fails", async () => {
     const user = userEvent.setup();
     const mockInvoke = vi.mocked(tauriCore.invoke);
     const mockToastError = vi.mocked(toastUtils.toastError);
@@ -296,15 +296,15 @@ describe("QuickActionsMenu", () => {
     await user.click(triggerButton);
 
     await waitFor(() => {
-      expect(screen.getByText("Open in Finder")).toBeInTheDocument();
+      expect(screen.getByText("Open in File Manager")).toBeInTheDocument();
     });
 
-    const finderItem = screen.getByText("Open in Finder");
-    await user.click(finderItem);
+    const fileManagerItem = screen.getByText("Open in File Manager");
+    await user.click(fileManagerItem);
 
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalledWith(
-        "Failed to open in Finder",
+        "Failed to open in file manager",
         "Error: Path not found"
       );
     });
