@@ -119,10 +119,12 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### 7. **Error Handling Mejorado**
 
-- [ ] **Error boundaries**: Implementar React Error Boundaries
-  ```typescript
-  // src/components/ErrorBoundary.tsx
-  ```
+- [x] **Error boundaries**: ✅ Implementar React Error Boundaries
+  - Componente `ErrorBoundary` creado en `src/components/ErrorBoundary.tsx`
+  - Integrado en `main.tsx` para capturar errores globales
+  - UI de error con opciones para recuperar o recargar
+  - Integración con toast notifications
+  - Detalles de error disponibles en modo desarrollo
 - [ ] **Error types centralizados**: Expandir `AppError` enum
 - [ ] **Error logging**: Integrar sistema de logging estructurado
   - `tracing` en Rust
@@ -282,7 +284,7 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 1. ✅ ~~ESLint + Prettier~~ (Completado)
 2. Husky + lint-staged
-3. Error boundaries
+3. ✅ ~~Error boundaries~~ (Completado)
 4. Type safety improvements
 5. CI/CD básico
 
