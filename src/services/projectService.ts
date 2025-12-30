@@ -54,7 +54,7 @@ export const detectPort = async (
   initialDelay: number = 1000,
   intervalDelay: number = 1500
 ): Promise<number | null> => {
-  // Esperar un poco antes del primer intento
+  // Wait a moment before the first attempt
   await new Promise((resolve) => setTimeout(resolve, initialDelay));
 
   for (let i = 0; i < attempts; i++) {
@@ -70,7 +70,7 @@ export const detectPort = async (
       // Ignore port detection errors, will retry
     }
 
-    // Esperar antes del siguiente intento (excepto en el último)
+    // Wait before the next attempt (except the last one)
     if (i < attempts - 1) {
       await new Promise((resolve) => setTimeout(resolve, intervalDelay));
     }

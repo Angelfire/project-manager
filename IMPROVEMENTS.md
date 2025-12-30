@@ -47,13 +47,8 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
   - `noFallthroughCasesInSwitch: true` - Previene fallthrough en switch
   - `noUncheckedIndexedAccess: true` - Acceso seguro a arrays/objetos
 - [x] **Path aliases**: ✅ Configurado en `tsconfig.json` y `vite.config.ts`
-  - `@/*` → `./src/*`
-  - `@/components/*` → `./src/components/*`
-  - `@/utils/*` → `./src/utils/*`
-  - `@/hooks/*` → `./src/hooks/*`
-  - `@/services/*` → `./src/services/*`
-  - `@/types` → `./src/types`
-  - `@/assets/*` → `./src/assets/*`
+  - `@/*` → `./src/*` (cubre todos los subdirectorios automáticamente)
+  - Uso: `@/components/...`, `@/utils/...`, `@/hooks/...`, etc.
 
 ## 🧪 Testing y Calidad
 

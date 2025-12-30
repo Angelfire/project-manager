@@ -20,6 +20,37 @@ export const ProjectFilters = memo(function ProjectFilters({
   uniqueRuntimes,
   uniqueFrameworks,
 }: ProjectFiltersProps) {
+  // Memoize callbacks at component level, not inline in JSX
+  const handleRuntimeChange = useCallback(
+    (value: string) => {
+      onFiltersChange({
+        ...filters,
+        runtime: value === "__all__" ? null : value,
+      });
+    },
+    [filters, onFiltersChange]
+  );
+
+  const handleFrameworkChange = useCallback(
+    (value: string) => {
+      onFiltersChange({
+        ...filters,
+        framework: value === "__all__" ? null : value,
+      });
+    },
+    [filters, onFiltersChange]
+  );
+
+  const handleStatusChange = useCallback(
+    (value: string) => {
+      onFiltersChange({
+        ...filters,
+        status: value as FilterOption["status"],
+      });
+    },
+    [filters, onFiltersChange]
+  );
+
   return (
     <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -29,14 +60,7 @@ export const ProjectFilters = memo(function ProjectFilters({
           </label>
           <Select
             value={filters.runtime || "__all__"}
-            onChange={useCallback(
-              (value) =>
-                onFiltersChange({
-                  ...filters,
-                  runtime: value === "__all__" ? null : value,
-                }),
-              [filters, onFiltersChange]
-            )}
+            onChange={handleRuntimeChange}
             placeholder="All Runtimes"
           >
             <SelectItem value="__all__">All Runtimes</SelectItem>
@@ -53,14 +77,7 @@ export const ProjectFilters = memo(function ProjectFilters({
           </label>
           <Select
             value={filters.framework || "__all__"}
-            onChange={useCallback(
-              (value) =>
-                onFiltersChange({
-                  ...filters,
-                  framework: value === "__all__" ? null : value,
-                }),
-              [filters, onFiltersChange]
-            )}
+            onChange={handleFrameworkChange}
             placeholder="All Frameworks"
           >
             <SelectItem value="__all__">All Frameworks</SelectItem>
@@ -77,14 +94,7 @@ export const ProjectFilters = memo(function ProjectFilters({
           </label>
           <Select
             value={filters.status}
-            onChange={useCallback(
-              (value) =>
-                onFiltersChange({
-                  ...filters,
-                  status: value as FilterOption["status"],
-                }),
-              [filters, onFiltersChange]
-            )}
+            onChange={handleStatusChange}
             placeholder="All Status"
           >
             <SelectItem value="all">All Status</SelectItem>
