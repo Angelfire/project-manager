@@ -171,7 +171,7 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 - [ ] **Tree shaking**: Asegurar que funcione correctamente
 - [ ] **Bundle analysis**: Analizar tamaño del bundle
   ```bash
-  npm install --save-dev rollup-plugin-visualizer
+  pnpm add -D rollup-plugin-visualizer
   ```
 - [ ] **Compression**: Configurar compresión de assets
 
@@ -185,7 +185,7 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### 16. **Security Best Practices**
 
-- [ ] **Dependency scanning**: `npm audit` regularmente
+- [ ] **Dependency scanning**: `pnpm audit` regularmente
 - [ ] **Snyk/Dependabot**: Alertas de vulnerabilidades
 - [ ] **Content Security Policy**: Configurar CSP en Tauri
 - [ ] **Input validation**: Validar todas las entradas de usuario
