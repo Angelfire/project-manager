@@ -4,11 +4,33 @@ import { Toaster } from "@/components/ui/toaster";
 
 // Mock sonner
 vi.mock("sonner", () => ({
-  Toaster: vi.fn(({ children, ...props }) => (
-    <div data-testid="sonner-toaster" {...props}>
-      {children}
-    </div>
-  )),
+  Toaster: vi.fn(
+    ({
+      children,
+      toastOptions,
+      richColors,
+      icons,
+      theme,
+      position,
+      className,
+      ...restProps
+    }) => {
+      // Only pass valid DOM props to the div element
+      // Store non-DOM props separately to avoid React warnings
+      return (
+        <div
+          data-testid="sonner-toaster"
+          data-theme={theme}
+          data-position={position}
+          data-rich-colors={richColors ? "true" : "false"}
+          className={className}
+          {...restProps}
+        >
+          {children}
+        </div>
+      );
+    }
+  ),
 }));
 
 // Mock lucide-react icons
@@ -32,23 +54,21 @@ describe("Toaster", () => {
     render(<Toaster />);
 
     const toaster = screen.getByTestId("sonner-toaster");
-    expect(toaster).toHaveAttribute("theme", "dark");
+    expect(toaster).toHaveAttribute("data-theme", "dark");
   });
 
   it("sets position to top-right", () => {
     render(<Toaster />);
 
     const toaster = screen.getByTestId("sonner-toaster");
-    expect(toaster).toHaveAttribute("position", "top-right");
+    expect(toaster).toHaveAttribute("data-position", "top-right");
   });
 
   it("includes richColors prop", () => {
     render(<Toaster />);
 
     const toaster = screen.getByTestId("sonner-toaster");
-    // richColors is a boolean prop, so it may not appear as an attribute
-    // We verify the component renders correctly instead
-    expect(toaster).toBeInTheDocument();
+    expect(toaster).toHaveAttribute("data-rich-colors", "true");
   });
 
   it("has correct className", () => {
