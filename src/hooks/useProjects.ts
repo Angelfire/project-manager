@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import { Child } from "@tauri-apps/plugin-shell";
-import { invoke } from "@tauri-apps/api/core";
 import { Project, LogEntry } from "@/types";
 import {
   scanProjects,
@@ -9,6 +8,7 @@ import {
   killProcessByPort,
 } from "@/services/projectService";
 import { toastError } from "@/utils/toast";
+import { tauriApi } from "@/api/tauri";
 
 export const useProjects = () => {
   const [selectedDirectory, setSelectedDirectory] = useState<string | null>(
@@ -132,7 +132,7 @@ export const useProjects = () => {
         // Try to kill using the PID if available
         if (process.pid) {
           try {
-            await invoke("kill_process_tree", { pid: process.pid });
+            await tauriApi.processes.killTree(process.pid);
           } catch {
             // Try to kill the process directly as fallback
             try {
