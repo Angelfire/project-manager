@@ -67,7 +67,7 @@ export const tauriApi = {
      * @param path - Path to open
      */
     openInFileManager: (path: string): Promise<void> => {
-      return invoke<void>("open_in_finder", { path });
+      return invoke<void>("open_in_file_manager", { path });
     },
   },
 };

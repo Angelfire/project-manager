@@ -132,7 +132,7 @@ describe("QuickActionsMenu", () => {
     await user.click(fileManagerItem);
 
     await waitFor(() => {
-      expect(mockInvoke).toHaveBeenCalledWith("open_in_finder", {
+      expect(mockInvoke).toHaveBeenCalledWith("open_in_file_manager", {
         path: mockProjectPath,
       });
     });

@@ -70,13 +70,13 @@ pub fn open_in_terminal(path: String) -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn open_in_finder(path: String) -> Result<(), AppError> {
+pub fn open_in_file_manager(path: String) -> Result<(), AppError> {
     #[cfg(target_os = "macos")]
     {
         StdCommand::new("open")
             .arg(&path)
             .output()
-            .map_err(|e| AppError::CommandError(format!("Failed to open in Finder: {}", e)))?;
+            .map_err(|e| AppError::CommandError(format!("Failed to open in file manager: {}", e)))?;
     }
 
     #[cfg(target_os = "linux")]

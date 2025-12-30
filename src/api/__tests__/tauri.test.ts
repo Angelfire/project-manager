@@ -250,7 +250,7 @@ describe("tauriApi", () => {
 
         expect(invoke).toHaveBeenCalledTimes(1);
         expect(invoke).toHaveBeenCalledWith<[string, { path: string }]>(
-          "open_in_finder",
+          "open_in_file_manager",
           { path: "/path/to/project" }
         );
       });
@@ -259,14 +259,14 @@ describe("tauriApi", () => {
         vi.mocked(invoke).mockResolvedValue(undefined);
 
         await tauriApi.quickActions.openInFileManager("/home/user/project");
-        expect(invoke).toHaveBeenCalledWith("open_in_finder", {
+        expect(invoke).toHaveBeenCalledWith("open_in_file_manager", {
           path: "/home/user/project",
         });
 
         vi.clearAllMocks();
 
         await tauriApi.quickActions.openInFileManager("/tmp/test");
-        expect(invoke).toHaveBeenCalledWith("open_in_finder", {
+        expect(invoke).toHaveBeenCalledWith("open_in_file_manager", {
           path: "/tmp/test",
         });
       });
@@ -279,7 +279,7 @@ describe("tauriApi", () => {
           tauriApi.quickActions.openInFileManager("/path/to/project")
         ).rejects.toThrow("File manager not found");
 
-        expect(invoke).toHaveBeenCalledWith("open_in_finder", {
+        expect(invoke).toHaveBeenCalledWith("open_in_file_manager", {
           path: "/path/to/project",
         });
       });
