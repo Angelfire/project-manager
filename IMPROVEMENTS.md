@@ -66,8 +66,8 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### 5. **CI/CD Pipeline**
 
-- [ ] **GitHub Actions**: Configurar workflows
-  - `.github/workflows/ci.yml` - Tests y linting
+- [x] **GitHub Actions**: Configurar workflows
+  - `.github/workflows/ci.yml` - Tests y linting ✅
   - `.github/workflows/build.yml` - Build para múltiples plataformas
   - `.github/workflows/release.yml` - Releases automáticos
 - [ ] **Pre-commit checks**: Validar código antes de merge
