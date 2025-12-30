@@ -5,16 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 // Mock sonner
 vi.mock("sonner", () => ({
   Toaster: vi.fn(
-    ({
-      children,
-      toastOptions,
-      richColors,
-      icons,
-      theme,
-      position,
-      className,
-      ...restProps
-    }) => {
+    ({ children, richColors, theme, position, className, ...restProps }) => {
       // Only pass valid DOM props to the div element
       // Store non-DOM props separately to avoid React warnings
       return (
