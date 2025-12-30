@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes, ReactNode } from "react";
 import { LucideIcon } from "lucide-react";
-import { cn } from "../../utils/cn";
+import { cn } from "@/utils/cn";
 
 type ButtonVariant =
   | "primary"

@@ -1,4 +1,4 @@
-import { Project } from "../types";
+import { Project } from "@/types";
 
 export const getRuntimeIcon = (runtime: string): string => {
   switch (runtime) {

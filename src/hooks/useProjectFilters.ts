@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { Project } from "../types";
-import { FilterOption } from "../components/ProjectFilters";
+import { Project } from "@/types";
+import { FilterOption } from "@/components/ProjectFilters";
 
 type SortOption = "name" | "modified" | "size";
 

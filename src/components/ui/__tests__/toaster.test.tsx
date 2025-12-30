@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Toaster } from "../toaster";
+import { Toaster } from "@/components/ui/toaster";
 
 // Mock sonner
 vi.mock("sonner", () => ({

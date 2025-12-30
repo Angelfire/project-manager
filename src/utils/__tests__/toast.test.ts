@@ -7,7 +7,7 @@ import {
   toastInfo,
   toastLoading,
   toastPromise,
-} from "../toast";
+} from "@/utils/toast";
 
 // Mock sonner
 vi.mock("sonner", () => ({

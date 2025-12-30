@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { cn } from "./utils/cn";
+import { cn } from "@/utils/cn";
 import {
   Folder,
   Play,
@@ -18,22 +18,22 @@ import {
   Filter,
   FileText,
 } from "lucide-react";
-import { useProjects } from "./hooks/useProjects";
-import runstackIcon from "./assets/runstack.png";
+import { useProjects } from "@/hooks/useProjects";
+import runstackIcon from "@/assets/runstack.png";
 import {
   getRuntimeIcon,
   getRuntimeColor,
   getRuntimeTopBar,
-} from "./utils/runtime";
-import { openProjectInBrowser, detectPort } from "./services/projectService";
-import { ProjectFilters, type FilterOption } from "./components/ProjectFilters";
-import { QuickActionsMenu } from "./components/QuickActionsMenu";
-import { ProjectLogs } from "./components/ProjectLogs";
-import { Select, SelectItem } from "./components/ui/select";
-import { Button } from "./components/ui/button";
-import { useProjectFilters } from "./hooks/useProjectFilters";
-import { Toaster } from "./components/ui/toaster";
-import { toastError } from "./utils/toast";
+} from "@/utils/runtime";
+import { openProjectInBrowser, detectPort } from "@/services/projectService";
+import { ProjectFilters, type FilterOption } from "@/components/ProjectFilters";
+import { QuickActionsMenu } from "@/components/QuickActionsMenu";
+import { ProjectLogs } from "@/components/ProjectLogs";
+import { Select, SelectItem } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { useProjectFilters } from "@/hooks/useProjectFilters";
+import { Toaster } from "@/components/ui/toaster";
+import { toastError } from "@/utils/toast";
 
 type SortOption = "name" | "modified" | "size";
 

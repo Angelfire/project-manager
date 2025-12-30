@@ -1,4 +1,4 @@
-import { Select, SelectItem } from "./ui/select";
+import { Select, SelectItem } from "@/components/ui/select";
 
 export type FilterOption = {
   runtime: string | null;

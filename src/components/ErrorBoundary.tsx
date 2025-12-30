@@ -1,7 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
-import { Button } from "./ui/button";
-import { toastError } from "../utils/toast";
+import { Button } from "@/components/ui/button";
+import { toastError } from "@/utils/toast";
 
 interface Props {
   children: ReactNode;

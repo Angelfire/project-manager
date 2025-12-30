@@ -39,27 +39,21 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### 3. **Configuración de TypeScript**
 
-- [ ] **TypeScript strict mode mejorado**:
-  ```json
-  {
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true
-  }
-  ```
-- [ ] **Path aliases**: Configurar alias para imports más limpios
-  ```json
-  {
-    "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/utils/*": ["./src/utils/*"]
-    }
-  }
-  ```
+- [x] **TypeScript strict mode mejorado**: ✅ Configurado
+  - `strict: true` - Habilitado
+  - `noUnusedLocals: true` - Detecta variables locales no usadas
+  - `noUnusedParameters: true` - Detecta parámetros no usados
+  - `noImplicitReturns: true` - Requiere return explícito
+  - `noFallthroughCasesInSwitch: true` - Previene fallthrough en switch
+  - `noUncheckedIndexedAccess: true` - Acceso seguro a arrays/objetos
+- [x] **Path aliases**: ✅ Configurado en `tsconfig.json` y `vite.config.ts`
+  - `@/*` → `./src/*`
+  - `@/components/*` → `./src/components/*`
+  - `@/utils/*` → `./src/utils/*`
+  - `@/hooks/*` → `./src/hooks/*`
+  - `@/services/*` → `./src/services/*`
+  - `@/types` → `./src/types`
+  - `@/assets/*` → `./src/assets/*`
 
 ## 🧪 Testing y Calidad
 

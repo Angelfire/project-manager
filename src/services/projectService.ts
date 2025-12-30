@@ -1,9 +1,9 @@
 import { Command, Child } from "@tauri-apps/plugin-shell";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { Project } from "../types";
-import { getDefaultPortForFramework } from "../utils/runtime";
-import { toastError, toastWarning } from "../utils/toast";
+import { Project } from "@/types";
+import { getDefaultPortForFramework } from "@/utils/runtime";
+import { toastError, toastWarning } from "@/utils/toast";
 
 export const scanProjects = async (path: string): Promise<Project[]> => {
   const foundProjects = await invoke<Project[]>("scan_directory", { path });

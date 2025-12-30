@@ -6,14 +6,14 @@ import {
   Copy,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { toastError, toastSuccess } from "../utils/toast";
+} from "@/components/ui/dropdown-menu";
+import { toastError, toastSuccess } from "@/utils/toast";
 
 interface QuickActionsMenuProps {
   projectPath: string;

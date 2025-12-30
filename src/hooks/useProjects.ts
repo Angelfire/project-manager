@@ -1,14 +1,14 @@
 import { useState, useCallback } from "react";
 import { Child } from "@tauri-apps/plugin-shell";
 import { invoke } from "@tauri-apps/api/core";
-import { Project, LogEntry } from "../types";
+import { Project, LogEntry } from "@/types";
 import {
   scanProjects,
   createProjectCommand,
   detectPort,
   killProcessByPort,
-} from "../services/projectService";
-import { toastError } from "../utils/toast";
+} from "@/services/projectService";
+import { toastError } from "@/utils/toast";
 
 export const useProjects = () => {
   const [selectedDirectory, setSelectedDirectory] = useState<string | null>(
