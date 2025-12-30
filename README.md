@@ -60,7 +60,7 @@ A desktop application built with Tauri, React, and TypeScript to manage and run 
 ## Requirements
 
 - Node.js 20.19+ or 22.12+ (recommended: latest LTS version)
-- npm (included with Node.js)
+- pnpm 9+ (package manager for this project)
 - Rust 1.83+ (to compile the backend)
 - npm, yarn, pnpm, or bun (depending on your projects to manage)
 
@@ -84,19 +84,19 @@ cd runstack
 2. Install dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
 
 3. For development:
 
 ```bash
-npm run tauri dev
+pnpm tauri dev
 ```
 
 4. To build the application (desktop only):
 
 ```bash
-npm run tauri build
+pnpm tauri build
 ```
 
 **Note**: This application is configured for desktop platforms only (macOS, Linux). It does not include support for Windows, Android, or iOS.
@@ -159,13 +159,13 @@ The project uses Vitest for testing React components.
 
 ```bash
 # Run tests in watch mode
-npm test
+pnpm test
 
 # Run tests once
-npm run test:run
+pnpm test:run
 
 # Run tests with UI
-npm run test:ui
+pnpm test:ui
 ```
 
 ## TODO
