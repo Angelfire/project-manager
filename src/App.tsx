@@ -219,18 +219,41 @@ function App() {
                       placeholder="Search..."
                       value={searchTerm}
                       onChange={(e) => {
-                        const value = e.target.value;
+                        const input = e.target;
+                        const value = input.value;
+                        // Clear any previous custom validation message
+                        input.setCustomValidity("");
+
                         // Allow clearing the search field (empty string)
                         if (value === "") {
                           setSearchTerm("");
                           return;
                         }
+
                         // Validate and sanitize non-empty values
                         const validated = validateSearchTerm(value);
-                        if (validated !== null) {
-                          setSearchTerm(validated);
+
+                        if (validated === null) {
+                          // Validation failed: keep previous value and show feedback
+                          input.setCustomValidity(
+                            "Some characters are not allowed in search."
+                          );
+                          input.reportValidity();
+                          return;
                         }
-                        // If validation fails, don't update (prevents invalid input)
+
+                        if (validated !== value) {
+                          // Validation sanitized the input: update and inform the user
+                          setSearchTerm(validated);
+                          input.setCustomValidity(
+                            "Some characters were removed because they are not allowed in search."
+                          );
+                          input.reportValidity();
+                          return;
+                        }
+
+                        // Valid input, update normally
+                        setSearchTerm(validated);
                       }}
                       maxLength={500}
                       className="w-full px-4 py-2 pl-10 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all text-sm"
