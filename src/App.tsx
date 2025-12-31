@@ -236,11 +236,11 @@ function App() {
                           const validated = validateSearchTerm(value);
 
                           if (validated === null) {
-                            // Validation failed: show feedback but still reflect user input
+                            // Validation failed: show feedback and keep previous valid value
                             setSearchError(
                               "Some characters are not allowed in search."
                             );
-                            setSearchTerm(value);
+                            return;
                           } else if (validated !== value) {
                             // Validation sanitized the input: show warning and update
                             setSearchError(

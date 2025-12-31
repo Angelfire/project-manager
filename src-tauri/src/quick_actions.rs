@@ -2,27 +2,16 @@ use crate::error::AppError;
 use std::path::Path;
 use std::process::Command as StdCommand;
 
-/// // Safe handling of quotes in file paths
-/// assert_eq!(escape_applescript_string(r#"file"name.txt"#), r#"file\"name.txt"#);
+/// Open the given file or directory in a text editor.
 ///
-/// // Prevents backslash-based escape sequence injection
-/// assert_eq!(escape_applescript_string(r"C:\path\to\file"), r"C:\\path\\to\\file");
+/// This function first tries to launch Visual Studio Code (`code` or
+/// `code-insiders`). If neither is available, it falls back to the system
+/// default editor:
+/// - On macOS, it uses `open -a TextEdit`.
+/// - On Linux, it uses `xdg-open`.
 ///
-/// // Handles newlines that could break command structure
-/// assert_eq!(escape_applescript_string("line1\nline2"), "line1\\nline2");
-///
-/// // Edge case: multiple special characters combined
-/// assert_eq!(
-///     escape_applescript_string("path\\with\"quotes\nand\ttabs"),
-///     "path\\\\with\\\"quotes\\nand\\ttabs"
-/// );
-/// ```
-///
-/// # Note
-///
-/// This function works in conjunction with AppleScript's `quoted form of` command
-/// (used in `open_in_terminal`) to provide defense-in-depth protection.
-
+/// The path is converted to a UTF-8 string only for passing to the
+/// underlying system commands.
 pub fn open_in_editor(path: &Path) -> Result<(), AppError> {
     // Convert to String only when needed for system commands
     let path_str = path.to_string_lossy().to_string();
