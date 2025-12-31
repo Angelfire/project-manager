@@ -50,7 +50,7 @@ use std::process::Command as StdCommand;
 /// // Edge case: multiple special characters combined
 /// assert_eq!(
 ///     escape_applescript_string("path\\with\"quotes\nand\ttabs"),
-///     r#"path\\with\"quotes\nand\ttabs"#
+///     "path\\\\with\\\"quotes\\nand\\ttabs"
 /// );
 /// ```
 ///
