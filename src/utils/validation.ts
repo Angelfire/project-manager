@@ -56,7 +56,7 @@ export function validatePath(path: string | null | undefined): boolean {
   const suspiciousPatterns = [
     /\.\.\/\.\./g, // ../../
     /\.\.\\\.\./g, // ..\..\
-    /^\.\./g, // Starts with ..
+    /^\.\./, // Starts with ..
     /\/\.\./g, // Contains /..
     /\\\.\./g, // Contains \..
   ];
@@ -85,8 +85,8 @@ export function validatePid(pid: number | null | undefined): boolean {
     return false;
   }
 
-  // PID must be a positive integer
-  if (!Number.isInteger(pid) || pid < 0) {
+  // PID must be a positive integer (PID 0 is typically reserved and not allowed)
+  if (!Number.isInteger(pid) || pid <= 0) {
     return false;
   }
 
