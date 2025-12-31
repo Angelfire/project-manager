@@ -71,7 +71,19 @@ pub fn validate_file_path(path: &str) -> Result<PathBuf, AppError> {
         ));
     }
 
-    // Limit path length
+    // Check for path traversal using component-based validation
+    // This is more robust than string pattern matching and provides defense in depth
+    let path_buf_for_validation = PathBuf::from(path);
+    if path_buf_for_validation
+        .components()
+        .any(|c| matches!(c, std::path::Component::ParentDir))
+    {
+        return Err(AppError::CommandError(
+            "Invalid path: path traversal not allowed".to_string(),
+        ));
+    }
+
+    // Limit path length (prevent DoS)
     if path.len() > 4096 {
         return Err(AppError::CommandError(
             "Invalid path: path too long".to_string(),

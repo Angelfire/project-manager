@@ -27,7 +27,16 @@ export function validateSearchTerm(searchTerm: string): string | null {
 
   // Remove clearly dangerous characters (HTML/JS metacharacters and control chars)
   // This preserves international characters while stripping likely injection vectors.
-  const sanitized = trimmed.replace(/[\x00-\x1F\x7F<>="'`&]/g, "");
+  // Using String.fromCharCode to avoid ESLint control character warnings
+  const dangerousChars = [
+    ...Array.from({ length: 32 }, (_, i) => String.fromCharCode(i)), // \x00-\x1F
+    String.fromCharCode(127), // \x7F
+    "<>=\"'`&",
+  ].join("");
+  const sanitized = trimmed.replace(
+    new RegExp(`[${dangerousChars.replace(/[\]\\-]/g, "\\$&")}]`, "g"),
+    ""
+  );
 
   // Return null if sanitization removed all characters
   if (sanitized.length === 0) {
@@ -52,19 +61,27 @@ export function validatePath(path: string | null | undefined): boolean {
     return false;
   }
 
-  // Check for suspicious patterns (basic path traversal detection)
-  const suspiciousPatterns = [
-    /\.\.\/\.\./g, // ../../
-    /\.\.\\\.\./g, // ..\..\
-    /^\.\./, // Starts with ..
-    /\/\.\./g, // Contains /..
-    /\\\.\./g, // Contains \..
-  ];
+  // Check for path traversal using component-based validation
+  // This is more robust than regex patterns and handles all edge cases
+  try {
+    // Normalize path separators for cross-platform compatibility
+    const normalizedPath = path.replace(/\\/g, "/");
+    const components = normalizedPath.split("/").filter((c) => c !== ""); // Remove empty components
 
-  for (const pattern of suspiciousPatterns) {
-    if (pattern.test(path)) {
+    // Check if any component is ".." (parent directory)
+    // This catches all path traversal patterns: "../something", "../../etc", etc.
+    if (components.includes("..")) {
       return false;
     }
+
+    // Additional check: if path starts with ".." after normalization
+    // This handles cases like "../file" or "..\\file"
+    if (normalizedPath.startsWith("../") || normalizedPath.startsWith("..\\")) {
+      return false;
+    }
+  } catch {
+    // If path parsing fails, reject it for safety
+    return false;
   }
 
   // Limit path length

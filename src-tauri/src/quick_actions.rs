@@ -2,6 +2,21 @@ use crate::error::AppError;
 use std::path::Path;
 use std::process::Command as StdCommand;
 
+/// Escapes a string for safe use in AppleScript string literals
+/// Escapes backslashes, double quotes, and other special characters
+fn escape_applescript_string(s: &str) -> String {
+    s.chars()
+        .map(|c| match c {
+            '\\' => "\\\\".to_string(),
+            '"' => "\\\"".to_string(),
+            '\n' => "\\n".to_string(),
+            '\r' => "\\r".to_string(),
+            '\t' => "\\t".to_string(),
+            _ => c.to_string(),
+        })
+        .collect()
+}
+
 pub fn open_in_editor(path: &Path) -> Result<(), AppError> {
     // Convert to String only when needed for system commands
     let path_str = path.to_string_lossy().to_string();
@@ -42,12 +57,16 @@ pub fn open_in_terminal(path: &Path) -> Result<(), AppError> {
     #[cfg(target_os = "macos")]
     {
         // macOS: open Terminal.app with the path
+        // Use AppleScript's 'quoted form of' to safely escape all special characters
+        // This handles backslashes, dollar signs, backticks, quotes, spaces, and other special chars
+        // We set the path as a variable first, then use quoted form of to escape it
         let script = format!(
-            "tell application \"Terminal\"\n\
-             do script \"cd '{}'\"\n\
+            "set thePath to \"{}\"\n\
+             tell application \"Terminal\"\n\
+             do script \"cd \" & quoted form of thePath\n\
              activate\n\
              end tell",
-            path_str.replace("'", "'\"'\"'")
+            escape_applescript_string(&path_str)
         );
         StdCommand::new("osascript")
             .args(&["-e", &script])

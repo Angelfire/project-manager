@@ -21,12 +21,34 @@ describe("validation", () => {
     });
 
     it("should remove dangerous characters", () => {
+      // HTML/JS metacharacters are removed
       expect(validateSearchTerm("react<script>")).toBe("reactscript");
-      // @ is removed but . is allowed, so "testexample.com" becomes "testexample.com"
-      expect(validateSearchTerm("test@example.com")).toBe("testexample.com");
-      // / is removed but . is allowed
-      expect(validateSearchTerm("path/to/file")).toBe("pathtofile");
-      expect(validateSearchTerm("test!@#$%^&*()")).toBe("test");
+      // @ is preserved (not a dangerous character for search terms)
+      expect(validateSearchTerm("test@example.com")).toBe("test@example.com");
+      // / is preserved (not a dangerous character for search terms)
+      expect(validateSearchTerm("path/to/file")).toBe("path/to/file");
+      // Control characters and HTML metacharacters are removed
+      expect(validateSearchTerm("test<>\"'`&")).toBe("test");
+      // & is removed (HTML entity), but other punctuation is preserved
+      expect(validateSearchTerm("test!@#$%^*()")).toBe("test!@#$%^*()");
+      expect(validateSearchTerm("test&more")).toBe("testmore");
+    });
+
+    it("should return null when sanitization removes all characters", () => {
+      // Strings that become empty after sanitization should return null
+      // Only dangerous characters (HTML/JS metacharacters and control chars) are removed
+      expect(validateSearchTerm("<>\"'`&")).toBeNull();
+      expect(validateSearchTerm("<<<>>>")).toBeNull();
+      // Mix of dangerous characters only
+      expect(validateSearchTerm("<>\"'`&<>\"'`&")).toBeNull();
+      // Control characters only (will be removed)
+      expect(validateSearchTerm("\x00\x01\x02")).toBeNull();
+      // Mix of control chars and dangerous chars
+      expect(validateSearchTerm("\x00<>&\"'`")).toBeNull();
+      // Only & character (HTML entity)
+      expect(validateSearchTerm("&")).toBeNull();
+      // Only < and > characters
+      expect(validateSearchTerm("<>")).toBeNull();
     });
 
     it("should allow safe characters", () => {
@@ -59,10 +81,11 @@ describe("validation", () => {
     });
 
     it("should handle unicode characters", () => {
-      // Unicode characters that are not word characters are removed
-      expect(validateSearchTerm("café")).toBe("caf");
-      // When all characters are removed, function returns null
-      expect(validateSearchTerm("测试")).toBeNull();
+      // Unicode characters are preserved (not dangerous for search terms)
+      expect(validateSearchTerm("café")).toBe("café");
+      expect(validateSearchTerm("测试")).toBe("测试");
+      expect(validateSearchTerm("naïve")).toBe("naïve");
+      expect(validateSearchTerm("résumé")).toBe("résumé");
     });
   });
 
