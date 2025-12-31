@@ -10,10 +10,16 @@ use std::process::Command as StdCommand;
 /// - On macOS, it uses `open -a TextEdit`.
 /// - On Linux, it uses `xdg-open`.
 ///
-/// The path is converted to a UTF-8 string only for passing to the
-/// underlying system commands.
+/// # Path Encoding
+///
+/// The path is converted to a string using `to_string_lossy()` for passing to
+/// underlying system commands. This conversion may lose information for paths
+/// containing invalid UTF-8 sequences (replacing them with the Unicode
+/// replacement character U+FFFD). On Unix systems, paths are not required to be
+/// valid UTF-8, so this is a known limitation.
 pub fn open_in_editor(path: &Path) -> Result<(), AppError> {
     // Convert to String only when needed for system commands
+    // Note: to_string_lossy() may lose information for non-UTF-8 paths
     let path_str = path.to_string_lossy().to_string();
 
     // Try VS Code first, then fallback to system default
@@ -45,8 +51,23 @@ pub fn open_in_editor(path: &Path) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Open the given directory in a terminal emulator.
+///
+/// # Platform-specific behavior
+///
+/// - **macOS**: Opens Terminal.app with the directory as the working directory
+/// - **Linux**: Tries multiple terminal emulators (gnome-terminal, konsole, xterm, alacritty)
+///
+/// # Path Encoding
+///
+/// The path is converted to a string using `to_string_lossy()` for passing to
+/// underlying system commands. This conversion may lose information for paths
+/// containing invalid UTF-8 sequences (replacing them with the Unicode
+/// replacement character U+FFFD). On Unix systems, paths are not required to be
+/// valid UTF-8, so this is a known limitation.
 pub fn open_in_terminal(path: &Path) -> Result<(), AppError> {
     // Convert to String only when needed for system commands
+    // Note: to_string_lossy() may lose information for non-UTF-8 paths
     let path_str = path.to_string_lossy().to_string();
 
     #[cfg(target_os = "macos")]
@@ -106,8 +127,23 @@ pub fn open_in_terminal(path: &Path) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Open the given file or directory in the system file manager.
+///
+/// # Platform-specific behavior
+///
+/// - **macOS**: Uses the `open` command to open in Finder
+/// - **Linux**: Tries multiple file managers (nautilus, dolphin, thunar, pcmanfm, xdg-open)
+///
+/// # Path Encoding
+///
+/// The path is converted to a string using `to_string_lossy()` for passing to
+/// underlying system commands. This conversion may lose information for paths
+/// containing invalid UTF-8 sequences (replacing them with the Unicode
+/// replacement character U+FFFD). On Unix systems, paths are not required to be
+/// valid UTF-8, so this is a known limitation.
 pub fn open_in_file_manager(path: &Path) -> Result<(), AppError> {
     // Convert to String only when needed for system commands
+    // Note: to_string_lossy() may lose information for non-UTF-8 paths
     let path_str = path.to_string_lossy().to_string();
 
     #[cfg(target_os = "macos")]

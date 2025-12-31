@@ -238,13 +238,13 @@ function App() {
                           if (validated === null) {
                             // Validation failed: show feedback and keep previous valid value
                             setSearchError(
-                              "Your search contains unsupported characters (e.g., <, >, \"). Please remove them and try again."
+                              'Your search contains unsupported characters (e.g., <, >, "). Please remove them and try again.'
                             );
                             return;
                           } else if (validated !== value) {
                             // Validation sanitized the input: show warning and update
                             setSearchError(
-                              "Your search contained unsupported characters (e.g., <, >, \"), which were removed."
+                              'Your search contained unsupported characters (e.g., <, >, "), which were removed.'
                             );
                             setSearchTerm(validated);
                           } else {
