@@ -133,3 +133,172 @@ pub fn validate_pid(pid: u32) -> Result<u32, AppError> {
 
     Ok(pid)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_validate_pid_rejects_zero() {
+        assert!(validate_pid(0).is_err());
+        let err = validate_pid(0).unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("0 is reserved"));
+    }
+
+    #[test]
+    fn test_validate_pid_accepts_valid_pids() {
+        assert_eq!(validate_pid(1).unwrap(), 1);
+        assert_eq!(validate_pid(12345).unwrap(), 12345);
+        assert_eq!(validate_pid(32768).unwrap(), 32768);
+        assert_eq!(validate_pid(1000000).unwrap(), 1000000);
+    }
+
+    #[test]
+    fn test_validate_pid_rejects_too_large() {
+        assert!(validate_pid(10_000_001).is_err());
+        let err = validate_pid(10_000_001).unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("out of range"));
+    }
+
+    #[test]
+    fn test_validate_directory_path_rejects_empty() {
+        assert!(validate_directory_path("").is_err());
+        let err = validate_directory_path("").unwrap_err();
+        assert!(matches!(err, AppError::NotFound(_)));
+    }
+
+    #[test]
+    fn test_validate_directory_path_rejects_null_bytes() {
+        assert!(validate_directory_path("/path\0/to/dir").is_err());
+        let err = validate_directory_path("/path\0/to/dir").unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("null bytes"));
+    }
+
+    #[test]
+    fn test_validate_directory_path_rejects_path_traversal() {
+        assert!(validate_directory_path("../parent").is_err());
+        assert!(validate_directory_path("../../etc").is_err());
+        assert!(validate_directory_path("/path/../other").is_err());
+        
+        let err = validate_directory_path("../parent").unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("path traversal"));
+    }
+
+    #[test]
+    fn test_validate_directory_path_rejects_too_long() {
+        let long_path = "/".to_string() + &"a".repeat(4097);
+        assert!(validate_directory_path(&long_path).is_err());
+        let err = validate_directory_path(&long_path).unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("too long"));
+    }
+
+    #[test]
+    fn test_validate_directory_path_rejects_nonexistent() {
+        assert!(validate_directory_path("/nonexistent/path/12345").is_err());
+        let err = validate_directory_path("/nonexistent/path/12345").unwrap_err();
+        assert!(matches!(err, AppError::NotFound(_)));
+    }
+
+    #[test]
+    fn test_validate_file_path_rejects_empty() {
+        assert!(validate_file_path("").is_err());
+        let err = validate_file_path("").unwrap_err();
+        assert!(matches!(err, AppError::NotFound(_)));
+    }
+
+    #[test]
+    fn test_validate_file_path_rejects_null_bytes() {
+        assert!(validate_file_path("/path\0/to/file").is_err());
+        let err = validate_file_path("/path\0/to/file").unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("null bytes"));
+    }
+
+    #[test]
+    fn test_validate_file_path_rejects_path_traversal() {
+        assert!(validate_file_path("../parent").is_err());
+        assert!(validate_file_path("../../etc/passwd").is_err());
+        assert!(validate_file_path("/path/../other").is_err());
+        
+        let err = validate_file_path("../parent").unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("path traversal"));
+    }
+
+    #[test]
+    fn test_validate_file_path_rejects_too_long() {
+        let long_path = "/".to_string() + &"a".repeat(4097);
+        assert!(validate_file_path(&long_path).is_err());
+        let err = validate_file_path(&long_path).unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("too long"));
+    }
+
+    #[test]
+    fn test_validate_file_path_rejects_nonexistent() {
+        assert!(validate_file_path("/nonexistent/file/12345.txt").is_err());
+        let err = validate_file_path("/nonexistent/file/12345.txt").unwrap_err();
+        assert!(matches!(err, AppError::NotFound(_)));
+    }
+
+    // Integration tests that require actual file system
+    #[test]
+    fn test_validate_directory_path_with_temp_dir() {
+        let temp_dir = std::env::temp_dir();
+        let test_path = temp_dir.join("test_validate_dir");
+        
+        // Create test directory
+        fs::create_dir_all(&test_path).unwrap();
+        
+        // Test that it validates successfully
+        let path_str = test_path.to_string_lossy();
+        let result = validate_directory_path(&path_str);
+        assert!(result.is_ok());
+        
+        // Cleanup
+        let _ = fs::remove_dir_all(&test_path);
+    }
+
+    #[test]
+    fn test_validate_file_path_with_temp_file() {
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join("test_validate_file.txt");
+        
+        // Create test file
+        fs::write(&test_file, "test content").unwrap();
+        
+        // Test that it validates successfully
+        let path_str = test_file.to_string_lossy();
+        let result = validate_file_path(&path_str);
+        assert!(result.is_ok());
+        
+        // Cleanup
+        let _ = fs::remove_file(&test_file);
+    }
+
+    #[test]
+    fn test_validate_directory_path_rejects_file() {
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join("test_not_dir.txt");
+        
+        // Create test file
+        fs::write(&test_file, "test content").unwrap();
+        
+        // Test that it rejects a file when expecting a directory
+        let path_str = test_file.to_string_lossy();
+        let result = validate_directory_path(&path_str);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("not a directory"));
+        
+        // Cleanup
+        let _ = fs::remove_file(&test_file);
+    }
+}
