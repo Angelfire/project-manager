@@ -81,7 +81,7 @@ pub fn open_in_terminal(path: &Path) -> Result<(), AppError> {
             ("konsole", vec!["--workdir", &path_str]),
             (
                 "xterm",
-                vec!["-e", "bash", "-c", "cd \"$1\" && exec bash", "bash", &path_str],
+                vec!["-e", "bash", "-c", "cd \"$1\" && exec bash", "--", &path_str],
             ),
             ("alacritty", vec!["--working-directory", &path_str]),
         ];
