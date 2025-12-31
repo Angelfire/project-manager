@@ -18,18 +18,16 @@ pub fn validate_directory_path(path: &str) -> Result<PathBuf, AppError> {
     }
 
     // Check for suspicious patterns (basic path traversal detection)
-    if path.contains("..") {
-        // Allow .. only if it's part of a valid relative path that doesn't escape
-        // For now, we'll be strict and reject any .. patterns
-        // In production, you might want more sophisticated validation
-        let path_buf = PathBuf::from(path);
-        if path_buf.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
-            return Err(AppError::CommandError(
-                "Invalid path: path traversal not allowed".to_string(),
-            ));
-        }
+    // Use component-based validation to detect parent directory segments (`..`)
+    let path_buf_for_validation = PathBuf::from(path);
+    if path_buf_for_validation
+        .components()
+        .any(|c| matches!(c, std::path::Component::ParentDir))
+    {
+        return Err(AppError::CommandError(
+            "Invalid path: path traversal not allowed".to_string(),
+        ));
     }
-
     // Limit path length (prevent DoS)
     if path.len() > 4096 {
         return Err(AppError::CommandError(
