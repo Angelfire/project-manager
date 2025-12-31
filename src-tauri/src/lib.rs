@@ -70,6 +70,14 @@ fn open_in_file_manager(path: String) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn validate_directory_path_command(path: String) -> Result<(), String> {
+    // Validate that the path exists and is a directory
+    validation::validate_directory_path(&path)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -83,7 +91,8 @@ pub fn run() {
             detect_port_by_pid,
             open_in_editor,
             open_in_terminal,
-            open_in_file_manager
+            open_in_file_manager,
+            validate_directory_path_command
         ])
         .setup(|app| {
             menu::setup_menu(app)?;

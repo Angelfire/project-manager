@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   validateSearchTerm,
   validatePath,
+  validateDirectoryPath,
   validatePid,
   validatePort,
 } from "../validation";
@@ -139,6 +140,53 @@ describe("validation", () => {
       expect(validatePath("..")).toBe(false); // Path traversal
       expect(validatePath("/")).toBe(true);
       expect(validatePath("C:")).toBe(true);
+    });
+  });
+
+  describe("validateDirectoryPath", () => {
+    beforeEach(() => {
+      // Mock the tauri API
+      vi.mock("@/api/tauri", () => ({
+        tauriApi: {
+          projects: {
+            validateDirectoryPath: vi.fn().mockResolvedValue(undefined),
+          },
+        },
+      }));
+    });
+
+    it("should reject invalid path formats", async () => {
+      await expect(validateDirectoryPath(null)).rejects.toThrow(
+        "Invalid path format"
+      );
+      await expect(validateDirectoryPath(undefined)).rejects.toThrow(
+        "Invalid path format"
+      );
+      await expect(validateDirectoryPath("")).rejects.toThrow(
+        "Invalid path format"
+      );
+      await expect(validateDirectoryPath("../parent")).rejects.toThrow(
+        "Invalid path format"
+      );
+    });
+
+    it("should call backend validation for valid path formats", async () => {
+      // The mock will resolve successfully
+      await expect(
+        validateDirectoryPath("/home/user/projects")
+      ).resolves.toBeUndefined();
+    });
+
+    it("should propagate backend errors", async () => {
+      // Override mock for this test
+      const { tauriApi } = await import("@/api/tauri");
+      vi.mocked(tauriApi.projects.validateDirectoryPath).mockRejectedValueOnce(
+        new Error("Path does not exist")
+      );
+
+      await expect(
+        validateDirectoryPath("/nonexistent/path")
+      ).rejects.toThrow();
     });
   });
 

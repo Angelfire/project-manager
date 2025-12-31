@@ -9,7 +9,7 @@ import {
 } from "@/services/projectService";
 import { toastError } from "@/utils/toast";
 import { tauriApi } from "@/api/tauri";
-import { validatePath } from "@/utils/validation";
+import { validateDirectoryPath } from "@/utils/validation";
 
 export const useProjects = () => {
   const [selectedDirectory, setSelectedDirectory] = useState<string | null>(
@@ -24,17 +24,11 @@ export const useProjects = () => {
   const [logs, setLogs] = useState<Map<string, LogEntry[]>>(new Map());
 
   const loadProjects = async (path: string) => {
-    // Validate path before processing
-    if (!validatePath(path)) {
-      toastError(
-        "Invalid directory path",
-        "The selected path is invalid or contains unsafe characters"
-      );
-      return;
-    }
-
     setLoading(true);
     try {
+      // Validate path before processing (includes existence check)
+      await validateDirectoryPath(path);
+
       const foundProjects = await scanProjects(path);
       setProjects(foundProjects);
     } catch (error) {
