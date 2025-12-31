@@ -6,10 +6,6 @@
 	<key>com.apple.security.network.client</key>
 	<true/>
 	
-	<!-- Allow outgoing network connections -->
-	<key>com.apple.security.network.server</key>
-	<true/>
-	
 	<!-- Allow file system access -->
 	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
