@@ -61,6 +61,12 @@ export function validatePath(path: string | null | undefined): boolean {
     return false;
   }
 
+  // Check for relative paths and home directory expansion
+  // Reject paths starting with "./" or "~" as they are relative or require expansion
+  if (path.startsWith("./") || path.startsWith("~/") || path === "~") {
+    return false;
+  }
+
   // Check for path traversal using component-based validation
   // This is more robust than regex patterns and handles all edge cases
   try {
