@@ -2,21 +2,6 @@ use crate::error::AppError;
 use std::path::Path;
 use std::process::Command as StdCommand;
 
-/// Escapes a string for safe use in AppleScript string literals
-/// Escapes backslashes, double quotes, and other special characters
-fn escape_applescript_string(s: &str) -> String {
-    s.chars()
-        .map(|c| match c {
-            '\\' => "\\\\".to_string(),
-            '"' => "\\\"".to_string(),
-            '\n' => "\\n".to_string(),
-            '\r' => "\\r".to_string(),
-            '\t' => "\\t".to_string(),
-            _ => c.to_string(),
-        })
-        .collect()
-}
-
 pub fn open_in_editor(path: &Path) -> Result<(), AppError> {
     // Convert to String only when needed for system commands
     let path_str = path.to_string_lossy().to_string();
@@ -57,19 +42,19 @@ pub fn open_in_terminal(path: &Path) -> Result<(), AppError> {
     #[cfg(target_os = "macos")]
     {
         // macOS: open Terminal.app with the path
-        // Use AppleScript's 'quoted form of' to safely escape all special characters
-        // This handles backslashes, dollar signs, backticks, quotes, spaces, and other special chars
-        // We set the path as a variable first, then use quoted form of to escape it
+        // Use AppleScript's POSIX file syntax to properly handle all special characters
+        // Pass the path as a command-line argument to osascript for proper escaping
         let script = format!(
-            "set thePath to \"{}\"\n\
+            "on run argv\n\
+             set posixPath to item 1 of argv\n\
              tell application \"Terminal\"\n\
-             do script \"cd \" & quoted form of thePath\n\
+             do script \"cd \" & quoted form of posixPath\n\
              activate\n\
-             end tell",
-            escape_applescript_string(&path_str)
+             end tell\n\
+             end run"
         );
         StdCommand::new("osascript")
-            .args(&["-e", &script])
+            .args(&["-e", &script, &path_str])
             .output()?;
     }
 
