@@ -52,11 +52,12 @@ pub fn open_in_terminal(path: &Path) -> Result<(), AppError> {
     #[cfg(target_os = "macos")]
     {
         // macOS: open Terminal.app with the path
-        // Escape the path for AppleScript by replacing backslashes and quotes
+        // Escape the path for AppleScript by replacing special characters
         // This provides defense-in-depth protection alongside AppleScript's quoted form
         let escaped_path = path_str
             .replace("\\", "\\\\")
-            .replace("\"", "\\\"");
+            .replace("\"", "\\\"")
+            .replace("'", "\\'");
         
         // Embed the path directly in the script to avoid osascript argv splitting issues
         // with paths containing spaces. Use AppleScript's quoted form for additional safety.
