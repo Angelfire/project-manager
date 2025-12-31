@@ -520,7 +520,7 @@ function App() {
             </div>
 
             {/* No search results message */}
-            {filteredProjects.length === 0 && searchTerm.trim().length > 0 && (
+            {filteredProjects.length === 0 && searchTerm.length > 0 && (
               <div className="bg-gray-900 rounded-lg border border-gray-800 p-12 text-center">
                 <div className="inline-flex items-center justify-center size-12 bg-gray-800 rounded-lg mb-4">
                   <Search className="size-6 text-gray-600" />
