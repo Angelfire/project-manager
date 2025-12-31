@@ -2,42 +2,6 @@ use crate::error::AppError;
 use std::path::Path;
 use std::process::Command as StdCommand;
 
-/// Escapes a string for safe use in AppleScript string literals.
-///
-/// This function is security-critical as it prevents command injection vulnerabilities
-/// when constructing AppleScript commands with user-provided or file system data.
-///
-/// # Characters Escaped
-///
-/// - `\` (backslash) → `\\` - Prevents escape sequence interpretation
-/// - `"` (double quote) → `\"` - Prevents breaking out of string literals
-/// - `\n` (newline) → `\\n` - Prevents multi-line injection
-/// - `\r` (carriage return) → `\\r` - Prevents line break injection
-/// - `\t` (tab) → `\\t` - Prevents tab character issues in commands
-///
-/// # Security Rationale
-///
-/// AppleScript string literals use double quotes and backslash escaping. Without proper
-/// escaping, malicious file paths or user input could:
-/// - Break out of the string literal context using unescaped quotes
-/// - Inject arbitrary AppleScript commands
-/// - Execute unintended system operations
-///
-/// # Examples
-///
-/// ```rust
-/// # fn escape_applescript_string(s: &str) -> String {
-/// #     s.chars()
-/// #         .map(|c| match c {
-/// #             '\\' => "\\\\".to_string(),
-/// #             '"' => "\\\"".to_string(),
-/// #             '\n' => "\\n".to_string(),
-/// #             '\r' => "\\r".to_string(),
-/// #             '\t' => "\\t".to_string(),
-/// #             _ => c.to_string(),
-/// #         })
-/// #         .collect()
-/// # }
 /// // Safe handling of quotes in file paths
 /// assert_eq!(escape_applescript_string(r#"file"name.txt"#), r#"file\"name.txt"#);
 ///
