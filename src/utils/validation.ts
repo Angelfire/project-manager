@@ -33,10 +33,11 @@ export function validateSearchTerm(searchTerm: string): string | null {
     String.fromCharCode(127), // \x7F
     "<>=\"'`&",
   ].join("");
-  const sanitized = trimmed.replace(
-    new RegExp(`[${dangerousChars.replace(/[\]\\-]/g, "\\$&")}]`, "g"),
-    ""
-  );
+  // Escape all regex metacharacters that have special meaning in character classes
+  // Must escape: backslash (\), closing bracket (]), and hyphen (-)
+  // Caret (^) is placed not at start to avoid special meaning
+  const escapedChars = dangerousChars.replace(/[\\\]\-^]/g, "\\$&");
+  const sanitized = trimmed.replace(new RegExp(`[${escapedChars}]`, "g"), "");
 
   // Return null if sanitization removed all characters
   if (sanitized.length === 0) {
