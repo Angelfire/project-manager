@@ -22,21 +22,6 @@
 	<key>com.apple.security.files.downloads.read-write</key>
 	<true/>
 	
-	<!-- Allow running subprocesses (for shell commands) -->
-	<key>com.apple.security.cs.allow-jit</key>
-	<true/>
-	
-	<!-- Allow unsigned executable memory (needed for some plugins) -->
-	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
-	<true/>
-	
-	<!-- Disable library validation (allows loading unsigned libraries) -->
-	<key>com.apple.security.cs.disable-library-validation</key>
-	<true/>
-	
-	<!-- Allow app to be debugged -->
-	<key>com.apple.security.get-task-allow</key>
-	<true/>
 </dict>
 </plist>
 
