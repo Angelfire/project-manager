@@ -52,19 +52,26 @@ pub fn open_in_terminal(path: &Path) -> Result<(), AppError> {
     #[cfg(target_os = "macos")]
     {
         // macOS: open Terminal.app with the path
-        // Use AppleScript's POSIX file syntax to properly handle all special characters
-        // Pass the path as a command-line argument to osascript for proper escaping
+        // Escape the path for AppleScript by replacing special characters
+        // This provides defense-in-depth protection alongside AppleScript's quoted form
+        let escaped_path = path_str
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("'", "\\'");
+        
+        // Embed the path directly in the script to avoid osascript argv splitting issues
+        // with paths containing spaces. Use AppleScript's quoted form for additional safety.
         let script = format!(
-            "on run argv\n\
-             set posixPath to item 1 of argv\n\
-             tell application \"Terminal\"\n\
-             do script \"cd \" & quoted form of posixPath\n\
+            "tell application \"Terminal\"\n\
+             do script \"cd \" & quoted form of \"{}\"\n\
              activate\n\
-             end tell\n\
-             end run"
+             end tell",
+            escaped_path
         );
+        
         StdCommand::new("osascript")
-            .args(&["-e", &script, &path_str])
+            .arg("-e")
+            .arg(&script)
             .output()?;
     }
 
