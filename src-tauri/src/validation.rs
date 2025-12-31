@@ -250,55 +250,46 @@ mod tests {
     // Integration tests that require actual file system
     #[test]
     fn test_validate_directory_path_with_temp_dir() {
-        let temp_dir = std::env::temp_dir();
-        let test_path = temp_dir.join("test_validate_dir");
-        
-        // Create test directory
-        fs::create_dir_all(&test_path).unwrap();
-        
+        // Use a unique temporary directory to avoid name collisions between tests
+        let temp_dir = tempfile::tempdir().unwrap();
+
         // Test that it validates successfully
-        let path_str = test_path.to_string_lossy();
+        let path_str = temp_dir.path().to_string_lossy();
         let result = validate_directory_path(&path_str);
         assert!(result.is_ok());
-        
-        // Cleanup
-        let _ = fs::remove_dir_all(&test_path);
+        // `temp_dir` is automatically cleaned up when it is dropped.
     }
 
     #[test]
     fn test_validate_file_path_with_temp_file() {
-        let temp_dir = std::env::temp_dir();
-        let test_file = temp_dir.join("test_validate_file.txt");
-        
-        // Create test file
-        fs::write(&test_file, "test content").unwrap();
+        // Use a unique temporary file to avoid name collisions between tests
+        let temp_file = tempfile::NamedTempFile::new().unwrap();
+
+        // Optionally write some content to the file to mirror previous behavior
+        fs::write(temp_file.path(), "test content").unwrap();
         
         // Test that it validates successfully
-        let path_str = test_file.to_string_lossy();
+        let path_str = temp_file.path().to_string_lossy();
         let result = validate_file_path(&path_str);
         assert!(result.is_ok());
-        
-        // Cleanup
-        let _ = fs::remove_file(&test_file);
+        // `temp_file` is automatically cleaned up when it is dropped.
     }
 
     #[test]
     fn test_validate_directory_path_rejects_file() {
-        let temp_dir = std::env::temp_dir();
-        let test_file = temp_dir.join("test_not_dir.txt");
+        // Use a unique temporary file to avoid name collisions between tests
+        let temp_file = tempfile::NamedTempFile::new().unwrap();
         
-        // Create test file
-        fs::write(&test_file, "test content").unwrap();
+        // Ensure the file exists (NamedTempFile already creates it, but we can mirror prior behavior)
+        fs::write(temp_file.path(), "test content").unwrap();
         
         // Test that it rejects a file when expecting a directory
-        let path_str = test_file.to_string_lossy();
+        let path_str = temp_file.path().to_string_lossy();
         let result = validate_directory_path(&path_str);
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(matches!(err, AppError::CommandError(_)));
         assert!(err.to_string().contains("not a directory"));
-        
-        // Cleanup
-        let _ = fs::remove_file(&test_file);
+        // `temp_file` is automatically cleaned up when it is dropped.
     }
 }
