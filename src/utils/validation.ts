@@ -25,9 +25,9 @@ export function validateSearchTerm(searchTerm: string): string | null {
     return null;
   }
 
-  // Remove potentially dangerous characters (but allow normal search characters)
-  // Allow: letters, numbers, spaces, hyphens, underscores, dots
-  const sanitized = trimmed.replace(/[^\w\s.-]/gi, "");
+  // Remove clearly dangerous characters (HTML/JS metacharacters and control chars)
+  // This preserves international characters while stripping likely injection vectors.
+  const sanitized = trimmed.replace(/[\x00-\x1F\x7F<>="'`&]/g, "");
 
   // Return null if sanitization removed all characters
   if (sanitized.length === 0) {
