@@ -265,7 +265,7 @@ mod tests {
         // Use a unique temporary file to avoid name collisions between tests
         let temp_file = tempfile::NamedTempFile::new().unwrap();
 
-        // Optionally write some content to the file to mirror previous behavior
+        // Write content to the file to ensure it's not empty (matches previous test behavior)
         fs::write(temp_file.path(), "test content").unwrap();
         
         // Test that it validates successfully
@@ -280,7 +280,7 @@ mod tests {
         // Use a unique temporary file to avoid name collisions between tests
         let temp_file = tempfile::NamedTempFile::new().unwrap();
         
-        // Ensure the file exists (NamedTempFile already creates it, but we can mirror prior behavior)
+        // Write content to the file (matches previous test behavior)
         fs::write(temp_file.path(), "test content").unwrap();
         
         // Test that it rejects a file when expecting a directory
