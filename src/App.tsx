@@ -248,7 +248,8 @@ function App() {
                             );
                             setSearchTerm(validated);
                           } else {
-                            // Valid input, update normally
+                            // Valid input, clear any previous error and update normally
+                            setSearchError(null);
                             setSearchTerm(validated);
                           }
                         }}
