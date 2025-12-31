@@ -163,7 +163,7 @@ describe("validation", () => {
 
   describe("validatePort", () => {
     it("should return true for valid ports", () => {
-      expect(validatePort(0)).toBe(true); // Ephemeral port
+      expect(validatePort(0)).toBe(true); // Port 0 (requests OS to assign ephemeral port)
       expect(validatePort(80)).toBe(true);
       expect(validatePort(3000)).toBe(true);
       expect(validatePort(8080)).toBe(true);
@@ -190,7 +190,7 @@ describe("validation", () => {
       expect(validatePort(100000)).toBe(false);
     });
 
-    it("should allow port 0 (ephemeral)", () => {
+    it("should allow port 0 (requests OS to assign ephemeral port)", () => {
       expect(validatePort(0)).toBe(true);
     });
 

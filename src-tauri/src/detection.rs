@@ -2,7 +2,7 @@ use crate::error::AppError;
 use crate::project_info::enrich_project_info;
 use crate::types::Project;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub fn detect_package_manager(path: &PathBuf) -> String {
     if path.join("pnpm-lock.yaml").exists() {
@@ -69,19 +69,17 @@ pub fn detect_framework(path: &PathBuf) -> String {
     "node".to_string()
 }
 
-pub fn scan_directory(path: String) -> Result<Vec<Project>, AppError> {
-    let dir = PathBuf::from(&path);
-
-    if !dir.exists() || !dir.is_dir() {
+pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
+    if !path.exists() || !path.is_dir() {
         return Err(AppError::NotFound(format!(
             "Directory does not exist: {}",
-            path
+            path.display()
         )));
     }
 
     let mut projects = Vec::new();
 
-    let entries = fs::read_dir(&dir)?;
+    let entries = fs::read_dir(path)?;
 
     for entry in entries {
         let entry = entry?;

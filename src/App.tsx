@@ -219,7 +219,14 @@ function App() {
                       placeholder="Search..."
                       value={searchTerm}
                       onChange={(e) => {
-                        const validated = validateSearchTerm(e.target.value);
+                        const value = e.target.value;
+                        // Allow clearing the search field (empty string)
+                        if (value === "") {
+                          setSearchTerm("");
+                          return;
+                        }
+                        // Validate and sanitize non-empty values
+                        const validated = validateSearchTerm(value);
                         if (validated !== null) {
                           setSearchTerm(validated);
                         }

@@ -1,11 +1,15 @@
 use crate::error::AppError;
+use std::path::Path;
 use std::process::Command as StdCommand;
 
-pub fn open_in_editor(path: String) -> Result<(), AppError> {
+pub fn open_in_editor(path: &Path) -> Result<(), AppError> {
+    // Convert to String only when needed for system commands
+    let path_str = path.to_string_lossy().to_string();
+    
     // Try VS Code first, then fallback to system default
     let commands = vec![
-        ("code", vec![path.clone()]),
-        ("code-insiders", vec![path.clone()]),
+        ("code", vec![path_str.clone()]),
+        ("code-insiders", vec![path_str.clone()]),
     ];
 
     for (cmd, args) in commands {
@@ -19,19 +23,22 @@ pub fn open_in_editor(path: String) -> Result<(), AppError> {
     #[cfg(target_os = "macos")]
     {
         StdCommand::new("open")
-            .args(&["-a", "TextEdit", &path])
+            .args(&["-a", "TextEdit", &path_str])
             .output()?;
     }
 
     #[cfg(target_os = "linux")]
     {
-        StdCommand::new("xdg-open").arg(&path).output()?;
+        StdCommand::new("xdg-open").arg(&path_str).output()?;
     }
 
     Ok(())
 }
 
-pub fn open_in_terminal(path: String) -> Result<(), AppError> {
+pub fn open_in_terminal(path: &Path) -> Result<(), AppError> {
+    // Convert to String only when needed for system commands
+    let path_str = path.to_string_lossy().to_string();
+    
     #[cfg(target_os = "macos")]
     {
         // macOS: open Terminal.app with the path
@@ -40,7 +47,7 @@ pub fn open_in_terminal(path: String) -> Result<(), AppError> {
              do script \"cd '{}'\"\n\
              activate\n\
              end tell",
-            path.replace("'", "'\"'\"'")
+            path_str.replace("'", "'\"'\"'")
         );
         StdCommand::new("osascript")
             .args(&["-e", &script])
@@ -51,13 +58,13 @@ pub fn open_in_terminal(path: String) -> Result<(), AppError> {
     {
         // Try different terminal emulators
         let terminals = vec![
-            ("gnome-terminal", vec!["--working-directory", &path]),
-            ("konsole", vec!["--workdir", &path]),
+            ("gnome-terminal", vec!["--working-directory", &path_str]),
+            ("konsole", vec!["--workdir", &path_str]),
             (
                 "xterm",
-                vec!["-e", "bash", "-c", &format!("cd '{}' && exec bash", path)],
+                vec!["-e", "bash", "-c", &format!("cd '{}' && exec bash", path_str)],
             ),
-            ("alacritty", vec!["--working-directory", &path]),
+            ("alacritty", vec!["--working-directory", &path_str]),
         ];
 
         for (cmd, args) in terminals {
@@ -70,11 +77,14 @@ pub fn open_in_terminal(path: String) -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn open_in_file_manager(path: String) -> Result<(), AppError> {
+pub fn open_in_file_manager(path: &Path) -> Result<(), AppError> {
+    // Convert to String only when needed for system commands
+    let path_str = path.to_string_lossy().to_string();
+    
     #[cfg(target_os = "macos")]
     {
         StdCommand::new("open")
-            .arg(&path)
+            .arg(&path_str)
             .output()
             .map_err(|e| AppError::CommandError(format!("Failed to open in file manager: {}", e)))?;
     }
@@ -83,11 +93,11 @@ pub fn open_in_file_manager(path: String) -> Result<(), AppError> {
     {
         // Try different file managers
         let managers = vec![
-            ("nautilus", vec![&path]),
-            ("dolphin", vec![&path]),
-            ("thunar", vec![&path]),
-            ("pcmanfm", vec![&path]),
-            ("xdg-open", vec![&path]),
+            ("nautilus", vec![&path_str]),
+            ("dolphin", vec![&path_str]),
+            ("thunar", vec![&path_str]),
+            ("pcmanfm", vec![&path_str]),
+            ("xdg-open", vec![&path_str]),
         ];
 
         for (cmd, args) in managers {

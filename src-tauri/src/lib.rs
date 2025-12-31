@@ -14,7 +14,8 @@ fn scan_directory(path: String) -> Result<Vec<types::Project>, String> {
     let validated_path = validation::validate_directory_path(&path)
         .map_err(|e| e.to_string())?;
     
-    detection::scan_directory(validated_path.to_string_lossy().to_string())
+    // Pass PathBuf directly to maintain type safety
+    detection::scan_directory(&validated_path)
         .map_err(|e| e.to_string())
 }
 
@@ -42,7 +43,8 @@ fn open_in_editor(path: String) -> Result<(), String> {
     let validated_path = validation::validate_file_path(&path)
         .map_err(|e| e.to_string())?;
     
-    quick_actions::open_in_editor(validated_path.to_string_lossy().to_string())
+    // Pass PathBuf directly to maintain type safety
+    quick_actions::open_in_editor(&validated_path)
         .map_err(|e| e.to_string())
 }
 
@@ -52,7 +54,8 @@ fn open_in_terminal(path: String) -> Result<(), String> {
     let validated_path = validation::validate_file_path(&path)
         .map_err(|e| e.to_string())?;
     
-    quick_actions::open_in_terminal(validated_path.to_string_lossy().to_string())
+    // Pass PathBuf directly to maintain type safety
+    quick_actions::open_in_terminal(&validated_path)
         .map_err(|e| e.to_string())
 }
 
@@ -62,7 +65,8 @@ fn open_in_file_manager(path: String) -> Result<(), String> {
     let validated_path = validation::validate_file_path(&path)
         .map_err(|e| e.to_string())?;
     
-    quick_actions::open_in_file_manager(validated_path.to_string_lossy().to_string())
+    // Pass PathBuf directly to maintain type safety
+    quick_actions::open_in_file_manager(&validated_path)
         .map_err(|e| e.to_string())
 }
 

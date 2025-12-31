@@ -114,7 +114,7 @@ pub fn validate_pid(pid: u32) -> Result<u32, AppError> {
 /// Validates a port number
 #[allow(dead_code)] // May be used in the future
 pub fn validate_port(port: u16) -> Result<u16, AppError> {
-    // Port 0 is valid (ephemeral port)
+    // Port 0 is valid (requests OS to assign ephemeral port)
     // Valid port range is 0-65535
     // No additional validation needed as u16 already enforces this
     Ok(port)
