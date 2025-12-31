@@ -58,7 +58,15 @@ pub fn validate_directory_path(path: &str) -> Result<PathBuf, AppError> {
     Ok(canonical)
 }
 
-/// Validates a file path (for quick actions)
+/// Validates a path (file or directory) for quick actions.
+/// 
+/// This function:
+/// - Ensures the path is non-empty
+/// - Rejects null bytes
+/// - Rejects parent directory components (`..`) to prevent traversal
+/// - Enforces a maximum path length
+/// - Checks that the path exists (but does *not* require it to be a file)
+/// - Resolves the path to its canonical absolute form
 pub fn validate_file_path(path: &str) -> Result<PathBuf, AppError> {
     if path.is_empty() {
         return Err(AppError::NotFound("Path cannot be empty".to_string()));
