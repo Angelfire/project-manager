@@ -58,18 +58,6 @@ use std::process::Command as StdCommand;
 ///
 /// This function works in conjunction with AppleScript's `quoted form of` command
 /// (used in `open_in_terminal`) to provide defense-in-depth protection.
-fn escape_applescript_string(s: &str) -> String {
-    s.chars()
-        .map(|c| match c {
-            '\\' => "\\\\".to_string(),
-            '"' => "\\\"".to_string(),
-            '\n' => "\\n".to_string(),
-            '\r' => "\\r".to_string(),
-            '\t' => "\\t".to_string(),
-            _ => c.to_string(),
-        })
-        .collect()
-}
 
 pub fn open_in_editor(path: &Path) -> Result<(), AppError> {
     // Convert to String only when needed for system commands
