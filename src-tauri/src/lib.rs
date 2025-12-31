@@ -6,35 +6,64 @@ mod process;
 mod project_info;
 mod quick_actions;
 mod types;
+mod validation;
 
 #[tauri::command]
 fn scan_directory(path: String) -> Result<Vec<types::Project>, String> {
-    detection::scan_directory(path).map_err(|e| e.to_string())
+    // Validate path before processing
+    let validated_path = validation::validate_directory_path(&path)
+        .map_err(|e| e.to_string())?;
+    
+    detection::scan_directory(validated_path.to_string_lossy().to_string())
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn kill_process_tree(pid: u32) -> Result<(), String> {
-    process::kill_process_tree(pid).map_err(|e| e.to_string())
+    // Validate PID before processing
+    let validated_pid = validation::validate_pid(pid)
+        .map_err(|e| e.to_string())?;
+    
+    process::kill_process_tree(validated_pid).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, String> {
-    process::detect_port_by_pid(pid).map_err(|e| e.to_string())
+    // Validate PID before processing
+    let validated_pid = validation::validate_pid(pid)
+        .map_err(|e| e.to_string())?;
+    
+    process::detect_port_by_pid(validated_pid).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn open_in_editor(path: String) -> Result<(), String> {
-    quick_actions::open_in_editor(path).map_err(|e| e.to_string())
+    // Validate path before processing
+    let validated_path = validation::validate_file_path(&path)
+        .map_err(|e| e.to_string())?;
+    
+    quick_actions::open_in_editor(validated_path.to_string_lossy().to_string())
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn open_in_terminal(path: String) -> Result<(), String> {
-    quick_actions::open_in_terminal(path).map_err(|e| e.to_string())
+    // Validate path before processing
+    let validated_path = validation::validate_file_path(&path)
+        .map_err(|e| e.to_string())?;
+    
+    quick_actions::open_in_terminal(validated_path.to_string_lossy().to_string())
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn open_in_file_manager(path: String) -> Result<(), String> {
-    quick_actions::open_in_file_manager(path).map_err(|e| e.to_string())
+    // Validate path before processing
+    let validated_path = validation::validate_file_path(&path)
+        .map_err(|e| e.to_string())?;
+    
+    quick_actions::open_in_file_manager(validated_path.to_string_lossy().to_string())
+        .map_err(|e| e.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

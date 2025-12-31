@@ -3,11 +3,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { tauriApi } from "@/api/tauri";
 import { Project } from "@/types";
 
-// Mock Tauri invoke
-vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi.fn(),
-}));
-
 describe("tauriApi", () => {
   beforeEach(() => {
     vi.clearAllMocks();

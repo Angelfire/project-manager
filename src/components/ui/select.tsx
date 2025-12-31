@@ -169,5 +169,4 @@ export function Select({
   );
 }
 
-// Export SelectItem with the same name for compatibility
 export { SelectItem };

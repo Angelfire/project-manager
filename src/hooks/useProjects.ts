@@ -9,6 +9,7 @@ import {
 } from "@/services/projectService";
 import { toastError } from "@/utils/toast";
 import { tauriApi } from "@/api/tauri";
+import { validatePath } from "@/utils/validation";
 
 export const useProjects = () => {
   const [selectedDirectory, setSelectedDirectory] = useState<string | null>(
@@ -23,6 +24,15 @@ export const useProjects = () => {
   const [logs, setLogs] = useState<Map<string, LogEntry[]>>(new Map());
 
   const loadProjects = async (path: string) => {
+    // Validate path before processing
+    if (!validatePath(path)) {
+      toastError(
+        "Invalid directory path",
+        "The selected path is invalid or contains unsafe characters"
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       const foundProjects = await scanProjects(path);
@@ -97,9 +107,9 @@ export const useProjects = () => {
 
       // Detect the real port after the server starts
       if (child.pid) {
-        // Iniciar la detección en background
+        // Start port detection in background
         detectPort(child.pid).then((detectedPort) => {
-          // Verificar que el proyecto aún esté corriendo
+          // Verify that the project is still running
           setRunningProjects((current) => {
             if (current.has(project.path) && detectedPort) {
               // Update the port in the project

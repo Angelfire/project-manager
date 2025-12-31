@@ -3,7 +3,6 @@ import { render, screen } from "@testing-library/react";
 import { ProjectLogs } from "@/components/ProjectLogs";
 import type { LogEntry } from "@/types";
 
-// Mock Tauri plugins
 vi.mock("@tauri-apps/plugin-dialog", () => ({
   save: vi.fn(() => Promise.resolve("/test/path")),
 }));

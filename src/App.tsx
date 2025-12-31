@@ -1,6 +1,7 @@
 import { useState, useCallback, lazy, Suspense } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { cn } from "@/utils/cn";
+import { validateSearchTerm } from "@/utils/validation";
 import {
   Folder,
   Play,
@@ -98,7 +99,6 @@ function App() {
     });
   }, []);
 
-  // Memoize handlers that are passed as props
   const handleSelectDirectory = useCallback(async () => {
     try {
       const selected = await open({
@@ -218,7 +218,14 @@ function App() {
                       type="text"
                       placeholder="Search..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => {
+                        const validated = validateSearchTerm(e.target.value);
+                        if (validated !== null) {
+                          setSearchTerm(validated);
+                        }
+                        // If validation fails, don't update (prevents invalid input)
+                      }}
+                      maxLength={500}
                       className="w-full px-4 py-2 pl-10 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all text-sm"
                     />
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
@@ -349,7 +356,6 @@ function App() {
                         ) : null}
                       </div>
 
-                      {/* Project Information */}
                       <div className="space-y-2 mb-4 text-xs text-gray-500">
                         {project.runtime_version && (
                           <div className="flex items-center gap-2">
