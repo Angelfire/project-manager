@@ -85,7 +85,7 @@ export function validatePid(pid: number | null | undefined): boolean {
     return false;
   }
 
-  // PID must be a positive integer (PID 0 is typically reserved and not allowed)
+  // PID must be a positive integer (PID 0 is reserved for kernel/swapper and dangerous to kill)
   if (!Number.isInteger(pid) || pid <= 0) {
     return false;
   }

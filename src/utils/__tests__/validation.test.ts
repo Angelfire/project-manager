@@ -121,11 +121,14 @@ describe("validation", () => {
 
   describe("validatePid", () => {
     it("should return true for valid PIDs", () => {
-      expect(validatePid(0)).toBe(true);
       expect(validatePid(1)).toBe(true);
       expect(validatePid(12345)).toBe(true);
       expect(validatePid(32768)).toBe(true);
       expect(validatePid(1000000)).toBe(true);
+    });
+
+    it("should return false for PID 0 (reserved for kernel)", () => {
+      expect(validatePid(0)).toBe(false);
     });
 
     it("should return false for null or undefined", () => {
