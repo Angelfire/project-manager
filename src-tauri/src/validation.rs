@@ -115,23 +115,15 @@ pub fn validate_file_path(path: &str) -> Result<PathBuf, AppError> {
 
 /// Validates a process ID
 pub fn validate_pid(pid: u32) -> Result<u32, AppError> {
-    // PID 0 is reserved for the kernel/swapper and dangerous to kill
-    // PID 1 is typically init/systemd and should not be killed
-    // Reject PID 0 and PID 1 for safety
+    // PID 0 is reserved for the kernel/swapper and is not a valid user-space process ID
     if pid == 0 {
         return Err(AppError::CommandError(
-            "Invalid PID: 0 is reserved for kernel and cannot be killed".to_string(),
-        ));
-    }
-    
-    if pid == 1 {
-        return Err(AppError::CommandError(
-            "Invalid PID: 1 is typically init/systemd and should not be killed".to_string(),
+            "Invalid PID: 0 is reserved for the kernel and not a valid process".to_string(),
         ));
     }
 
-    // Valid PIDs are typically in range 1-2^15 (32768) or 1-2^22 (4194304) depending on system
-    // We'll use a reasonable upper bound
+    // Valid PIDs are typically in range 1-2^15 (32768) or 1-2^22 (4194304) depending on system.
+    // We'll use a reasonable upper bound to catch obviously invalid values.
     if pid > 10_000_000 {
         return Err(AppError::CommandError(format!(
             "Invalid PID: {} (out of range)",
