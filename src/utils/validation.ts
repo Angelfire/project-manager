@@ -34,8 +34,8 @@ export function validateSearchTerm(searchTerm: string): string | null {
     "<>=\"'`&",
   ].join("");
   // Escape regex metacharacters that have special meaning in character classes
-  // Must escape: backslash (\), closing bracket (]), and hyphen (-)
-  const escapedChars = dangerousChars.replace(/[\\\]\-]/g, "\\$&");
+  // Must escape: backslash (\) and closing bracket (])
+  const escapedChars = dangerousChars.replace(/[\\\]]/g, "\\$&");
   const sanitized = trimmed.replace(new RegExp(`[${escapedChars}]`, "g"), "");
 
   // Return null if sanitization removed all characters
