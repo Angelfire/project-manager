@@ -15,8 +15,23 @@ use std::process::Command as StdCommand;
 /// The path is converted to a string using `to_string_lossy()` for passing to
 /// underlying system commands. This conversion may lose information for paths
 /// containing invalid UTF-8 sequences (replacing them with the Unicode
-/// replacement character U+FFFD). On Unix systems, paths are not required to be
-/// valid UTF-8, so this is a known limitation.
+/// replacement character U+FFFD).
+///
+/// On Unix systems, paths are not required to be valid UTF-8. As a result:
+/// - Opening files or directories whose names contain invalid UTF-8 may fail,
+///   or the wrong path may be opened, because the editor receives a lossy,
+///   modified version of the original path.
+/// - These failures may appear "silent" from the perspective of this helper,
+///   since it only checks whether the command starts, not that the intended
+///   file was successfully opened.
+///
+/// This is a known limitation of `open_in_editor`. If your application must
+/// robustly support arbitrary byte sequences in paths (common on Unix),
+/// consider:
+/// - Using `OsStr` / `Path`-based APIs throughout and avoiding conversion to
+///   UTF-8 when launching editors, or
+/// - Explicitly requiring that all paths be valid UTF-8 and documenting that
+///   constraint for callers of this function.
 pub fn open_in_editor(path: &Path) -> Result<(), AppError> {
     // Convert to String only when needed for system commands
     // Note: to_string_lossy() may lose information for non-UTF-8 paths
