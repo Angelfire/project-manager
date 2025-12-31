@@ -234,24 +234,21 @@ function App() {
                         const validated = validateSearchTerm(value);
 
                         if (validated === null) {
-                          // Validation failed: keep previous value and set feedback
+                          // Validation failed: show feedback but still reflect user input
                           input.setCustomValidity(
                             "Some characters are not allowed in search."
                           );
-                          return;
-                        }
-
-                        if (validated !== value) {
+                          setSearchTerm(value);
+                        } else if (validated !== value) {
                           // Validation sanitized the input: update and set feedback
                           setSearchTerm(validated);
                           input.setCustomValidity(
                             "Some characters were removed because they are not allowed in search."
                           );
-                          return;
+                        } else {
+                          // Valid input, update normally
+                          setSearchTerm(validated);
                         }
-
-                        // Valid input, update normally
-                        setSearchTerm(validated);
                       }}
                       onBlur={(e) => {
                         // Show any validation message when the user leaves the field
