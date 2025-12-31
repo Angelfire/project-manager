@@ -94,10 +94,12 @@ describe("validation", () => {
     it("should return true for valid paths", () => {
       expect(validatePath("/home/user/projects")).toBe(true);
       expect(validatePath("C:\\Users\\Projects")).toBe(true);
-      expect(validatePath("./relative/path")).toBe(true);
-      expect(validatePath("~/projects")).toBe(true);
     });
 
+    it("should return false for relative or home-relative paths", () => {
+      expect(validatePath("./relative/path")).toBe(false);
+      expect(validatePath("~/projects")).toBe(false);
+    });
     it("should return false for null or undefined", () => {
       expect(validatePath(null)).toBe(false);
       expect(validatePath(undefined)).toBe(false);
