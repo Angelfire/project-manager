@@ -56,7 +56,7 @@ export function validatePath(path: string | null | undefined): boolean {
   const suspiciousPatterns = [
     /\.\.\/\.\./g, // ../../
     /\.\.\\\.\./g, // ..\..\
-    /^\.\./g, // Starts with ..
+    /^\.\./, // Starts with ..
     /\/\.\./g, // Contains /..
     /\\\.\./g, // Contains \..
   ];
