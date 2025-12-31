@@ -87,6 +87,33 @@ export function validatePath(path: string | null | undefined): boolean {
 }
 
 /**
+ * Validates that a directory path exists and is accessible
+ * This function performs the same validation as the backend, including filesystem checks.
+ * @param path - The path to validate
+ * @returns Promise that resolves if path is valid, rejects with error message if not
+ */
+export async function validateDirectoryPath(
+  path: string | null | undefined
+): Promise<void> {
+  // First do basic validation
+  if (!validatePath(path)) {
+    throw new Error("Invalid path format");
+  }
+
+  // At this point, validatePath ensures path is a non-empty string
+  // TypeScript doesn't track this, so we use a type guard
+  if (typeof path !== "string") {
+    throw new Error("Invalid path format");
+  }
+
+  // Import dynamically to avoid issues in test environment
+  const { tauriApi } = await import("@/api/tauri");
+
+  // Call backend to validate that path exists and is a directory
+  await tauriApi.projects.validateDirectoryPath(path);
+}
+
+/**
  * Validates a process ID
  * @param pid - The process ID to validate
  * @returns True if PID is valid, false otherwise
