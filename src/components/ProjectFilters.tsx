@@ -20,7 +20,6 @@ export const ProjectFilters = memo(function ProjectFilters({
   uniqueRuntimes,
   uniqueFrameworks,
 }: ProjectFiltersProps) {
-  // Memoize callbacks at component level, not inline in JSX
   const handleRuntimeChange = useCallback(
     (value: string) => {
       onFiltersChange({

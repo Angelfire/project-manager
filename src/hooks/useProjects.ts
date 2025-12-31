@@ -9,6 +9,7 @@ import {
 } from "@/services/projectService";
 import { toastError } from "@/utils/toast";
 import { tauriApi } from "@/api/tauri";
+import { validateDirectoryPath } from "@/utils/validation";
 
 export const useProjects = () => {
   const [selectedDirectory, setSelectedDirectory] = useState<string | null>(
@@ -25,6 +26,9 @@ export const useProjects = () => {
   const loadProjects = async (path: string) => {
     setLoading(true);
     try {
+      // Validate path before processing (includes existence check)
+      await validateDirectoryPath(path);
+
       const foundProjects = await scanProjects(path);
       setProjects(foundProjects);
     } catch (error) {
@@ -97,9 +101,9 @@ export const useProjects = () => {
 
       // Detect the real port after the server starts
       if (child.pid) {
-        // Iniciar la detección en background
+        // Start port detection in background
         detectPort(child.pid).then((detectedPort) => {
-          // Verificar que el proyecto aún esté corriendo
+          // Verify that the project is still running
           setRunningProjects((current) => {
             if (current.has(project.path) && detectedPort) {
               // Update the port in the project

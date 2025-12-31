@@ -1,6 +1,7 @@
 import { useState, useCallback, lazy, Suspense } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { cn } from "@/utils/cn";
+import { validateSearchTerm } from "@/utils/validation";
 import {
   Folder,
   Play,
@@ -45,6 +46,7 @@ type SortOption = "name" | "modified" | "size";
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [sortAscending, setSortAscending] = useState(true);
   const [filters, setFilters] = useState<FilterOption>({
@@ -98,7 +100,6 @@ function App() {
     });
   }, []);
 
-  // Memoize handlers that are passed as props
   const handleSelectDirectory = useCallback(async () => {
     try {
       const selected = await open({
@@ -213,15 +214,58 @@ function App() {
                   </p>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <div className="relative flex-1 sm:w-56">
-                    <input
-                      type="text"
-                      placeholder="Search..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full px-4 py-2 pl-10 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all text-sm"
-                    />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
+                  <div className="flex-1 sm:w-56">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                          const value = e.target.value;
+
+                          // Clear any previous error message
+                          setSearchError(null);
+
+                          // Allow clearing the search field (empty string)
+                          if (value === "") {
+                            setSearchTerm("");
+                            return;
+                          }
+
+                          // Validate and sanitize non-empty values
+                          const validated = validateSearchTerm(value);
+
+                          if (validated === null) {
+                            // Validation failed: show feedback and keep previous valid value
+                            setSearchError(
+                              'Your search contains unsupported characters (e.g., <, >, "). Please remove them and try again.'
+                            );
+                            return;
+                          } else if (validated !== value) {
+                            // Validation sanitized the input: show warning and update
+                            setSearchError(
+                              'Your search contained unsupported characters (e.g., <, >, "), which were removed.'
+                            );
+                            setSearchTerm(validated);
+                          } else {
+                            // Valid input, clear any previous error and update normally
+                            setSearchError(null);
+                            setSearchTerm(validated);
+                          }
+                        }}
+                        maxLength={500}
+                        className={cn(
+                          "w-full px-4 py-2 pl-10 border rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:border-gray-700 transition-all text-sm",
+                          searchError
+                            ? "border-red-500 focus:ring-red-500"
+                            : "border-gray-800 focus:ring-gray-700"
+                        )}
+                      />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
+                    </div>
+                    {searchError && (
+                      <p className="mt-1 text-xs text-red-400">{searchError}</p>
+                    )}
                   </div>
                   <Button
                     onClick={handleToggleFilters}
@@ -349,7 +393,6 @@ function App() {
                         ) : null}
                       </div>
 
-                      {/* Project Information */}
                       <div className="space-y-2 mb-4 text-xs text-gray-500">
                         {project.runtime_version && (
                           <div className="flex items-center gap-2">
@@ -475,6 +518,21 @@ function App() {
                 );
               })}
             </div>
+
+            {/* No search results message */}
+            {filteredProjects.length === 0 && searchTerm.length > 0 && (
+              <div className="bg-gray-900 rounded-lg border border-gray-800 p-12 text-center">
+                <div className="inline-flex items-center justify-center size-12 bg-gray-800 rounded-lg mb-4">
+                  <Search className="size-6 text-gray-600" />
+                </div>
+                <p className="text-gray-400 font-medium">
+                  No projects found matching &quot;{searchTerm}&quot;
+                </p>
+                <p className="text-gray-600 text-sm mt-1">
+                  Try adjusting your search term or filters
+                </p>
+              </div>
+            )}
           </div>
         )}
 

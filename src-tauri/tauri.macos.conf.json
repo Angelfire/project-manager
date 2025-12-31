@@ -10,11 +10,21 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "RunStack",
+        "label": "main",
+        "url": "/",
         "width": 1400,
-        "height": 900
+        "height": 900,
+        "minWidth": 1020,
+        "minHeight": 600,
+        "fullscreen": false,
+        "resizable": true,
+        "center": true,
+        "hiddenTitle": true,
+        "titleBarStyle": "Transparent"
       }
     ],
     "security": {
@@ -23,7 +33,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["dmg", "app", "deb", "rpm", "appimage"],
+    "targets": ["app", "dmg"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -37,12 +47,10 @@
     "shortDescription": "Manage and run your Node.js, Deno and Bun projects",
     "longDescription": "RunStack - A desktop application to manage and run your development projects. Built with Tauri, React, and TypeScript.",
     "macOS": {
-      "frameworks": [],
-      "minimumSystemVersion": "10.13",
-      "exceptionDomain": "",
+      "entitlements": "entitlements.plist",
+      "minimumSystemVersion": "10.15",
       "signingIdentity": null,
-      "providerShortName": null,
-      "entitlements": null
+      "hardenedRuntime": true
     }
   }
 }

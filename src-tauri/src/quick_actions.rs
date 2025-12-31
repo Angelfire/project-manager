@@ -1,11 +1,46 @@
 use crate::error::AppError;
+use std::path::Path;
 use std::process::Command as StdCommand;
 
-pub fn open_in_editor(path: String) -> Result<(), AppError> {
+/// Open the given file or directory in a text editor.
+///
+/// This function first tries to launch Visual Studio Code (`code` or
+/// `code-insiders`). If neither is available, it falls back to the system
+/// default editor:
+/// - On macOS, it uses `open -a TextEdit`.
+/// - On Linux, it uses `xdg-open`.
+///
+/// # Path Encoding
+///
+/// The path is converted to a string using `to_string_lossy()` for passing to
+/// underlying system commands. This conversion may lose information for paths
+/// containing invalid UTF-8 sequences (replacing them with the Unicode
+/// replacement character U+FFFD).
+///
+/// On Unix systems, paths are not required to be valid UTF-8. As a result:
+/// - Opening files or directories whose names contain invalid UTF-8 may fail,
+///   or the wrong path may be opened, because the editor receives a lossy,
+///   modified version of the original path.
+/// - These failures may appear "silent" from the perspective of this helper,
+///   since it only checks whether the command starts, not that the intended
+///   file was successfully opened.
+///
+/// This is a known limitation of `open_in_editor`. If your application must
+/// robustly support arbitrary byte sequences in paths (common on Unix),
+/// consider:
+/// - Using `OsStr` / `Path`-based APIs throughout and avoiding conversion to
+///   UTF-8 when launching editors, or
+/// - Explicitly requiring that all paths be valid UTF-8 and documenting that
+///   constraint for callers of this function.
+pub fn open_in_editor(path: &Path) -> Result<(), AppError> {
+    // Convert to String only when needed for system commands
+    // Note: to_string_lossy() may lose information for non-UTF-8 paths
+    let path_str = path.to_string_lossy().to_string();
+
     // Try VS Code first, then fallback to system default
     let commands = vec![
-        ("code", vec![path.clone()]),
-        ("code-insiders", vec![path.clone()]),
+        ("code", vec![path_str.clone()]),
+        ("code-insiders", vec![path_str.clone()]),
     ];
 
     for (cmd, args) in commands {
@@ -19,31 +54,55 @@ pub fn open_in_editor(path: String) -> Result<(), AppError> {
     #[cfg(target_os = "macos")]
     {
         StdCommand::new("open")
-            .args(&["-a", "TextEdit", &path])
+            .args(&["-a", "TextEdit", &path_str])
             .output()?;
     }
 
     #[cfg(target_os = "linux")]
     {
-        StdCommand::new("xdg-open").arg(&path).output()?;
+        StdCommand::new("xdg-open").arg(&path_str).output()?;
     }
 
     Ok(())
 }
 
-pub fn open_in_terminal(path: String) -> Result<(), AppError> {
+/// Open the given directory in a terminal emulator.
+///
+/// # Platform-specific behavior
+///
+/// - **macOS**: Opens Terminal.app with the directory as the working directory
+/// - **Linux**: Tries multiple terminal emulators (gnome-terminal, konsole, xterm, alacritty)
+///
+/// # Path Encoding
+///
+/// The path is converted to a string using `to_string_lossy()` for passing to
+/// underlying system commands. This conversion may lose information for paths
+/// containing invalid UTF-8 sequences (replacing them with the Unicode
+/// replacement character U+FFFD). On Unix systems, paths are not required to be
+/// valid UTF-8, so this is a known limitation.
+pub fn open_in_terminal(path: &Path) -> Result<(), AppError> {
+    // Convert to String only when needed for system commands
+    // Note: to_string_lossy() may lose information for non-UTF-8 paths
+    let path_str = path.to_string_lossy().to_string();
+
     #[cfg(target_os = "macos")]
     {
         // macOS: open Terminal.app with the path
-        let script = format!(
-            "tell application \"Terminal\"\n\
-             do script \"cd '{}'\"\n\
-             activate\n\
-             end tell",
-            path.replace("'", "'\"'\"'")
-        );
+        // Pass the path as a command-line argument to osascript for proper handling.
+        // AppleScript's quoted form properly escapes all special characters when applied
+        // to the variable, avoiding command injection risks.
+        let script = "on run argv\n\
+                     set posixPath to item 1 of argv\n\
+                     tell application \"Terminal\"\n\
+                     do script \"cd \" & quoted form of posixPath\n\
+                     activate\n\
+                     end tell\n\
+                     end run";
+        
         StdCommand::new("osascript")
-            .args(&["-e", &script])
+            .arg("-e")
+            .arg(script)
+            .arg(&path_str)
             .output()?;
     }
 
@@ -51,13 +110,20 @@ pub fn open_in_terminal(path: String) -> Result<(), AppError> {
     {
         // Try different terminal emulators
         let terminals = vec![
-            ("gnome-terminal", vec!["--working-directory", &path]),
-            ("konsole", vec!["--workdir", &path]),
+            ("gnome-terminal", vec!["--working-directory", &path_str]),
+            ("konsole", vec!["--workdir", &path_str]),
             (
                 "xterm",
-                vec!["-e", "bash", "-c", &format!("cd '{}' && exec bash", path)],
+                vec![
+                    "-e",
+                    "bash",
+                    "-c",
+                    "cd \"$1\" && exec bash",
+                    "--",
+                    &path_str,
+                ],
             ),
-            ("alacritty", vec!["--working-directory", &path]),
+            ("alacritty", vec!["--working-directory", &path_str]),
         ];
 
         for (cmd, args) in terminals {
@@ -70,24 +136,44 @@ pub fn open_in_terminal(path: String) -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn open_in_file_manager(path: String) -> Result<(), AppError> {
+/// Open the given file or directory in the system file manager.
+///
+/// # Platform-specific behavior
+///
+/// - **macOS**: Uses the `open` command to open in Finder
+/// - **Linux**: Tries multiple file managers (nautilus, dolphin, thunar, pcmanfm, xdg-open)
+///
+/// # Path Encoding
+///
+/// The path is converted to a string using `to_string_lossy()` for passing to
+/// underlying system commands. This conversion may lose information for paths
+/// containing invalid UTF-8 sequences (replacing them with the Unicode
+/// replacement character U+FFFD). On Unix systems, paths are not required to be
+/// valid UTF-8, so this is a known limitation.
+pub fn open_in_file_manager(path: &Path) -> Result<(), AppError> {
+    // Convert to String only when needed for system commands
+    // Note: to_string_lossy() may lose information for non-UTF-8 paths
+    let path_str = path.to_string_lossy().to_string();
+
     #[cfg(target_os = "macos")]
     {
         StdCommand::new("open")
-            .arg(&path)
+            .arg(&path_str)
             .output()
-            .map_err(|e| AppError::CommandError(format!("Failed to open in file manager: {}", e)))?;
+            .map_err(|e| {
+                AppError::CommandError(format!("Failed to open in file manager: {}", e))
+            })?;
     }
 
     #[cfg(target_os = "linux")]
     {
         // Try different file managers
         let managers = vec![
-            ("nautilus", vec![&path]),
-            ("dolphin", vec![&path]),
-            ("thunar", vec![&path]),
-            ("pcmanfm", vec![&path]),
-            ("xdg-open", vec![&path]),
+            ("nautilus", vec![&path_str]),
+            ("dolphin", vec![&path_str]),
+            ("thunar", vec![&path_str]),
+            ("pcmanfm", vec![&path_str]),
+            ("xdg-open", vec![&path_str]),
         ];
 
         for (cmd, args) in managers {

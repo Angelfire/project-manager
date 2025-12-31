@@ -5,12 +5,6 @@ import { QuickActionsMenu } from "@/components/QuickActionsMenu";
 import * as tauriCore from "@tauri-apps/api/core";
 import * as toastUtils from "@/utils/toast";
 
-// Mock Tauri APIs
-vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi.fn(),
-}));
-
-// Mock toast utilities
 vi.mock("../../utils/toast", () => ({
   toastError: vi.fn(),
   toastSuccess: vi.fn(),

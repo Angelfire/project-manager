@@ -139,8 +139,6 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 - [ ] **Dependency scanning**: `pnpm audit` regularmente
 - [ ] **Snyk/Dependabot**: Alertas de vulnerabilidades
-- [ ] **Content Security Policy**: Configurar CSP en Tauri
-- [ ] **Input validation**: Validar todas las entradas de usuario
 
 ## 📊 Monitoreo y Analytics
 
@@ -216,11 +214,9 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### Alta Prioridad (Impacto inmediato)
 
-1. ✅ ~~ESLint + Prettier~~ (Completado)
 2. Husky + lint-staged
-3. ✅ ~~Error boundaries~~ (Completado)
-4. Type safety improvements
-5. CI/CD básico
+3. Type safety improvements
+4. CI/CD básico
 
 ### Media Prioridad (Mejora calidad)
 

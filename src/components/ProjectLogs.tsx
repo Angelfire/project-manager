@@ -46,7 +46,6 @@ export const ProjectLogs = memo(function ProjectLogs({
     }
   }, []);
 
-  // Memoize filtered logs to avoid re-filtering on every render
   const filteredLogs = useMemo(
     () =>
       logs.filter((log) =>
@@ -55,7 +54,6 @@ export const ProjectLogs = memo(function ProjectLogs({
     [logs, searchTerm]
   );
 
-  // Memoize format function
   const formatTimestamp = useCallback((timestamp: number): string => {
     const date = new Date(timestamp);
     const hours = date.getHours().toString().padStart(2, "0");
@@ -117,7 +115,6 @@ export const ProjectLogs = memo(function ProjectLogs({
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-gray-900 rounded-lg border border-gray-800 w-full max-w-4xl h-[80vh] flex flex-col">
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-800">
           <div>
             <h2 className="text-lg font-semibold text-gray-100">
@@ -154,7 +151,6 @@ export const ProjectLogs = memo(function ProjectLogs({
           </div>
         </div>
 
-        {/* Search bar */}
         <div className="p-4 border-b border-gray-800">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
@@ -184,7 +180,6 @@ export const ProjectLogs = memo(function ProjectLogs({
           </div>
         </div>
 
-        {/* Logs container */}
         <div
           ref={logsContainerRef}
           onScroll={handleScroll}

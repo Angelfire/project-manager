@@ -18,6 +18,15 @@ export const tauriApi = {
     scan: (path: string): Promise<Project[]> => {
       return invoke<Project[]>("scan_directory", { path });
     },
+
+    /**
+     * Validate that a path exists and is a directory
+     * @param path - Directory path to validate
+     * @throws Error if path doesn't exist or is not a directory
+     */
+    validateDirectoryPath: (path: string): Promise<void> => {
+      return invoke<void>("validate_directory_path_command", { path });
+    },
   },
 
   /**
