@@ -2,18 +2,6 @@ use crate::error::AppError;
 use std::process::Command as StdCommand;
 
 pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
-    // Safety check: reject dangerous PIDs
-    if pid == 0 {
-        return Err(AppError::CommandError(
-            "Cannot kill PID 0: reserved for kernel/swapper".to_string(),
-        ));
-    }
-    if pid == 1 {
-        return Err(AppError::CommandError(
-            "Cannot kill PID 1: typically init/systemd".to_string(),
-        ));
-    }
-
     // Unix (macOS/Linux): kill the process and all its children
     // First, find all child processes recursively
     let mut all_pids = vec![pid];
