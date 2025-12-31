@@ -1,12 +1,12 @@
 mod detection;
-mod error;
+pub mod error;
 mod menu;
 mod port;
 mod process;
 mod project_info;
 mod quick_actions;
 mod types;
-mod validation;
+pub mod validation;
 
 #[tauri::command]
 fn scan_directory(path: String) -> Result<Vec<types::Project>, String> {
