@@ -110,7 +110,6 @@ pub fn open_in_terminal(path: &Path) -> Result<(), AppError> {
                     "-c",
                     "cd \"$1\" && exec bash",
                     "--",
-                    "bash",
                     &path_str,
                 ],
             ),
