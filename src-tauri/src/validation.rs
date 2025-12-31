@@ -130,12 +130,3 @@ pub fn validate_port(port: u16) -> Result<u16, AppError> {
     // No additional validation needed as u16 already enforces this
     Ok(port)
 }
-
-/// Sanitizes a path string to prevent command injection
-/// Removes or escapes dangerous characters
-#[allow(dead_code)] // May be used in the future
-pub fn sanitize_path_for_command(path: &str) -> String {
-    // Replace single quotes with escaped version for shell safety
-    path.replace("'", "'\"'\"'")
-}
-
