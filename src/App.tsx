@@ -234,26 +234,28 @@ function App() {
                         const validated = validateSearchTerm(value);
 
                         if (validated === null) {
-                          // Validation failed: keep previous value and show feedback
+                          // Validation failed: keep previous value and set feedback
                           input.setCustomValidity(
                             "Some characters are not allowed in search."
                           );
-                          input.reportValidity();
                           return;
                         }
 
                         if (validated !== value) {
-                          // Validation sanitized the input: update and inform the user
+                          // Validation sanitized the input: update and set feedback
                           setSearchTerm(validated);
                           input.setCustomValidity(
                             "Some characters were removed because they are not allowed in search."
                           );
-                          input.reportValidity();
                           return;
                         }
 
                         // Valid input, update normally
                         setSearchTerm(validated);
+                      }}
+                      onBlur={(e) => {
+                        // Show any validation message when the user leaves the field
+                        e.target.reportValidity();
                       }}
                       maxLength={500}
                       className="w-full px-4 py-2 pl-10 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all text-sm"
