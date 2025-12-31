@@ -75,8 +75,8 @@ export function validatePath(path: string | null | undefined): boolean {
     }
 
     // Additional check: if path starts with ".." after normalization
-    // This handles cases like "../file" or "..\\file"
-    if (normalizedPath.startsWith("../") || normalizedPath.startsWith("..\\")) {
+    // This explicitly rejects leading "../" segments (e.g., "../file")
+    if (normalizedPath.startsWith("../")) {
       return false;
     }
   } catch {
