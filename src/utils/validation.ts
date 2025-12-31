@@ -100,11 +100,17 @@ export async function validateDirectoryPath(
     throw new Error("Invalid path format");
   }
 
+  // At this point, validatePath ensures path is a non-empty string
+  // TypeScript doesn't track this, so we use a type guard
+  if (typeof path !== "string") {
+    throw new Error("Invalid path format");
+  }
+
   // Import dynamically to avoid issues in test environment
   const { tauriApi } = await import("@/api/tauri");
 
   // Call backend to validate that path exists and is a directory
-  await tauriApi.projects.validateDirectoryPath(path!);
+  await tauriApi.projects.validateDirectoryPath(path);
 }
 
 /**
