@@ -46,6 +46,7 @@ type SortOption = "name" | "modified" | "size";
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [sortAscending, setSortAscending] = useState(true);
   const [filters, setFilters] = useState<FilterOption>({
@@ -213,47 +214,57 @@ function App() {
                   </p>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <div className="relative flex-1 sm:w-56">
-                    <input
-                      type="text"
-                      placeholder="Search..."
-                      value={searchTerm}
-                      onChange={(e) => {
-                        const input = e.target;
-                        const value = input.value;
-                        // Clear any previous custom validation message
-                        input.setCustomValidity("");
+                  <div className="flex-1 sm:w-56">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                          const value = e.target.value;
 
-                        // Allow clearing the search field (empty string)
-                        if (value === "") {
-                          setSearchTerm("");
-                          return;
-                        }
+                          // Clear any previous error message
+                          setSearchError(null);
 
-                        // Validate and sanitize non-empty values
-                        const validated = validateSearchTerm(value);
+                          // Allow clearing the search field (empty string)
+                          if (value === "") {
+                            setSearchTerm("");
+                            return;
+                          }
 
-                        if (validated === null) {
-                          // Validation failed: show feedback but still reflect user input
-                          input.setCustomValidity(
-                            "Some characters are not allowed in search."
-                          );
-                          setSearchTerm(value);
-                        } else if (validated !== value) {
-                          // Validation sanitized the input: update and set feedback
-                          setSearchTerm(validated);
-                          input.setCustomValidity(
-                            "Some characters were removed because they are not allowed in search."
-                          );
-                        } else {
-                          // Valid input, update normally
-                          setSearchTerm(validated);
-                        }
-                      }}
-                      maxLength={500}
-                      className="w-full px-4 py-2 pl-10 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all text-sm"
-                    />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
+                          // Validate and sanitize non-empty values
+                          const validated = validateSearchTerm(value);
+
+                          if (validated === null) {
+                            // Validation failed: show feedback but still reflect user input
+                            setSearchError(
+                              "Some characters are not allowed in search."
+                            );
+                            setSearchTerm(value);
+                          } else if (validated !== value) {
+                            // Validation sanitized the input: show warning and update
+                            setSearchError(
+                              "Some characters were removed because they are not allowed in search."
+                            );
+                            setSearchTerm(validated);
+                          } else {
+                            // Valid input, update normally
+                            setSearchTerm(validated);
+                          }
+                        }}
+                        maxLength={500}
+                        className={cn(
+                          "w-full px-4 py-2 pl-10 border rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:border-gray-700 transition-all text-sm",
+                          searchError
+                            ? "border-red-500 focus:ring-red-500"
+                            : "border-gray-800 focus:ring-gray-700"
+                        )}
+                      />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
+                    </div>
+                    {searchError && (
+                      <p className="mt-1 text-xs text-red-400">{searchError}</p>
+                    )}
                   </div>
                   <Button
                     onClick={handleToggleFilters}
