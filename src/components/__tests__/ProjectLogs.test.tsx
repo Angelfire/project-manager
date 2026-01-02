@@ -12,10 +12,13 @@ vi.mock("@tauri-apps/plugin-fs", () => ({
 }));
 
 describe("ProjectLogs", () => {
+  // Use fixed timestamp for determinism
+  const FIXED_TIMESTAMP = 1705324800000; // Jan 15, 2024 12:00:00 UTC in milliseconds
+
   const mockLogs: LogEntry[] = [
     {
       id: "1",
-      timestamp: Date.now(),
+      timestamp: FIXED_TIMESTAMP,
       type: "stdout",
       content: "Server started on port 3000",
       projectPath: "/test/project",

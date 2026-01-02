@@ -33,9 +33,9 @@ const variantStyles: Record<ButtonVariant, string> = {
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-sm has-[>svg]:px-2.5",
-  md: "h-9 px-4 text-sm has-[>svg]:px-3",
-  lg: "h-10 px-6 text-base has-[>svg]:px-4",
+  sm: "py-2 px-3 text-sm leading-none has-[>svg]:px-2.5",
+  md: "py-[10px] px-4 text-sm leading-none has-[>svg]:px-3",
+  lg: "py-3 px-6 text-base leading-none has-[>svg]:px-4",
 };
 
 const iconSizeStyles: Record<ButtonSize, string> = {
@@ -69,9 +69,9 @@ function Button({
     baseStyles,
     variantStyles[variant],
     {
-      "size-9": isIconOnly && size === "md",
-      "size-8": isIconOnly && size === "sm",
-      "size-10": isIconOnly && size === "lg",
+      "p-[9px]": isIconOnly && size === "md",
+      "p-2": isIconOnly && size === "sm",
+      "p-2.5": isIconOnly && size === "lg",
       [sizeStyles[size]]: !isIconOnly && variant !== "icon",
     },
     {
