@@ -1,34 +1,20 @@
 import { useState, useCallback, lazy, Suspense } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { cn } from "@/utils/cn";
-import { validateSearchTerm } from "@/utils/validation";
 import {
   Folder,
-  Play,
-  Square,
   RefreshCw,
   Search,
-  ExternalLink,
   Loader2,
   FolderOpen,
   ArrowUpDown,
-  Info,
-  Calendar,
-  HardDrive,
-  Code,
   Filter,
-  FileText,
 } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import runstackIcon from "@/assets/runstack.png";
-import {
-  getRuntimeIcon,
-  getRuntimeColor,
-  getRuntimeTopBar,
-} from "@/utils/runtime";
-import { openProjectInBrowser, detectPort } from "@/services/projectService";
 import { ProjectFilters, type FilterOption } from "@/components/ProjectFilters";
-import { QuickActionsMenu } from "@/components/QuickActionsMenu";
+import { ProjectCard } from "@/components/ProjectCard";
+import { useSearchInput } from "@/hooks/useSearchInput";
 
 // Lazy load heavy components
 const ProjectLogs = lazy(() =>
@@ -45,8 +31,11 @@ import { toastError } from "@/utils/toast";
 type SortOption = "name" | "modified" | "size";
 
 function App() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchError, setSearchError] = useState<string | null>(null);
+  const {
+    searchTerm,
+    searchError,
+    handleChange: handleSearchChange,
+  } = useSearchInput();
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [sortAscending, setSortAscending] = useState(true);
   const [filters, setFilters] = useState<FilterOption>({
@@ -80,25 +69,6 @@ function App() {
       sortAscending,
       runningProjects
     );
-
-  // Memoize expensive formatting functions
-  const formatFileSize = useCallback((bytes: number | null): string => {
-    if (!bytes) return "Unknown";
-    const sizes = ["B", "KB", "MB", "GB"];
-    if (bytes === 0) return "0 B";
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
-  }, []);
-
-  const formatDate = useCallback((timestamp: number | null): string => {
-    if (!timestamp) return "Unknown";
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }, []);
 
   const handleSelectDirectory = useCallback(async () => {
     try {
@@ -158,7 +128,7 @@ function App() {
                   value={selectedDirectory || ""}
                   readOnly
                   placeholder="Select a directory..."
-                  className="w-full px-4 py-2 pl-10 border text-sm border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all"
+                  className="w-full py-2.5 px-4 pl-10 border text-sm leading-none border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all"
                 />
                 <Folder className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
               </div>
@@ -220,42 +190,10 @@ function App() {
                         type="text"
                         placeholder="Search..."
                         value={searchTerm}
-                        onChange={(e) => {
-                          const value = e.target.value;
-
-                          // Clear any previous error message
-                          setSearchError(null);
-
-                          // Allow clearing the search field (empty string)
-                          if (value === "") {
-                            setSearchTerm("");
-                            return;
-                          }
-
-                          // Validate and sanitize non-empty values
-                          const validated = validateSearchTerm(value);
-
-                          if (validated === null) {
-                            // Validation failed: show feedback and keep previous valid value
-                            setSearchError(
-                              'Your search contains unsupported characters (e.g., <, >, "). Please remove them and try again.'
-                            );
-                            return;
-                          } else if (validated !== value) {
-                            // Validation sanitized the input: show warning and update
-                            setSearchError(
-                              'Your search contained unsupported characters (e.g., <, >, "), which were removed.'
-                            );
-                            setSearchTerm(validated);
-                          } else {
-                            // Valid input, clear any previous error and update normally
-                            setSearchError(null);
-                            setSearchTerm(validated);
-                          }
-                        }}
+                        onChange={(e) => handleSearchChange(e.target.value)}
                         maxLength={500}
                         className={cn(
-                          "w-full px-4 py-2 pl-10 border rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:border-gray-700 transition-all text-sm",
+                          "w-full py-2.5 px-4 pl-10 border rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:border-gray-700 transition-all text-sm leading-none",
                           searchError
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-800 focus:ring-gray-700"
@@ -309,214 +247,19 @@ function App() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredProjects.map((project) => {
-                const isRunning = runningProjects.has(project.path);
-                return (
-                  <div
-                    key={project.path}
-                    className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden transition-colors hover:border-gray-700"
-                  >
-                    <div
-                      className={cn("h-1", getRuntimeTopBar(project.runtime))}
-                    />
-                    <div className="p-5">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <i
-                              className={cn(
-                                "text-2xl text-white",
-                                getRuntimeIcon(project.runtime)
-                              )}
-                            ></i>
-                            <h3 className="text-base font-semibold text-gray-100 truncate">
-                              {project.name}
-                            </h3>
-                          </div>
-                          <p className="text-xs text-gray-600 font-mono truncate">
-                            {project.path}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1.5 ml-3 shrink-0">
-                          <span
-                            className={cn("relative flex", {
-                              "size-2.5": true,
-                            })}
-                          >
-                            {isRunning && (
-                              <span
-                                className={cn(
-                                  "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-                                  "bg-green-400"
-                                )}
-                              />
-                            )}
-                            <span
-                              className={cn(
-                                "relative inline-flex rounded-full size-2.5",
-                                {
-                                  "bg-green-500": isRunning,
-                                  "bg-gray-700": !isRunning,
-                                }
-                              )}
-                            />
-                          </span>
-                          <span
-                            className={cn("text-xs font-medium", {
-                              "text-green-400": isRunning,
-                              "text-gray-600": !isRunning,
-                            })}
-                          >
-                            {isRunning ? "Active" : "Inactive"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-1.5 mb-4">
-                        <span
-                          className={cn(
-                            "px-2.5 py-1 rounded text-xs font-medium",
-                            getRuntimeColor(project.runtime)
-                          )}
-                        >
-                          {project.runtime}
-                        </span>
-                        {project.package_manager && (
-                          <span className="px-2.5 py-1 rounded text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700">
-                            {project.package_manager}
-                          </span>
-                        )}
-                        {isRunning && project.port ? (
-                          <span className="px-2.5 py-1 rounded text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700">
-                            :{project.port}
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <div className="space-y-2 mb-4 text-xs text-gray-500">
-                        {project.runtime_version && (
-                          <div className="flex items-center gap-2">
-                            <Info className="size-3.5" />
-                            <span>
-                              {project.runtime} {project.runtime_version}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-4 flex-wrap">
-                          {project.modified && (
-                            <div className="flex items-center gap-2">
-                              <Calendar className="size-3.5" />
-                              <span>{formatDate(project.modified)}</span>
-                            </div>
-                          )}
-                          {project.size && (
-                            <div className="flex items-center gap-2">
-                              <HardDrive className="size-3.5" />
-                              <span>{formatFileSize(project.size)}</span>
-                            </div>
-                          )}
-                          {project.scripts &&
-                            Object.keys(project.scripts).length > 0 && (
-                              <div className="flex items-center gap-2">
-                                <Code className="size-3.5" />
-                                <span>
-                                  {Object.keys(project.scripts).length} scripts
-                                </span>
-                              </div>
-                            )}
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        {isRunning ? (
-                          <>
-                            <Button
-                              onClick={() => stopProject(project)}
-                              variant="danger"
-                              size="sm"
-                              icon={Square}
-                              fullWidth
-                            >
-                              Stop
-                            </Button>
-                            <Button
-                              onClick={async () => {
-                                const process = processes.get(project.path);
-                                if (process?.pid && !project.port) {
-                                  // Try to detect the port before opening
-                                  try {
-                                    const detectedPort = await detectPort(
-                                      process.pid,
-                                      1,
-                                      0,
-                                      0
-                                    );
-                                    if (detectedPort) {
-                                      setProjects((prev) =>
-                                        prev.map((p) =>
-                                          p.path === project.path
-                                            ? { ...p, port: detectedPort }
-                                            : p
-                                        )
-                                      );
-                                      await openProjectInBrowser(
-                                        { ...project, port: detectedPort },
-                                        processes
-                                      );
-                                      return;
-                                    }
-                                  } catch {
-                                    // Port detection failed, will use default port
-                                  }
-                                }
-                                await openProjectInBrowser(project, processes);
-                              }}
-                              variant="icon"
-                              size="sm"
-                              icon={ExternalLink}
-                              title={
-                                project.port
-                                  ? `Open in browser (port ${project.port})`
-                                  : "Open in browser (detecting port...)"
-                              }
-                            />
-                            <Button
-                              onClick={() => setOpenLogsFor(project.path)}
-                              variant="icon"
-                              size="sm"
-                              icon={FileText}
-                              title="View logs"
-                            />
-                            <QuickActionsMenu projectPath={project.path} />
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              onClick={() => runProject(project)}
-                              variant="success"
-                              size="sm"
-                              icon={Play}
-                              fullWidth
-                            >
-                              Run
-                            </Button>
-                            {getProjectLogs(project.path).length > 0 && (
-                              <Button
-                                onClick={() => setOpenLogsFor(project.path)}
-                                variant="icon"
-                                size="sm"
-                                icon={FileText}
-                                title="View logs"
-                              />
-                            )}
-                            <QuickActionsMenu projectPath={project.path} />
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {filteredProjects.map((project) => (
+                <ProjectCard
+                  key={project.path}
+                  project={project}
+                  isRunning={runningProjects.has(project.path)}
+                  processes={processes}
+                  getProjectLogs={getProjectLogs}
+                  onRun={runProject}
+                  onStop={stopProject}
+                  onOpenLogs={setOpenLogsFor}
+                  onUpdateProject={setProjects}
+                />
+              ))}
             </div>
 
             {/* No search results message */}
