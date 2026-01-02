@@ -207,7 +207,7 @@ Coverage reports are generated in the `coverage/` directory and can be viewed in
   - Improve keyboard navigation
   - Add focus management
   - Ensure screen reader compatibility
-- [] **Performance optimizations**: Further optimize application performance
+- [ ] **Performance optimizations**: Further optimize application performance
   - [ ] Implement virtual scrolling for large project lists
   - [ ] Optimize bundle size
   - [ ] Image optimization

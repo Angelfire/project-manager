@@ -30,7 +30,9 @@ describe("ProjectCard", () => {
   };
 
   const mockProcesses = new Map<string, Child>();
-  const mockGetProjectLogs = vi.fn(() => []);
+  const mockGetProjectLogs = vi.fn(
+    (_projectPath: string): Array<{ id: string }> => []
+  );
   const mockOnRun = vi.fn();
   const mockOnStop = vi.fn();
   const mockOnOpenLogs = vi.fn();
