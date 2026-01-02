@@ -1,6 +1,4 @@
-# Mejoras y Buenas Prácticas - Basadas en IDO Project
-
-Este documento lista buenas prácticas y patrones identificados en el proyecto [IDO](https://github.com/UbiquantAI/IDO) que pueden aplicarse a RunStack para mejorar la calidad del código y la experiencia de desarrollo.
+# Mejoras y Buenas Prácticas
 
 ## 📁 Estructura y Organización del Proyecto
 
@@ -34,16 +32,14 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 ### 4. **Cobertura de Tests**
 
 - [ ] **Tests de integración**: Agregar tests E2E con Playwright o similar
-- [ ] **Tests de Rust**: Implementar tests unitarios para el backend
-  - Tests en `src-tauri/src/**/*.rs`
-  - Tests de integración para comandos Tauri
+- [] **Tests de Rust**: Implementar tests unitarios para el backend ✅
+  - [ ] Tests para project detection logic
+  - [ ] Tests para process management functions
+  - [ ] Tests para port detection
+  - [ ] Tests para quick actions
 
 ### 5. **CI/CD Pipeline**
 
-- [x] **GitHub Actions**: Configurar workflows
-  - `.github/workflows/ci.yml` - Tests y linting ✅
-  - `.github/workflows/build.yml` - Build para múltiples plataformas
-  - `.github/workflows/release.yml` - Releases automáticos
 - [ ] **Pre-commit checks**: Validar código antes de merge
 - [ ] **Automated releases**: Versionado automático con semantic-release
 
@@ -76,7 +72,7 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### 8. **Type Safety**
 
-- [ ] **Strict types**: Eliminar todos los `any`
+- [ ] **Strict types**: Eliminar todos los `any` (en progreso)
 - [ ] **Type guards**: Crear funciones de type checking
   ```typescript
   function isProject(obj: unknown): obj is Project {
@@ -119,7 +115,6 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 
 ### 14. **Optimización de Build**
 
-- [ ] **Code splitting**: Lazy loading de componentes
 - [ ] **Tree shaking**: Asegurar que funcione correctamente
 - [ ] **Bundle analysis**: Analizar tamaño del bundle
   ```bash
@@ -215,16 +210,12 @@ Este documento lista buenas prácticas y patrones identificados en el proyecto [
 ### Alta Prioridad (Impacto inmediato)
 
 2. Husky + lint-staged
-3. Type safety improvements
-4. CI/CD básico
 
 ### Media Prioridad (Mejora calidad)
 
 6. Documentación estructurada
-7. Tests de Rust
-8. Path aliases
-9. Barrel exports
-10. Constants centralizados
+7. Barrel exports
+8. Constants centralizados
 
 ### Baja Prioridad (Nice to have)
 

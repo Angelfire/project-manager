@@ -186,11 +186,11 @@ Coverage reports are generated in the `coverage/` directory and can be viewed in
 
 ### High Priority
 
-- [ ] **Add Tauri backend tests**: Implement tests for Rust backend functions using Rust's testing framework
-  - Test project detection logic
-  - Test process management functions
-  - Test port detection
-  - Test quick actions (open in editor, terminal, finder)
+- [] **Add Tauri backend tests**: Implement tests for Rust backend functions using Rust's testing framework ✅
+  - [ ] Test project detection logic
+  - [ ] Test process management functions
+  - [ ] Test port detection
+  - [ ] Test quick actions (open in editor, terminal, finder)
 - [ ] **Improve logo**: Get a better, more professional logo for the application
   - Current logo is a placeholder PNG
   - Consider SVG format for better scalability
@@ -207,10 +207,10 @@ Coverage reports are generated in the `coverage/` directory and can be viewed in
   - Improve keyboard navigation
   - Add focus management
   - Ensure screen reader compatibility
-- [ ] **Performance optimizations**: Further optimize application performance
-  - Implement virtual scrolling for large project lists
-  - Optimize bundle size
-  - Image optimization
+- [] **Performance optimizations**: Further optimize application performance ✅
+  - [ ] Implement virtual scrolling for large project lists
+  - [ ] Optimize bundle size
+  - [ ] Image optimization
 - [ ] **Internationalization (i18n)**: Add support for multiple languages
   - Extract all user-facing strings
   - Implement i18n solution (e.g., react-i18next)
