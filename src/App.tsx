@@ -2,11 +2,10 @@ import { useState, useCallback, lazy, Suspense } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { cn } from "@/utils/cn";
 import {
-  Folder,
-  RefreshCw,
   Search,
   Loader2,
   FolderOpen,
+  Folder,
   ArrowUpDown,
   Filter,
 } from "lucide-react";
@@ -14,6 +13,7 @@ import { useProjects } from "@/hooks/useProjects";
 import runstackIcon from "@/assets/runstack.png";
 import { ProjectFilters, type FilterOption } from "@/components/ProjectFilters";
 import { ProjectCard } from "@/components/ProjectCard";
+import { DirectorySelector } from "@/components/DirectorySelector";
 import { useSearchInput } from "@/hooks/useSearchInput";
 
 // Lazy load heavy components
@@ -115,51 +115,16 @@ function App() {
           </div>
         </header>
 
-        <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-8">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <label className="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wide">
-                <FolderOpen className="size-4" />
-                Directory
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={selectedDirectory || ""}
-                  readOnly
-                  placeholder="Select a directory..."
-                  className="w-full py-2.5 px-4 pl-10 border text-sm leading-none border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-all"
-                />
-                <Folder className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
-              </div>
-            </div>
-            <div className="flex gap-2 items-end">
-              <Button
-                onClick={handleSelectDirectory}
-                variant="primary"
-                size="md"
-                icon={Folder}
-                className="whitespace-nowrap"
-              >
-                Select
-              </Button>
-              {selectedDirectory && (
-                <Button
-                  onClick={() => loadProjects(selectedDirectory)}
-                  disabled={loading}
-                  variant="primary"
-                  size="md"
-                  icon={loading ? Loader2 : RefreshCw}
-                  className={cn("whitespace-nowrap", {
-                    "[&>svg]:animate-spin": loading,
-                  })}
-                >
-                  {loading ? "Scanning" : "Rescan"}
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
+        <DirectorySelector
+          selectedDirectory={selectedDirectory}
+          loading={loading}
+          onSelect={handleSelectDirectory}
+          onRescan={() => {
+            if (selectedDirectory) {
+              loadProjects(selectedDirectory);
+            }
+          }}
+        />
 
         {loading && (
           <div className="text-center py-16">
