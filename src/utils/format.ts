@@ -20,7 +20,7 @@ export function formatFileSize(bytes: number | null): string {
  * @returns Formatted date string (e.g., "Jan 15, 2024") or "Unknown" if timestamp is null
  */
 export function formatDate(timestamp: number | null): string {
-  if (!timestamp) return "Unknown";
+  if (timestamp === null) return "Unknown";
   const date = new Date(timestamp * 1000);
   return date.toLocaleDateString("en-US", {
     year: "numeric",
@@ -28,4 +28,3 @@ export function formatDate(timestamp: number | null): string {
     day: "numeric",
   });
 }
-
