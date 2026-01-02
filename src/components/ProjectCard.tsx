@@ -48,7 +48,16 @@ export const ProjectCard = memo(function ProjectCard({
     if (process?.pid && !project.port) {
       // Try to detect the port before opening
       try {
-        const detectedPort = await detectPort(process.pid, 1, 0, 0);
+        // Quick port detection: 1 attempt with no initial or interval delays
+        const QUICK_DETECTION_ATTEMPTS = 1;
+        const NO_INITIAL_DELAY = 0;
+        const NO_INTERVAL_DELAY = 0;
+        const detectedPort = await detectPort(
+          process.pid,
+          QUICK_DETECTION_ATTEMPTS,
+          NO_INITIAL_DELAY,
+          NO_INTERVAL_DELAY
+        );
         if (detectedPort) {
           onUpdateProject((prev) =>
             prev.map((p) =>
