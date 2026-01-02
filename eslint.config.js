@@ -10,6 +10,9 @@ import prettierConfig from "eslint-config-prettier";
 export default [
   js.configs.recommended,
   {
+    ignores: ["scripts/**", "dist/**", "node_modules/**", "src-tauri/**"],
+  },
+  {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parser: tsparser,
@@ -80,11 +83,26 @@ export default [
     },
   },
   {
-    ignores: [
-      "dist",
-      "node_modules",
-      "src-tauri",
-      "*.config.js",
-    ],
+    ignores: ["dist", "node_modules", "src-tauri", "scripts/**", "*.config.js"],
+  },
+  {
+    files: ["scripts/**/*.js"],
+    languageOptions: {
+      globals: {
+        console: "readonly",
+        process: "readonly",
+      },
+      ecmaVersion: "latest",
+      sourceType: "module",
+    },
+    rules: {
+      "no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+    },
   },
 ];

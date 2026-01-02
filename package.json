@@ -27,7 +27,8 @@
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,json,css,md}\"",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "check-all": "node scripts/check-all.js"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.16",
