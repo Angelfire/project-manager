@@ -22,6 +22,11 @@ import { formatFileSize, formatDate } from "@/utils/format";
 import { openProjectInBrowser, detectPort } from "@/services/projectService";
 import type { Project } from "@/types";
 
+// Port detection configuration for quick browser opening
+const QUICK_DETECTION_ATTEMPTS = 1;
+const NO_INITIAL_DELAY = 0;
+const NO_INTERVAL_DELAY = 0;
+
 interface ProjectCardProps {
   project: Project;
   isRunning: boolean;
@@ -48,10 +53,6 @@ export const ProjectCard = memo(function ProjectCard({
     if (process?.pid && !project.port) {
       // Try to detect the port before opening
       try {
-        // Quick port detection: 1 attempt with no initial or interval delays
-        const QUICK_DETECTION_ATTEMPTS = 1;
-        const NO_INITIAL_DELAY = 0;
-        const NO_INTERVAL_DELAY = 0;
         const detectedPort = await detectPort(
           process.pid,
           QUICK_DETECTION_ATTEMPTS,
