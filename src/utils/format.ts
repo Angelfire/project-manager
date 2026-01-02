@@ -4,7 +4,7 @@
  * @returns Formatted string (e.g., "1.5 MB") or "Unknown" if bytes is null
  */
 export function formatFileSize(bytes: number | null): string {
-  if (!bytes) return "Unknown";
+  if (bytes === null) return "Unknown";
   const sizes = ["B", "KB", "MB", "GB"];
   if (bytes === 0) return "0 B";
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
