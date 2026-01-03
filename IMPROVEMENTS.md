@@ -67,7 +67,7 @@
 
 ### 8. **Type Safety**
 
-- [ ] **Eliminar todos los `any`**: En progreso (mayoría eliminados)
+- [ ] **Eliminar todos los `any`**: En progreso – revisar y eliminar los `any` restantes
 - [ ] **Type guards**: Crear funciones de type checking
   ```typescript
   function isProject(obj: unknown): obj is Project {
