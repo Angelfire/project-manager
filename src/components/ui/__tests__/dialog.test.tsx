@@ -36,28 +36,20 @@ describe("Dialog", () => {
 
     it("should render title when provided", () => {
       render(<Dialog {...defaultProps} title="Test Dialog" />);
-      // Title is rendered as h2 in the header (DialogTitle is also present for accessibility)
+      // Title is rendered using DialogTitle Radix primitive
       const headings = screen.getAllByRole("heading", { name: "Test Dialog" });
       expect(headings.length).toBeGreaterThan(0);
-      // Find the visible h2 (not the sr-only DialogTitle)
-      const visibleHeading = headings.find(
-        (h) => !h.classList.contains("sr-only")
-      );
-      expect(visibleHeading).toBeInTheDocument();
-      expect(visibleHeading?.tagName).toBe("H2");
+      const heading = headings[0];
+      expect(heading).toBeInTheDocument();
+      expect(heading.tagName).toBe("H2");
     });
 
     it("should render subtitle when provided", () => {
       render(<Dialog {...defaultProps} subtitle="Test subtitle" />);
-      // Subtitle is rendered as p in the header (DialogDescription is also present for accessibility)
-      const subtitles = screen.getAllByText("Test subtitle");
-      expect(subtitles.length).toBeGreaterThan(0);
-      // Find the visible p (not the sr-only DialogDescription)
-      const visibleSubtitle = subtitles.find(
-        (s) => !s.classList.contains("sr-only")
-      );
-      expect(visibleSubtitle).toBeInTheDocument();
-      expect(visibleSubtitle?.tagName).toBe("P");
+      // Subtitle is rendered using DialogDescription Radix primitive
+      const subtitle = screen.getByText("Test subtitle");
+      expect(subtitle).toBeInTheDocument();
+      expect(subtitle.tagName).toBe("P");
     });
 
     it("should render both title and subtitle", () => {
@@ -70,19 +62,13 @@ describe("Dialog", () => {
       );
       const headings = screen.getAllByRole("heading", { name: "Test Dialog" });
       expect(headings.length).toBeGreaterThan(0);
-      const visibleHeading = headings.find(
-        (h) => !h.classList.contains("sr-only")
-      );
-      expect(visibleHeading).toBeInTheDocument();
-      expect(visibleHeading?.tagName).toBe("H2");
+      const heading = headings[0];
+      expect(heading).toBeInTheDocument();
+      expect(heading.tagName).toBe("H2");
 
-      const subtitles = screen.getAllByText("Test subtitle");
-      expect(subtitles.length).toBeGreaterThan(0);
-      const visibleSubtitle = subtitles.find(
-        (s) => !s.classList.contains("sr-only")
-      );
-      expect(visibleSubtitle).toBeInTheDocument();
-      expect(visibleSubtitle?.tagName).toBe("P");
+      const subtitle = screen.getByText("Test subtitle");
+      expect(subtitle).toBeInTheDocument();
+      expect(subtitle.tagName).toBe("P");
     });
 
     it("should render close button by default", () => {
@@ -114,11 +100,9 @@ describe("Dialog", () => {
       // Header should be rendered with title (title is required)
       const headings = screen.getAllByRole("heading", { name: "Test Dialog" });
       expect(headings.length).toBeGreaterThan(0);
-      const visibleHeading = headings.find(
-        (h) => !h.classList.contains("sr-only")
-      );
-      expect(visibleHeading).toBeInTheDocument();
-      expect(visibleHeading?.tagName).toBe("H2");
+      const heading = headings[0];
+      expect(heading).toBeInTheDocument();
+      expect(heading.tagName).toBe("H2");
     });
   });
 
