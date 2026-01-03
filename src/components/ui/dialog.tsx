@@ -1,19 +1,32 @@
-import { useEffect, useRef, ReactNode } from "react";
+import * as React from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
 
-interface DialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  subtitle?: string;
-  children: ReactNode;
-  className?: string;
-  showCloseButton?: boolean;
-  headerActions?: ReactNode;
-  size?: "sm" | "md" | "lg" | "xl" | "full";
-}
+const DialogRoot = DialogPrimitive.Root;
+
+const DialogTrigger = DialogPrimitive.Trigger;
+
+const DialogPortal = DialogPrimitive.Portal;
+
+const DialogClose = DialogPrimitive.Close;
+
+const DialogOverlay = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Overlay
+    ref={ref}
+    data-testid="dialog-overlay"
+    className={cn(
+      "fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
+    {...props}
+  />
+));
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 const sizeClasses = {
   sm: "max-w-md",
@@ -22,6 +35,122 @@ const sizeClasses = {
   xl: "max-w-4xl",
   full: "max-w-full",
 };
+
+const DialogContent = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+    size?: "sm" | "md" | "lg" | "xl" | "full";
+    showCloseButton?: boolean;
+  }
+>(
+  (
+    { className, children, size = "md", showCloseButton = true, ...props },
+    ref
+  ) => (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        ref={ref}
+        data-testid="dialog-content"
+        className={cn(
+          "fixed left-1/2 top-1/2 z-50 w-full max-h-[90vh] -translate-x-1/2 -translate-y-1/2 bg-gray-900 rounded-lg border border-gray-800 flex flex-col shadow-xl p-0 overflow-hidden",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "focus:outline-none",
+          size && sizeClasses[size as keyof typeof sizeClasses],
+          className
+        )}
+        onOpenAutoFocus={(e) => {
+          // Prevent auto-focus on the close button
+          e.preventDefault();
+        }}
+        {...props}
+      >
+        {showCloseButton && (
+          <DialogPrimitive.Close asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={X}
+              className="absolute right-4 top-4 p-2 rounded-sm opacity-70 ring-offset-gray-900 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-gray-800 z-10"
+              aria-label="Close dialog"
+              tabIndex={-1}
+            />
+          </DialogPrimitive.Close>
+        )}
+        {children}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  )
+);
+DialogContent.displayName = DialogPrimitive.Content.displayName;
+
+const DialogHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col space-y-1.5 text-center sm:text-left",
+      className
+    )}
+    {...props}
+  />
+);
+DialogHeader.displayName = "DialogHeader";
+
+const DialogFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className
+    )}
+    {...props}
+  />
+);
+DialogFooter.displayName = "DialogFooter";
+
+const DialogTitle = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn(
+      "text-lg font-semibold leading-none tracking-tight text-gray-100",
+      className
+    )}
+    {...props}
+  />
+));
+DialogTitle.displayName = DialogPrimitive.Title.displayName;
+
+const DialogDescription = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-gray-500", className)}
+    {...props}
+  />
+));
+DialogDescription.displayName = DialogPrimitive.Description.displayName;
+
+// High-level component for backward compatibility
+interface DialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  className?: string;
+  showCloseButton?: boolean;
+  headerActions?: React.ReactNode;
+  size?: "sm" | "md" | "lg" | "xl" | "full";
+}
 
 export function Dialog({
   isOpen,
@@ -34,122 +163,48 @@ export function Dialog({
   headerActions,
   size = "md",
 }: DialogProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-
-  // Close on outside click
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      // Check if click is on the overlay (not on the dialog content)
-      if (
-        overlayRef.current &&
-        dialogRef.current &&
-        event.target === overlayRef.current
-      ) {
-        onClose();
-      }
-    };
-
-    // Use mousedown to catch the click before it bubbles
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen, onClose]);
-
-  // Close on Escape key
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isOpen, onClose]);
-
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
   return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={title ? "dialog-title" : undefined}
-      data-testid="dialog-overlay"
+    <DialogRoot
+      open={isOpen}
+      onOpenChange={(open: boolean) => !open && onClose()}
     >
-      <div
-        ref={dialogRef}
-        data-testid="dialog-content"
-        className={cn(
-          "bg-gray-900 rounded-lg border border-gray-800 w-full flex flex-col shadow-xl",
-          sizeClasses[size],
-          className
-        )}
-        onClick={(e) => {
-          // Prevent closing when clicking inside the dialog
-          e.stopPropagation();
-        }}
+      <DialogContent
+        size={size}
+        showCloseButton={showCloseButton}
+        className={className}
       >
-        {(title || subtitle || showCloseButton || headerActions) && (
-          <div className="flex items-center justify-between p-4 border-b border-gray-800">
+        {(title || subtitle || headerActions) && (
+          <DialogHeader className="flex-row items-center justify-between p-4 pt-14 border-b border-gray-800 pr-12">
             {(title || subtitle) && (
               <div>
-                {title && (
-                  <h2
-                    id="dialog-title"
-                    className="text-lg font-semibold text-gray-100"
-                  >
-                    {title}
-                  </h2>
-                )}
+                {title && <DialogTitle>{title}</DialogTitle>}
                 {subtitle && (
-                  <p className="text-xs text-gray-500 font-mono mt-1 truncate">
+                  <DialogDescription className="text-xs font-mono mt-1 truncate">
                     {subtitle}
-                  </p>
+                  </DialogDescription>
                 )}
               </div>
             )}
-            <div className="flex items-center gap-2">
-              {headerActions}
-              {showCloseButton && (
-                <Button
-                  onClick={onClose}
-                  variant="ghost"
-                  size="sm"
-                  icon={X}
-                  className="p-2"
-                  aria-label="Close dialog"
-                />
-              )}
-            </div>
-          </div>
+            {headerActions && (
+              <div className="flex items-center gap-2">{headerActions}</div>
+            )}
+          </DialogHeader>
         )}
         <div className="flex-1 overflow-hidden">{children}</div>
-      </div>
-    </div>
+      </DialogContent>
+    </DialogRoot>
   );
 }
+
+export {
+  DialogRoot,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+};

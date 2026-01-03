@@ -4,7 +4,13 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { LogEntry } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import {
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { cn } from "@/utils/cn";
 import { toastError, toastInfo, toastSuccess } from "@/utils/toast";
 
@@ -112,104 +118,105 @@ export const ProjectLogs = memo(function ProjectLogs({
   }, [logs, projectName, formatTimestamp]);
 
   return (
-    <Dialog
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`Logs: ${projectName}`}
-      subtitle={projectPath}
-      size="xl"
-      className="h-[80vh]"
-      headerActions={
-        <>
-          <Button
-            onClick={exportLogs}
-            variant="ghost"
-            size="sm"
-            icon={Download}
-            className="p-2"
-            title="Export logs"
-          />
-          <Button
-            onClick={onClear}
-            variant="ghost"
-            size="sm"
-            icon={Trash2}
-            className="p-2 hover:text-red-400"
-            title="Clear logs"
-          />
-        </>
-      }
-    >
-      <div className="flex flex-col h-full">
-        <div className="p-4 border-b border-gray-800">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
-            <input
-              type="text"
-              placeholder="Search logs..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 text-sm"
+    <DialogRoot open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent size="xl" className="h-[80vh]">
+        <DialogHeader className="flex-row items-center justify-between p-4 pt-14 border-b border-gray-800">
+          <div>
+            <DialogTitle>{`Logs: ${projectName}`}</DialogTitle>
+            <DialogDescription className="text-xs font-mono mt-1 truncate">
+              {projectPath}
+            </DialogDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={exportLogs}
+              variant="ghost"
+              size="sm"
+              icon={Download}
+              className="p-2"
+              title="Export logs"
+            />
+            <Button
+              onClick={onClear}
+              variant="ghost"
+              size="sm"
+              icon={Trash2}
+              className="p-2 hover:text-red-400"
+              title="Clear logs"
             />
           </div>
-          <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
-            <span>
-              {filteredLogs.length} of {logs.length} log entries
-            </span>
-            {!autoScroll && (
-              <button
-                onClick={() => {
-                  setAutoScroll(true);
-                  logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="text-blue-400 hover:text-blue-300"
-              >
-                Scroll to bottom
-              </button>
+        </DialogHeader>
+        <div className="flex flex-col h-full">
+          <div className="p-4 border-b border-gray-800">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
+              <input
+                type="text"
+                placeholder="Search logs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-800 rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:ring-gray-700 focus:border-gray-700 text-sm"
+              />
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+              <span>
+                {filteredLogs.length} of {logs.length} log entries
+              </span>
+              {!autoScroll && (
+                <button
+                  onClick={() => {
+                    setAutoScroll(true);
+                    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="text-blue-400 hover:text-blue-300"
+                >
+                  Scroll to bottom
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div
+            ref={logsContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto p-4 font-mono text-xs"
+          >
+            {filteredLogs.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                {searchTerm ? "No logs match your search" : "No logs yet"}
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {filteredLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className={cn("flex gap-2", {
+                      "text-red-400": log.type === "stderr",
+                      "text-gray-300": log.type === "stdout",
+                    })}
+                  >
+                    <span className="text-gray-600 shrink-0">
+                      [{formatTimestamp(log.timestamp)}]
+                    </span>
+                    <span
+                      className={cn("shrink-0", {
+                        "text-red-500": log.type === "stderr",
+                        "text-green-500": log.type === "stdout",
+                      })}
+                    >
+                      [{log.type.toUpperCase()}]
+                    </span>
+                    <span className="flex-1 wrap-break-words whitespace-pre-wrap">
+                      {log.content}
+                    </span>
+                  </div>
+                ))}
+                <div ref={logsEndRef} />
+              </div>
             )}
           </div>
         </div>
-
-        <div
-          ref={logsContainerRef}
-          onScroll={handleScroll}
-          className="flex-1 overflow-y-auto p-4 font-mono text-xs"
-        >
-          {filteredLogs.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              {searchTerm ? "No logs match your search" : "No logs yet"}
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {filteredLogs.map((log) => (
-                <div
-                  key={log.id}
-                  className={cn("flex gap-2", {
-                    "text-red-400": log.type === "stderr",
-                    "text-gray-300": log.type === "stdout",
-                  })}
-                >
-                  <span className="text-gray-600 shrink-0">
-                    [{formatTimestamp(log.timestamp)}]
-                  </span>
-                  <span
-                    className={cn("shrink-0", {
-                      "text-red-500": log.type === "stderr",
-                      "text-green-500": log.type === "stdout",
-                    })}
-                  >
-                    [{log.type.toUpperCase()}]
-                  </span>
-                  <span className="flex-1 wrap-break-words whitespace-pre-wrap">
-                    {log.content}
-                  </span>
-                </div>
-              ))}
-              <div ref={logsEndRef} />
-            </div>
-          )}
-        </div>
-      </div>
-    </Dialog>
+      </DialogContent>
+    </DialogRoot>
   );
 });
