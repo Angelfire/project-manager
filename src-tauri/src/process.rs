@@ -203,7 +203,7 @@ mod tests {
             Ok(port) => assert!(port.is_none(), "Nonexistent process should not have a port"),
             Err(e) => {
                 // On some systems, querying a nonexistent PID returns an error
-                assert!(e.to_string().len() > 0, "Error message should not be empty");
+                assert!(!e.to_string().is_empty(), "Error message should not be empty");
             }
         }
     }

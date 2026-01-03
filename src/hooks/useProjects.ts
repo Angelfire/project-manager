@@ -235,7 +235,7 @@ export const useProjects = () => {
   };
 
   const stopProject = async (project: Project) => {
-    // Try to kill using Rust process PID (if available)
+    // Kill using Rust process PID (primary approach)
     const rustPid = rustProcessPids.get(project.path);
     if (rustPid) {
       try {
@@ -244,7 +244,7 @@ export const useProjects = () => {
         // Ignore kill errors
       }
     } else if (project.port) {
-      // If we don't have a PID, try to kill by port
+      // Fallback: if we don't have a PID, try to kill by port
       await killProcessByPort(project.port);
     }
 
