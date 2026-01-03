@@ -4,7 +4,6 @@ import { listen } from "@tauri-apps/api/event";
 import { Project, LogEntry } from "@/types";
 import {
   scanProjects,
-  createProjectCommand,
   detectPort,
   killProcessByPort,
 } from "@/services/projectService";
@@ -25,6 +24,28 @@ export const useProjects = () => {
   const [logs, setLogs] = useState<Map<string, LogEntry[]>>(new Map());
   const [rustProcessPids, setRustProcessPids] = useState<Map<string, number>>(
     new Map()
+  );
+
+  const addLog = useCallback(
+    (projectPath: string, type: "stdout" | "stderr", content: string) => {
+      const logEntry: LogEntry = {
+        id: `${Date.now()}-${Math.random()}`,
+        timestamp: Date.now(),
+        type,
+        content,
+        projectPath,
+      };
+
+      setLogs((prev) => {
+        const newMap = new Map(prev);
+        const projectLogs = newMap.get(projectPath) || [];
+        // Keep only the last 1000 log entries per project
+        const updatedLogs = [...projectLogs, logEntry].slice(-1000);
+        newMap.set(projectPath, updatedLogs);
+        return newMap;
+      });
+    },
+    []
   );
 
   // Listen to process stdout/stderr events from Rust backend
@@ -91,8 +112,7 @@ export const useProjects = () => {
           // Optionally handle or log setup errors; ignore here to avoid unmount-time noise
         });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [addLog]);
 
   const loadProjects = async (path: string) => {
     setLoading(true);
@@ -108,28 +128,6 @@ export const useProjects = () => {
       setLoading(false);
     }
   };
-
-  const addLog = useCallback(
-    (projectPath: string, type: "stdout" | "stderr", content: string) => {
-      const logEntry: LogEntry = {
-        id: `${Date.now()}-${Math.random()}`,
-        timestamp: Date.now(),
-        type,
-        content,
-        projectPath,
-      };
-
-      setLogs((prev) => {
-        const newMap = new Map(prev);
-        const projectLogs = newMap.get(projectPath) || [];
-        // Keep only the last 1000 log entries per project
-        const updatedLogs = [...projectLogs, logEntry].slice(-1000);
-        newMap.set(projectPath, updatedLogs);
-        return newMap;
-      });
-    },
-    []
-  );
 
   const runProject = async (project: Project) => {
     if (runningProjects.has(project.path)) {
@@ -182,16 +180,6 @@ export const useProjects = () => {
         "stdout",
         `[${new Date().toLocaleTimeString()}] Process started (PID: ${pid})\n`
       );
-
-      // Also create a Child object for compatibility with existing code
-      const commandObj = createProjectCommand(project);
-      const child = await commandObj.spawn();
-
-      setProcesses((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(project.path, child);
-        return newMap;
-      });
 
       // Detect the real port after the server starts
       if (pid) {
@@ -247,7 +235,7 @@ export const useProjects = () => {
   };
 
   const stopProject = async (project: Project) => {
-    // Try to kill using Rust process PID first (if available)
+    // Kill using Rust process PID (primary approach)
     const rustPid = rustProcessPids.get(project.path);
     if (rustPid) {
       try {
@@ -255,40 +243,9 @@ export const useProjects = () => {
       } catch {
         // Ignore kill errors
       }
-    }
-
-    // Also try to kill using the Child process
-    const process = processes.get(project.path);
-    if (process) {
-      try {
-        // Try to kill using the PID if available
-        if (process.pid) {
-          try {
-            await tauriApi.processes.killTree(process.pid);
-          } catch {
-            // Try to kill the process directly as fallback
-            try {
-              await process.kill();
-            } catch {
-              // Ignore kill errors
-            }
-          }
-        } else {
-          // If no PID, try to kill directly
-          try {
-            await process.kill();
-          } catch {
-            // Ignore kill errors
-          }
-        }
-      } catch {
-        // Ignore errors during process termination
-      }
-    } else {
-      // If we don't find the process in the map, try to kill by port
-      if (project.port) {
-        await killProcessByPort(project.port);
-      }
+    } else if (project.port) {
+      // Fallback: if we don't have a PID, try to kill by port
+      await killProcessByPort(project.port);
     }
 
     // Clean up Rust process PID
