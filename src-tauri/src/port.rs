@@ -138,9 +138,16 @@ fn detect_vite_port(path: &PathBuf) -> Option<u16> {
 fn extract_port_from_config_file(content: &str, key: &str) -> Option<u16> {
     // Search for patterns like "port: 4321" or "port:4321" or nested "server: { port: 4321 }"
     // Handle both single-line and multi-line formats
+    // Filter out commented lines to avoid false positives
     let lines: Vec<&str> = content.lines().collect();
     
     for (i, line) in lines.iter().enumerate() {
+        // Skip lines that are comments (starting with // or # or /* after trimming)
+        let trimmed = line.trim();
+        if trimmed.starts_with("//") || trimmed.starts_with("#") || trimmed.starts_with("/*") || trimmed.starts_with("*") {
+            continue;
+        }
+        
         // Direct match: port: 4321 or "port": 4321
         if line.contains(key) && line.contains(':') {
             // Try to extract port from this line
@@ -151,11 +158,17 @@ fn extract_port_from_config_file(content: &str, key: &str) -> Option<u16> {
         
         // Handle nested structures like: server: { ... port: 4321 ... }
         // Can be multi-line: "server: {\n  port: 4321\n}"
-        if line.contains("server") {
+        // Use more specific pattern matching: "server:" or "server {" to avoid false positives
+        if line.contains("server:") || line.contains("server {") {
             // Check the next few lines for a port declaration (multi-line format)
             let search_range = std::cmp::min(i + 4, lines.len());
             for j in (i + 1)..search_range {
                 if let Some(next_line) = lines.get(j) {
+                    // Skip commented lines
+                    let next_trimmed = next_line.trim();
+                    if next_trimmed.starts_with("//") || next_trimmed.starts_with("#") || next_trimmed.starts_with("/*") || next_trimmed.starts_with("*") {
+                        continue;
+                    }
                     if next_line.contains(key) && next_line.contains(':') {
                         if let Some(port) = extract_port_from_line(next_line, key) {
                             return Some(port);
