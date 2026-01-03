@@ -2,6 +2,17 @@ use crate::error::AppError;
 use std::process::Command as StdCommand;
 
 pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
+    // First, verify that the process exists
+    // Use `ps -p` to check if the process exists
+    let ps_check = StdCommand::new("ps")
+        .args(&["-p", &pid.to_string()])
+        .output()?;
+    
+    // If ps returns non-zero exit code, the process doesn't exist
+    if !ps_check.status.success() {
+        return Err(AppError::NotFound(format!("Process with PID {} does not exist", pid)));
+    }
+
     // Unix (macOS/Linux): kill the process and all its children
     // First, find all child processes recursively
     let mut all_pids = vec![pid];
@@ -31,9 +42,15 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
 
     // Kill all found processes (children first, then parent)
     for process_pid in all_pids.iter().rev() {
-        StdCommand::new("kill")
+        let kill_output = StdCommand::new("kill")
             .args(&["-9", &process_pid.to_string()])
             .output()?;
+        
+        // Verify that kill succeeded (ignore errors for child processes that may have already terminated)
+        if !kill_output.status.success() && *process_pid == pid {
+            // Only fail if we couldn't kill the main process
+            return Err(AppError::NotFound(format!("Failed to kill process with PID {}", pid)));
+        }
     }
 
     // Verify that the main process was terminated
