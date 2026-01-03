@@ -78,12 +78,18 @@ export const useProjects = () => {
       });
     };
 
-    setupEventListeners();
+    const setupPromise = setupEventListeners();
 
     return () => {
-      if (unlistenStdout) unlistenStdout();
-      if (unlistenStderr) unlistenStderr();
-      if (unlistenExit) unlistenExit();
+      setupPromise
+        .then(() => {
+          if (unlistenStdout) unlistenStdout();
+          if (unlistenStderr) unlistenStderr();
+          if (unlistenExit) unlistenExit();
+        })
+        .catch(() => {
+          // Optionally handle or log setup errors; ignore here to avoid unmount-time noise
+        });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
