@@ -20,7 +20,6 @@ export const useProjects = () => {
   const [runningProjects, setRunningProjects] = useState<Set<string>>(
     new Set()
   );
-  const [processes, setProcesses] = useState<Map<string, Child>>(new Map());
   const [logs, setLogs] = useState<Map<string, LogEntry[]>>(new Map());
   const [rustProcessPids, setRustProcessPids] = useState<Map<string, number>>(
     new Map()
