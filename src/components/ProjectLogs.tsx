@@ -120,7 +120,7 @@ export const ProjectLogs = memo(function ProjectLogs({
   return (
     <DialogRoot open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent size="xl" className="h-[80vh]">
-        <DialogHeader className="flex-row items-center justify-between p-4 pt-14 border-b border-gray-800">
+        <DialogHeader withCloseButton>
           <div>
             <DialogTitle>{`Logs: ${projectName}`}</DialogTitle>
             <DialogDescription className="text-xs font-mono mt-1 truncate">

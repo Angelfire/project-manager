@@ -56,7 +56,7 @@ const DialogContent = React.forwardRef<
           "fixed left-1/2 top-1/2 z-50 w-full max-h-[90vh] -translate-x-1/2 -translate-y-1/2 bg-gray-900 rounded-lg border border-gray-800 flex flex-col shadow-xl p-0 overflow-hidden",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           "focus:outline-none",
-          size && sizeClasses[size as keyof typeof sizeClasses],
+          sizeClasses[size],
           className
         )}
         onOpenAutoFocus={(e) => {
@@ -84,13 +84,20 @@ const DialogContent = React.forwardRef<
 );
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
+interface DialogHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+  withCloseButton?: boolean;
+}
+
 const DialogHeader = ({
   className,
+  withCloseButton = false,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+}: DialogHeaderProps) => (
   <div
     className={cn(
       "flex flex-col space-y-1.5 text-center sm:text-left",
+      withCloseButton &&
+        "flex-row items-center justify-between p-4 pt-14 border-b border-gray-800 pr-2",
       className
     )}
     {...props}
@@ -143,7 +150,7 @@ DialogDescription.displayName = DialogPrimitive.Description.displayName;
 interface DialogProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
+  title: string; // Required for accessibility
   subtitle?: string;
   children: React.ReactNode;
   className?: string;
@@ -172,24 +179,21 @@ export function Dialog({
         size={size}
         showCloseButton={showCloseButton}
         className={className}
+        {...(!subtitle && { "aria-describedby": undefined })}
       >
-        {(title || subtitle || headerActions) && (
-          <DialogHeader className="flex-row items-center justify-between p-4 pt-14 border-b border-gray-800 pr-12">
-            {(title || subtitle) && (
-              <div>
-                {title && <DialogTitle>{title}</DialogTitle>}
-                {subtitle && (
-                  <DialogDescription className="text-xs font-mono mt-1 truncate">
-                    {subtitle}
-                  </DialogDescription>
-                )}
-              </div>
+        <DialogHeader withCloseButton={showCloseButton}>
+          <div>
+            <DialogTitle>{title}</DialogTitle>
+            {subtitle && (
+              <DialogDescription className="text-xs font-mono mt-1 truncate">
+                {subtitle}
+              </DialogDescription>
             )}
-            {headerActions && (
-              <div className="flex items-center gap-2">{headerActions}</div>
-            )}
-          </DialogHeader>
-        )}
+          </div>
+          {headerActions && (
+            <div className="flex items-center gap-2">{headerActions}</div>
+          )}
+        </DialogHeader>
         <div className="flex-1 overflow-hidden">{children}</div>
       </DialogContent>
     </DialogRoot>
