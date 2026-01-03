@@ -41,7 +41,7 @@ describe("Dialog", () => {
       expect(headings.length).toBeGreaterThan(0);
       const heading = headings[0];
       expect(heading).toBeInTheDocument();
-      expect(heading.tagName).toBe("H2");
+      expect(heading?.tagName).toBe("H2");
     });
 
     it("should render subtitle when provided", () => {
@@ -64,7 +64,7 @@ describe("Dialog", () => {
       expect(headings.length).toBeGreaterThan(0);
       const heading = headings[0];
       expect(heading).toBeInTheDocument();
-      expect(heading.tagName).toBe("H2");
+      expect(heading?.tagName).toBe("H2");
 
       const subtitle = screen.getByText("Test subtitle");
       expect(subtitle).toBeInTheDocument();
@@ -102,7 +102,7 @@ describe("Dialog", () => {
       expect(headings.length).toBeGreaterThan(0);
       const heading = headings[0];
       expect(heading).toBeInTheDocument();
-      expect(heading.tagName).toBe("H2");
+      expect(heading?.tagName).toBe("H2");
     });
   });
 
