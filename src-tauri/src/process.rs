@@ -1,7 +1,23 @@
 use crate::error::AppError;
 use std::process::Command as StdCommand;
 
+/// Kills a process tree (parent and all children) by PID
+/// 
+/// Note: This function uses Unix-specific commands (ps, pgrep, kill) and will only work
+/// on Unix-like systems (Linux, macOS). Windows is not currently supported.
+#[cfg(unix)]
 pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
+    // First, verify that the process exists
+    // Use `ps -p` to check if the process exists
+    let ps_check = StdCommand::new("ps")
+        .args(&["-p", &pid.to_string()])
+        .output()?;
+    
+    // If ps returns non-zero exit code, the process doesn't exist
+    if !ps_check.status.success() {
+        return Err(AppError::NotFound(format!("Process with PID {} does not exist", pid)));
+    }
+
     // Unix (macOS/Linux): kill the process and all its children
     // First, find all child processes recursively
     let mut all_pids = vec![pid];
@@ -31,9 +47,15 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
 
     // Kill all found processes (children first, then parent)
     for process_pid in all_pids.iter().rev() {
-        StdCommand::new("kill")
+        let kill_output = StdCommand::new("kill")
             .args(&["-9", &process_pid.to_string()])
             .output()?;
+        
+        // Verify that kill succeeded (ignore errors for child processes that may have already terminated)
+        if !kill_output.status.success() && *process_pid == pid {
+            // Only fail if we couldn't kill the main process
+            return Err(AppError::CommandError(format!("Failed to kill process with PID {}", pid)));
+        }
     }
 
     // Verify that the main process was terminated
@@ -45,6 +67,11 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Detects which port a process (or its children) is listening on
+/// 
+/// Note: This function uses Unix-specific commands (lsof, pgrep, ps) and will only work
+/// on Unix-like systems (Linux, macOS). Windows is not currently supported.
+#[cfg(unix)]
 pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
     // Unix (macOS/Linux): use lsof to find the port
     // First try with the PID directly
@@ -180,4 +207,45 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
     }
 
     Ok(None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_kill_process_tree_nonexistent_pid() {
+        // Test with a very high PID that likely doesn't exist
+        // Should return an error since process doesn't exist
+        let result = kill_process_tree(999999);
+        assert!(result.is_err(), "Killing nonexistent process should return an error");
+    }
+
+    #[test]
+    fn test_detect_port_by_pid_nonexistent_pid() {
+        // Test with a very high PID that likely doesn't exist
+        // Should return Ok(None) since process doesn't exist (or error on some systems)
+        let result = detect_port_by_pid(999999);
+        match result {
+            Ok(port) => assert!(port.is_none(), "Nonexistent process should not have a port"),
+            Err(e) => {
+                // On some systems, querying a nonexistent PID returns an error
+                assert!(!e.to_string().is_empty(), "Error message should not be empty");
+            }
+        }
+    }
+
+    #[test]
+    fn test_detect_port_by_pid_current_process() {
+        // Test with current process PID (should exist)
+        let current_pid = std::process::id();
+        let result = detect_port_by_pid(current_pid);
+        // Should return Ok since the process exists (though port may be None)
+        assert!(result.is_ok(), "Querying existing process should not fail");
+        
+        // The result should be None since this test process doesn't listen on a port
+        if let Ok(port) = result {
+            assert!(port.is_none(), "Test process should not be listening on a port");
+        }
+    }
 }

@@ -3,7 +3,6 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProjectCard } from "@/components/ProjectCard";
 import type { Project } from "@/types";
-import { Child } from "@tauri-apps/plugin-shell";
 
 // Mock dependencies
 vi.mock("@/services/projectService", () => ({
@@ -29,18 +28,15 @@ describe("ProjectCard", () => {
     modified: 1705324800, // Jan 15, 2024
   };
 
-  const mockProcesses = new Map<string, Child>();
   const mockGetProjectLogs = vi.fn(
     (_projectPath: string): Array<{ id: string }> => []
   );
   const mockOnRun = vi.fn();
   const mockOnStop = vi.fn();
   const mockOnOpenLogs = vi.fn();
-  const mockOnUpdateProject = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockProcesses.clear();
   });
 
   it("renders project name and path", () => {
@@ -48,12 +44,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -68,12 +62,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -85,12 +77,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={true}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -102,12 +92,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -119,12 +107,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -137,12 +123,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={projectWithPort}
         isRunning={true}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -155,12 +139,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={projectWithPort}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -172,12 +154,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -189,12 +169,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -206,12 +184,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -226,12 +202,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -243,12 +217,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -263,12 +235,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={true}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -284,12 +254,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -306,12 +274,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={true}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -328,12 +294,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={true}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -350,12 +314,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -370,12 +332,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 
@@ -389,12 +349,10 @@ describe("ProjectCard", () => {
       <ProjectCard
         project={mockProject}
         isRunning={false}
-        processes={mockProcesses}
         getProjectLogs={mockGetProjectLogs}
         onRun={mockOnRun}
         onStop={mockOnStop}
         onOpenLogs={mockOnOpenLogs}
-        onUpdateProject={mockOnUpdateProject}
       />
     );
 

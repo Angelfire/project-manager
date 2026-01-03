@@ -1,5 +1,4 @@
 import { memo, useCallback } from "react";
-import { Child } from "@tauri-apps/plugin-shell";
 import { cn } from "@/utils/cn";
 import {
   Play,
@@ -19,64 +18,29 @@ import {
   getRuntimeTopBar,
 } from "@/utils/runtime";
 import { formatFileSize, formatDate } from "@/utils/format";
-import { openProjectInBrowser, detectPort } from "@/services/projectService";
+import { openProjectInBrowser } from "@/services/projectService";
 import type { Project } from "@/types";
-
-// Port detection configuration for quick browser opening
-const QUICK_DETECTION_ATTEMPTS = 1;
-const NO_INITIAL_DELAY = 0;
-const NO_INTERVAL_DELAY = 0;
 
 interface ProjectCardProps {
   project: Project;
   isRunning: boolean;
-  processes: Map<string, Child>;
   getProjectLogs: (projectPath: string) => Array<{ id: string }>;
   onRun: (project: Project) => void;
   onStop: (project: Project) => void;
   onOpenLogs: (projectPath: string) => void;
-  onUpdateProject: (updater: (prev: Project[]) => Project[]) => void;
 }
 
 export const ProjectCard = memo(function ProjectCard({
   project,
   isRunning,
-  processes,
   getProjectLogs,
   onRun,
   onStop,
   onOpenLogs,
-  onUpdateProject,
 }: ProjectCardProps) {
   const handleOpenInBrowser = useCallback(async () => {
-    const process = processes.get(project.path);
-    if (process?.pid && !project.port) {
-      // Try to detect the port before opening
-      try {
-        const detectedPort = await detectPort(
-          process.pid,
-          QUICK_DETECTION_ATTEMPTS,
-          NO_INITIAL_DELAY,
-          NO_INTERVAL_DELAY
-        );
-        if (detectedPort) {
-          onUpdateProject((prev) =>
-            prev.map((p) =>
-              p.path === project.path ? { ...p, port: detectedPort } : p
-            )
-          );
-          await openProjectInBrowser(
-            { ...project, port: detectedPort },
-            processes
-          );
-          return;
-        }
-      } catch {
-        // Port detection failed, will use default port
-      }
-    }
-    await openProjectInBrowser(project, processes);
-  }, [project, processes, onUpdateProject]);
+    await openProjectInBrowser(project);
+  }, [project]);
 
   return (
     <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden transition-colors hover:border-gray-700">

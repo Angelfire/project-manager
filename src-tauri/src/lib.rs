@@ -3,6 +3,7 @@ pub mod error;
 mod menu;
 mod port;
 mod process;
+mod process_logs;
 mod project_info;
 mod quick_actions;
 mod types;
@@ -92,7 +93,8 @@ pub fn run() {
             open_in_editor,
             open_in_terminal,
             open_in_file_manager,
-            validate_directory_path_command
+            validate_directory_path_command,
+            process_logs::spawn_process_with_logs
         ])
         .setup(|app| {
             menu::setup_menu(app)?;
