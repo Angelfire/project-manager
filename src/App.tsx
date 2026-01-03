@@ -49,10 +49,8 @@ function App() {
     selectedDirectory,
     setSelectedDirectory,
     projects,
-    setProjects,
     loading,
     runningProjects,
-    processes,
     getProjectLogs,
     clearProjectLogs,
     loadProjects,
@@ -217,12 +215,10 @@ function App() {
                   key={project.path}
                   project={project}
                   isRunning={runningProjects.has(project.path)}
-                  processes={processes}
                   getProjectLogs={getProjectLogs}
                   onRun={runProject}
                   onStop={stopProject}
                   onOpenLogs={setOpenLogsFor}
-                  onUpdateProject={setProjects}
                 />
               ))}
             </div>

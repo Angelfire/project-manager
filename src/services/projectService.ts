@@ -1,4 +1,4 @@
-import { Command, Child } from "@tauri-apps/plugin-shell";
+import { Command } from "@tauri-apps/plugin-shell";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Project } from "@/types";
 import { getDefaultPortForFramework } from "@/utils/runtime";
@@ -102,34 +102,23 @@ export const killProcessByPort = async (port: number): Promise<void> => {
   }
 };
 
-export const openProjectInBrowser = async (
-  project: Project,
-  processes: Map<string, Child>
-): Promise<void> => {
-  // Wait a moment if the port hasn't been detected yet
-  if (!project.port) {
-    // Try to detect the port one more time before using the fallback
-    const process = processes.get(project.path);
-    if (process?.pid) {
-      try {
-        const detectedPort = await tauriApi.processes.detectPort(process.pid);
-        if (detectedPort) {
-          await openInBrowser(detectedPort);
-          return;
-        }
-      } catch {
-        // Port detection failed, will use default port
-      }
-    }
-    // If not detected, use the default port
-    const defaultPort = getDefaultPortForFramework(project);
-    if (defaultPort) {
-      await openInBrowser(defaultPort);
-    } else {
-      toastWarning("Port not available", "The server may be starting...");
-    }
-  } else {
-    // Use the detected port
+export const openProjectInBrowser = async (project: Project): Promise<void> => {
+  // If port is already detected, use it directly
+  if (project.port) {
     await openInBrowser(project.port);
+    return;
   }
+
+  // If no port, try to use the default port for the framework
+  const defaultPort = getDefaultPortForFramework(project);
+  if (defaultPort) {
+    await openInBrowser(defaultPort);
+    return;
+  }
+
+  // Fallback: show warning
+  toastWarning(
+    "Port not detected",
+    "Unable to determine the server port. Please check if the server is running."
+  );
 };
