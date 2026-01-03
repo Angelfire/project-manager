@@ -187,38 +187,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_kill_process_tree_invalid_pid() {
-        // Test with PID 0 (should fail validation, but test the function behavior)
-        // Note: This will fail because PID 0 is reserved, but we test error handling
-        let result = kill_process_tree(0);
-        // The function may succeed or fail depending on system, but should not panic
-        let _ = result; // Just ensure it doesn't panic
-    }
-
-    #[test]
     fn test_kill_process_tree_nonexistent_pid() {
         // Test with a very high PID that likely doesn't exist
-        // This should not panic, but may return an error
+        // Should return an error since process doesn't exist
         let result = kill_process_tree(999999);
-        let _ = result; // Just ensure it doesn't panic
-    }
-
-    #[test]
-    fn test_detect_port_by_pid_invalid_pid() {
-        // Test with PID 0
-        let result = detect_port_by_pid(0);
-        // Should return None or error, but not panic
-        assert!(result.is_ok() || result.is_err());
+        assert!(result.is_err(), "Killing nonexistent process should return an error");
     }
 
     #[test]
     fn test_detect_port_by_pid_nonexistent_pid() {
         // Test with a very high PID that likely doesn't exist
+        // Should return Ok(None) since process doesn't exist (or error on some systems)
         let result = detect_port_by_pid(999999);
-        // Should return None (no port found) or error, but not panic
         match result {
-            Ok(port) => assert!(port.is_none()),
-            Err(_) => {} // Error is acceptable
+            Ok(port) => assert!(port.is_none(), "Nonexistent process should not have a port"),
+            Err(e) => {
+                // On some systems, querying a nonexistent PID returns an error
+                assert!(e.to_string().len() > 0, "Error message should not be empty");
+            }
         }
     }
 
@@ -227,7 +213,12 @@ mod tests {
         // Test with current process PID (should exist)
         let current_pid = std::process::id();
         let result = detect_port_by_pid(current_pid);
-        // Should return Ok (either Some(port) or None), but not panic
-        assert!(result.is_ok() || result.is_err());
+        // Should return Ok since the process exists (though port may be None)
+        assert!(result.is_ok(), "Querying existing process should not fail");
+        
+        // The result should be None since this test process doesn't listen on a port
+        if let Ok(port) = result {
+            assert!(port.is_none(), "Test process should not be listening on a port");
+        }
     }
 }
