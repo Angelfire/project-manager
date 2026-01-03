@@ -31,14 +31,20 @@ pub async fn spawn_process_with_logs(
 
         std::thread::spawn(move || {
             for line in reader.lines() {
-                if let Ok(line) = line {
-                    let _ = app_clone.emit(
-                        "process-stdout",
-                        serde_json::json!({
-                            "projectPath": project_path_clone.clone(),
-                            "content": line
-                        }),
-                    );
+                match line {
+                    Ok(line) => {
+                        // If emit fails, it means the app is shutting down, so exit the thread
+                        if app_clone.emit(
+                            "process-stdout",
+                            serde_json::json!({
+                                "projectPath": project_path_clone.clone(),
+                                "content": line
+                            }),
+                        ).is_err() {
+                            break;
+                        }
+                    }
+                    Err(_) => break, // Pipe closed or error, exit thread
                 }
             }
         });
@@ -52,14 +58,20 @@ pub async fn spawn_process_with_logs(
 
         std::thread::spawn(move || {
             for line in reader.lines() {
-                if let Ok(line) = line {
-                    let _ = app_clone.emit(
-                        "process-stderr",
-                        serde_json::json!({
-                            "projectPath": project_path_clone.clone(),
-                            "content": line
-                        }),
-                    );
+                match line {
+                    Ok(line) => {
+                        // If emit fails, it means the app is shutting down, so exit the thread
+                        if app_clone.emit(
+                            "process-stderr",
+                            serde_json::json!({
+                                "projectPath": project_path_clone.clone(),
+                                "content": line
+                            }),
+                        ).is_err() {
+                            break;
+                        }
+                    }
+                    Err(_) => break, // Pipe closed or error, exit thread
                 }
             }
         });
@@ -71,7 +83,7 @@ pub async fn spawn_process_with_logs(
     std::thread::spawn(move || {
         match child.wait() {
             Ok(_status) => {
-                // On successful wait, emit the existing process-exit event
+                // Emit exit event, ignore errors if app is shutting down
                 let _ = app_clone.emit(
                     "process-exit",
                     serde_json::json!({
@@ -81,7 +93,7 @@ pub async fn spawn_process_with_logs(
                 );
             }
             Err(e) => {
-                // If waiting on the process fails, emit a separate error event
+                // Emit error event, ignore errors if app is shutting down
                 let _ = app_clone.emit(
                     "process-exit-error",
                     serde_json::json!({
@@ -95,22 +107,4 @@ pub async fn spawn_process_with_logs(
     });
 
     Ok(pid)
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_spawn_process_with_logs_invalid_path() {
-        // This test would require mocking Tauri AppHandle, which is complex
-        // For now, we test the validation part indirectly through integration tests
-        // The validation error should occur before spawning
-        assert!(true); // Placeholder - actual test requires Tauri test setup
-    }
-
-    #[test]
-    fn test_spawn_process_with_logs_valid_path() {
-        // This test would require a full Tauri test environment
-        // Integration tests in tests/ directory would be more appropriate
-        assert!(true); // Placeholder
-    }
 }
