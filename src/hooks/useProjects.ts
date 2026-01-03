@@ -23,9 +23,9 @@ export const useProjects = () => {
   );
   const [processes, setProcesses] = useState<Map<string, Child>>(new Map());
   const [logs, setLogs] = useState<Map<string, LogEntry[]>>(new Map());
-  const [rustProcessPids, setRustProcessPids] = useState<
-    Map<string, number>
-  >(new Map());
+  const [rustProcessPids, setRustProcessPids] = useState<Map<string, number>>(
+    new Map()
+  );
 
   // Listen to process stdout/stderr events from Rust backend
   useEffect(() => {
@@ -38,14 +38,22 @@ export const useProjects = () => {
         projectPath: string;
         content: string;
       }>("process-stdout", (event) => {
-        addLog(event.payload.projectPath, "stdout", event.payload.content + "\n");
+        addLog(
+          event.payload.projectPath,
+          "stdout",
+          event.payload.content + "\n"
+        );
       });
 
       unlistenStderr = await listen<{
         projectPath: string;
         content: string;
       }>("process-stderr", (event) => {
-        addLog(event.payload.projectPath, "stderr", event.payload.content + "\n");
+        addLog(
+          event.payload.projectPath,
+          "stderr",
+          event.payload.content + "\n"
+        );
       });
 
       unlistenExit = await listen<{
