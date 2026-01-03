@@ -69,14 +69,29 @@ pub async fn spawn_process_with_logs(
     let app_clone = app.clone();
     let project_path_clone = project_path.clone();
     std::thread::spawn(move || {
-        let _ = child.wait();
-        let _ = app_clone.emit(
-            "process-exit",
-            serde_json::json!({
-                "projectPath": project_path_clone,
-                "pid": pid
-            }),
-        );
+        match child.wait() {
+            Ok(_status) => {
+                // On successful wait, emit the existing process-exit event
+                let _ = app_clone.emit(
+                    "process-exit",
+                    serde_json::json!({
+                        "projectPath": project_path_clone,
+                        "pid": pid
+                    }),
+                );
+            }
+            Err(e) => {
+                // If waiting on the process fails, emit a separate error event
+                let _ = app_clone.emit(
+                    "process-exit-error",
+                    serde_json::json!({
+                        "projectPath": project_path_clone,
+                        "pid": pid,
+                        "error": e.to_string()
+                    }),
+                );
+            }
+        }
     });
 
     Ok(pid)
