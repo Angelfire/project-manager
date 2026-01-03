@@ -149,18 +149,10 @@ fn extract_port_from_config_file(content: &str, key: &str) -> Option<u16> {
             }
         }
         
-        // Handle nested structures like: server: { port: 4321 }
-        // Can be on same line: "server: { port: 4321 }"
-        // Or multi-line: "server: {\n  port: 4321\n}"
+        // Handle nested structures like: server: { ... port: 4321 ... }
+        // Can be multi-line: "server: {\n  port: 4321\n}"
         if line.contains("server") {
-            // First, check if port is on the same line (single-line format)
-            if line.contains(key) && line.contains(':') {
-                if let Some(port) = extract_port_from_line(line, key) {
-                    return Some(port);
-                }
-            }
-            
-            // If not found on same line, check next few lines (multi-line format)
+            // Check the next few lines for a port declaration (multi-line format)
             let search_range = std::cmp::min(i + 4, lines.len());
             for j in (i + 1)..search_range {
                 if let Some(next_line) = lines.get(j) {
