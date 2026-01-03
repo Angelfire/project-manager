@@ -1,6 +1,11 @@
 use crate::error::AppError;
 use std::process::Command as StdCommand;
 
+/// Kills a process tree (parent and all children) by PID
+/// 
+/// Note: This function uses Unix-specific commands (ps, pgrep, kill) and will only work
+/// on Unix-like systems (Linux, macOS). Windows is not currently supported.
+#[cfg(unix)]
 pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
     // First, verify that the process exists
     // Use `ps -p` to check if the process exists
@@ -49,7 +54,7 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
         // Verify that kill succeeded (ignore errors for child processes that may have already terminated)
         if !kill_output.status.success() && *process_pid == pid {
             // Only fail if we couldn't kill the main process
-            return Err(AppError::NotFound(format!("Failed to kill process with PID {}", pid)));
+            return Err(AppError::CommandError(format!("Failed to kill process with PID {}", pid)));
         }
     }
 
@@ -62,6 +67,11 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Detects which port a process (or its children) is listening on
+/// 
+/// Note: This function uses Unix-specific commands (lsof, pgrep, ps) and will only work
+/// on Unix-like systems (Linux, macOS). Windows is not currently supported.
+#[cfg(unix)]
 pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
     // Unix (macOS/Linux): use lsof to find the port
     // First try with the PID directly

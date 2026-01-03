@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from "react";
-import { Child } from "@tauri-apps/plugin-shell";
 import { listen } from "@tauri-apps/api/event";
 import { Project, LogEntry } from "@/types";
 import {
@@ -52,6 +51,7 @@ export const useProjects = () => {
     let unlistenStdout: (() => void) | null = null;
     let unlistenStderr: (() => void) | null = null;
     let unlistenExit: (() => void) | null = null;
+    let unlistenExitError: (() => void) | null = null;
 
     const setupEventListeners = async () => {
       unlistenStdout = await listen<{
@@ -96,6 +96,28 @@ export const useProjects = () => {
           return newMap;
         });
       });
+
+      unlistenExitError = await listen<{
+        projectPath: string;
+        pid: number;
+        error: string;
+      }>("process-exit-error", (event) => {
+        addLog(
+          event.payload.projectPath,
+          "stderr",
+          `[${new Date().toLocaleTimeString()}] Process wait error (PID: ${event.payload.pid}): ${event.payload.error}\n`
+        );
+        setRunningProjects((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(event.payload.projectPath);
+          return newSet;
+        });
+        setRustProcessPids((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(event.payload.projectPath);
+          return newMap;
+        });
+      });
     };
 
     const setupPromise = setupEventListeners();
@@ -106,6 +128,7 @@ export const useProjects = () => {
           if (unlistenStdout) unlistenStdout();
           if (unlistenStderr) unlistenStderr();
           if (unlistenExit) unlistenExit();
+          if (unlistenExitError) unlistenExitError();
         })
         .catch(() => {
           // Optionally handle or log setup errors; ignore here to avoid unmount-time noise
@@ -180,39 +203,36 @@ export const useProjects = () => {
         `[${new Date().toLocaleTimeString()}] Process started (PID: ${pid})\n`
       );
 
-      // Detect the real port after the server starts
-      if (pid) {
-        // Start port detection in background
-        detectPort(pid)
-          .then((detectedPort) => {
-            // Verify that the project is still running
-            setRunningProjects((current) => {
-              if (current.has(project.path) && detectedPort) {
-                // Update the port in the project
-                setProjects((prev) =>
-                  prev.map((p) =>
-                    p.path === project.path ? { ...p, port: detectedPort } : p
-                  )
-                );
-                // Log port detection
-                addLog(
-                  project.path,
-                  "stdout",
-                  `[${new Date().toLocaleTimeString()}] Server detected on port ${detectedPort}\n`
-                );
-              }
-              return current;
-            });
-          })
-          .catch((_error) => {
-            // Port detection failure is non-critical, log it but don't fail
-            addLog(
-              project.path,
-              "stdout",
-              `[${new Date().toLocaleTimeString()}] Port detection: Unable to detect port (this is normal for some projects)\n`
-            );
+      // Start port detection in background
+      detectPort(pid)
+        .then((detectedPort) => {
+          // Verify that the project is still running
+          setRunningProjects((current) => {
+            if (current.has(project.path) && detectedPort) {
+              // Update the port in the project
+              setProjects((prev) =>
+                prev.map((p) =>
+                  p.path === project.path ? { ...p, port: detectedPort } : p
+                )
+              );
+              // Log port detection
+              addLog(
+                project.path,
+                "stdout",
+                `[${new Date().toLocaleTimeString()}] Server detected on port ${detectedPort}\n`
+              );
+            }
+            return current;
           });
-      }
+        })
+        .catch((_error) => {
+          // Port detection failure is non-critical, log it but don't fail
+          addLog(
+            project.path,
+            "stdout",
+            `[${new Date().toLocaleTimeString()}] Port detection: Unable to detect port (this is normal for some projects)\n`
+          );
+        });
     } catch (error) {
       addLog(
         project.path,
@@ -222,7 +242,7 @@ export const useProjects = () => {
       addLog(
         project.path,
         "stderr",
-        `[${new Date().toLocaleTimeString()}] Error: ${error instanceof Error ? error.message : String(error)}\n`
+        `[${new Date().toLocaleTimeString()}] ${error instanceof Error ? error.message : String(error)}\n`
       );
       toastError("Error running project", String(error));
       setRunningProjects((prev) => {
@@ -248,6 +268,10 @@ export const useProjects = () => {
     }
 
     // Clean up Rust process PID
+    // Note: There's potential redundancy between this cleanup and the process-exit event handler.
+    // Both may attempt to clean up rustProcessPids and runningProjects if stopProject is called
+    // while the process exits naturally. This is intentional for robustness - Map/Set deletions
+    // are idempotent, so duplicate cleanup is harmless.
     setRustProcessPids((prev) => {
       const newMap = new Map(prev);
       newMap.delete(project.path);
@@ -259,12 +283,6 @@ export const useProjects = () => {
       const newSet = new Set(prev);
       newSet.delete(project.path);
       return newSet;
-    });
-
-    setProcesses((prev) => {
-      const newMap = new Map(prev);
-      newMap.delete(project.path);
-      return newMap;
     });
 
     // Clear the port when the project is stopped
@@ -295,7 +313,6 @@ export const useProjects = () => {
     setProjects,
     loading,
     runningProjects,
-    processes,
     logs,
     loadProjects,
     runProject,
