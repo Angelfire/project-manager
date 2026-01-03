@@ -94,9 +94,9 @@ const DialogHeader = ({
 }: DialogHeaderProps) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
-      withCloseButton &&
-        "flex-row items-center justify-between p-4 pt-14 border-b border-gray-800 pr-2",
+      withCloseButton
+        ? "flex flex-row items-center justify-between p-4 pt-14 border-b border-gray-800 pr-2"
+        : "flex flex-col space-y-1.5 text-center sm:text-left",
       className
     )}
     {...props}
