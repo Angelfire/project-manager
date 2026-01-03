@@ -32,11 +32,6 @@
 ### 4. **Cobertura de Tests**
 
 - [ ] **Tests de integración**: Agregar tests E2E con Playwright o similar
-- [] **Tests de Rust**: Implementar tests unitarios para el backend ✅
-  - [ ] Tests para project detection logic
-  - [ ] Tests para process management functions
-  - [ ] Tests para port detection
-  - [ ] Tests para quick actions
 
 ### 5. **CI/CD Pipeline**
 
@@ -72,7 +67,7 @@
 
 ### 8. **Type Safety**
 
-- [ ] **Strict types**: Eliminar todos los `any` (en progreso)
+- [ ] **Eliminar todos los `any`**: En progreso – revisar y eliminar los `any` restantes
 - [ ] **Type guards**: Crear funciones de type checking
   ```typescript
   function isProject(obj: unknown): obj is Project {
@@ -179,6 +174,7 @@
 ### 20. **Optimizaciones de Rendimiento**
 
 - [ ] **Image optimization**: Optimizar imágenes y assets
+- [ ] **Virtual scrolling**: Para listas grandes de proyectos
 
 ## 🧹 Code Quality
 
