@@ -10,6 +10,7 @@ const DialogTrigger = DialogPrimitive.Trigger;
 
 const DialogPortal = DialogPrimitive.Portal;
 
+// Exported for consumers who need programmatic dialog control (appears unused internally).
 const DialogClose = DialogPrimitive.Close;
 
 const DialogOverlay = React.forwardRef<
