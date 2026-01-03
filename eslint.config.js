@@ -36,6 +36,8 @@ export default [
         HTMLButtonElement: "readonly",
         HTMLDivElement: "readonly",
         HTMLSpanElement: "readonly",
+        MouseEvent: "readonly",
+        KeyboardEvent: "readonly",
         process: "readonly",
       },
     },

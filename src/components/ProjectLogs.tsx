@@ -1,9 +1,10 @@
 import { memo, useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { X, Search, Trash2, Download } from "lucide-react";
+import { Search, Trash2, Download } from "lucide-react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { LogEntry } from "@/types";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { cn } from "@/utils/cn";
 import { toastError, toastInfo, toastSuccess } from "@/utils/toast";
 
@@ -110,47 +111,36 @@ export const ProjectLogs = memo(function ProjectLogs({
     }
   }, [logs, projectName, formatTimestamp]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 rounded-lg border border-gray-800 w-full max-w-4xl h-[80vh] flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-100">
-              Logs: {projectName}
-            </h2>
-            <p className="text-xs text-gray-500 font-mono mt-1 truncate">
-              {projectPath}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={exportLogs}
-              variant="ghost"
-              size="sm"
-              icon={Download}
-              className="p-2"
-              title="Export logs"
-            />
-            <Button
-              onClick={onClear}
-              variant="ghost"
-              size="sm"
-              icon={Trash2}
-              className="p-2 hover:text-red-400"
-              title="Clear logs"
-            />
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              size="sm"
-              icon={X}
-              className="p-2"
-            />
-          </div>
-        </div>
-
+    <Dialog
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Logs: ${projectName}`}
+      subtitle={projectPath}
+      size="xl"
+      className="h-[80vh]"
+      headerActions={
+        <>
+          <Button
+            onClick={exportLogs}
+            variant="ghost"
+            size="sm"
+            icon={Download}
+            className="p-2"
+            title="Export logs"
+          />
+          <Button
+            onClick={onClear}
+            variant="ghost"
+            size="sm"
+            icon={Trash2}
+            className="p-2 hover:text-red-400"
+            title="Clear logs"
+          />
+        </>
+      }
+    >
+      <div className="flex flex-col h-full">
         <div className="p-4 border-b border-gray-800">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
@@ -220,6 +210,6 @@ export const ProjectLogs = memo(function ProjectLogs({
           )}
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 });
