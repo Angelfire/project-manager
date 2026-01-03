@@ -136,21 +136,68 @@ fn detect_vite_port(path: &PathBuf) -> Option<u16> {
 }
 
 fn extract_port_from_config_file(content: &str, key: &str) -> Option<u16> {
+    // Search for patterns like "port: 4321" or "port:4321" or nested "server: { port: 4321 }"
+    // Handle both single-line and multi-line formats
     let lines: Vec<&str> = content.lines().collect();
-    for line in lines {
-        // Search for key: followed by a number (e.g., port: 4321, "port": 4321)
+    
+    for (i, line) in lines.iter().enumerate() {
+        // Direct match: port: 4321 or "port": 4321
         if line.contains(key) && line.contains(':') {
-            let parts: Vec<&str> = line.split(':').collect();
-            if parts.len() >= 2 {
-                // Clean the value (remove spaces, commas, braces, quotes, etc.)
-                let port_str = parts[1]
-                    .trim()
-                    .trim_matches(',')
-                    .trim_matches('"')
-                    .trim_matches('\'')
-                    .trim_matches('}')
-                    .trim_matches('{')
-                    .trim();
+            // Try to extract port from this line
+            if let Some(port) = extract_port_from_line(line, key) {
+                return Some(port);
+            }
+        }
+        
+        // Handle nested structures like: server: { port: 4321 }
+        // Can be on same line: "server: { port: 4321 }"
+        // Or multi-line: "server: {\n  port: 4321\n}"
+        if line.contains("server") {
+            // First, check if port is on the same line (single-line format)
+            if line.contains(key) && line.contains(':') {
+                if let Some(port) = extract_port_from_line(line, key) {
+                    return Some(port);
+                }
+            }
+            
+            // If not found on same line, check next few lines (multi-line format)
+            let search_range = std::cmp::min(i + 4, lines.len());
+            for j in (i + 1)..search_range {
+                if let Some(next_line) = lines.get(j) {
+                    if next_line.contains(key) && next_line.contains(':') {
+                        if let Some(port) = extract_port_from_line(next_line, key) {
+                            return Some(port);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+fn extract_port_from_line(line: &str, key: &str) -> Option<u16> {
+    // Find the position of "port:" in the line (must be followed by colon)
+    let search_pattern = format!("{}:", key);
+    if let Some(key_pos) = line.find(&search_pattern) {
+        let value_start = key_pos + search_pattern.len();
+        if value_start < line.len() {
+            // Extract everything after "port:"
+            let value_part = &line[value_start..];
+            // Split by whitespace, comma, or closing brace to get the number
+            // Filter out empty strings and find the first non-empty part
+            let port_str = value_part
+                .split(|c: char| c.is_whitespace() || c == ',' || c == '}' || c == ')' || c == ']')
+                .find(|s| !s.is_empty())
+                .unwrap_or("")
+                .trim()
+                .trim_matches('"')
+                .trim_matches('\'')
+                .trim_matches('{')
+                .trim_matches('[')
+                .trim_matches('(');
+            
+            if !port_str.is_empty() {
                 if let Ok(port) = port_str.parse::<u16>() {
                     if port > 0 {
                         return Some(port);
@@ -197,6 +244,15 @@ fn extract_port_from_string(s: &str) -> Option<u16> {
             }
         }
 
+        // Search for -p=3000 (short form)
+        if word.starts_with("-p=") {
+            if let Some(port_str) = word.strip_prefix("-p=") {
+                if let Ok(port) = port_str.parse::<u16>() {
+                    return Some(port);
+                }
+            }
+        }
+
         // Search for :3000 or localhost:3000 (only if it looks like a valid port)
         if word.contains(':') {
             let parts: Vec<&str> = word.split(':').collect();
@@ -216,4 +272,194 @@ fn extract_port_from_string(s: &str) -> Option<u16> {
     }
 
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    fn create_temp_dir() -> TempDir {
+        tempfile::tempdir().expect("Failed to create temp directory")
+    }
+
+    fn create_temp_file(dir: &PathBuf, name: &str, content: &str) -> PathBuf {
+        let file_path = dir.join(name);
+        fs::write(&file_path, content).expect("Failed to write temp file");
+        file_path
+    }
+
+    #[test]
+    fn test_get_default_port_astro() {
+        assert_eq!(get_default_port("astro"), Some(4321));
+    }
+
+    #[test]
+    fn test_get_default_port_nextjs() {
+        assert_eq!(get_default_port("nextjs"), Some(3000));
+    }
+
+    #[test]
+    fn test_get_default_port_vite() {
+        assert_eq!(get_default_port("vite"), Some(5173));
+    }
+
+    #[test]
+    fn test_get_default_port_react() {
+        assert_eq!(get_default_port("react"), Some(3000));
+    }
+
+    #[test]
+    fn test_get_default_port_sveltekit() {
+        assert_eq!(get_default_port("sveltekit"), Some(5173));
+    }
+
+    #[test]
+    fn test_get_default_port_nuxt() {
+        assert_eq!(get_default_port("nuxt"), Some(3000));
+    }
+
+    #[test]
+    fn test_get_default_port_unknown() {
+        assert_eq!(get_default_port("unknown"), Some(3000));
+    }
+
+    #[test]
+    fn test_get_default_port_node() {
+        assert_eq!(get_default_port("node"), Some(3000));
+    }
+
+    #[test]
+    fn test_detect_port_deno() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        assert_eq!(detect_port_deno(&dir_path), Some(8000));
+    }
+
+    #[test]
+    fn test_extract_port_from_string_port_flag() {
+        assert_eq!(extract_port_from_string("--port 3000"), Some(3000));
+        assert_eq!(extract_port_from_string("-p 5173"), Some(5173));
+    }
+
+    #[test]
+    fn test_extract_port_from_string_port_env() {
+        assert_eq!(extract_port_from_string("PORT=3000"), Some(3000));
+        assert_eq!(extract_port_from_string("PORT=8080 dev"), Some(8080));
+    }
+
+    #[test]
+    fn test_extract_port_from_string_port_equals() {
+        assert_eq!(extract_port_from_string("--port=3000"), Some(3000));
+        assert_eq!(extract_port_from_string("-p=5173"), Some(5173));
+    }
+
+    #[test]
+    fn test_extract_port_from_string_colon() {
+        assert_eq!(extract_port_from_string(":3000"), Some(3000));
+        assert_eq!(extract_port_from_string("localhost:8080"), Some(8080));
+    }
+
+    #[test]
+    fn test_extract_port_from_string_no_port() {
+        assert_eq!(extract_port_from_string("npm run dev"), None);
+        assert_eq!(extract_port_from_string(""), None);
+    }
+
+    #[test]
+    fn test_extract_port_from_string_multiple_ports() {
+        // Should return the first valid port found
+        assert_eq!(extract_port_from_string("--port 3000 --port 8080"), Some(3000));
+    }
+
+    #[test]
+    fn test_detect_port_from_package_json() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(
+            &dir_path,
+            "package.json",
+            r#"{"scripts": {"dev": "vite --port 5173"}}"#,
+        );
+
+        assert_eq!(detect_port_from_package_json(&dir_path), Some(5173));
+    }
+
+    #[test]
+    fn test_detect_port_from_package_json_no_port() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(
+            &dir_path,
+            "package.json",
+            r#"{"scripts": {"dev": "vite"}}"#,
+        );
+
+        assert_eq!(detect_port_from_package_json(&dir_path), None);
+    }
+
+    #[test]
+    fn test_detect_port_from_package_json_start_script() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(
+            &dir_path,
+            "package.json",
+            r#"{"scripts": {"start": "node server.js --port 3000"}}"#,
+        );
+
+        assert_eq!(detect_port_from_package_json(&dir_path), Some(3000));
+    }
+
+    #[test]
+    fn test_detect_astro_port() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(
+            &dir_path,
+            "astro.config.mjs",
+            "export default { server: { port: 4321 } }",
+        );
+
+        assert_eq!(detect_astro_port(&dir_path), Some(4321));
+    }
+
+    #[test]
+    fn test_detect_nextjs_port() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(
+            &dir_path,
+            "next.config.js",
+            "module.exports = { port: 3000 }",
+        );
+
+        assert_eq!(detect_nextjs_port(&dir_path), Some(3000));
+    }
+
+    #[test]
+    fn test_detect_vite_port() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(
+            &dir_path,
+            "vite.config.ts",
+            "export default { server: { port: 5173 } }",
+        );
+
+        assert_eq!(detect_vite_port(&dir_path), Some(5173));
+    }
+
+    #[test]
+    fn test_detect_port_default() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        // No config files, should return default port based on framework
+        create_temp_file(&dir_path, "package.json", r#"{}"#);
+
+        // Should return default port (3000 for node framework)
+        let port = detect_port(&dir_path);
+        assert!(port.is_some());
+    }
 }

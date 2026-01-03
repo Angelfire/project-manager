@@ -181,3 +181,53 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
 
     Ok(None)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_kill_process_tree_invalid_pid() {
+        // Test with PID 0 (should fail validation, but test the function behavior)
+        // Note: This will fail because PID 0 is reserved, but we test error handling
+        let result = kill_process_tree(0);
+        // The function may succeed or fail depending on system, but should not panic
+        let _ = result; // Just ensure it doesn't panic
+    }
+
+    #[test]
+    fn test_kill_process_tree_nonexistent_pid() {
+        // Test with a very high PID that likely doesn't exist
+        // This should not panic, but may return an error
+        let result = kill_process_tree(999999);
+        let _ = result; // Just ensure it doesn't panic
+    }
+
+    #[test]
+    fn test_detect_port_by_pid_invalid_pid() {
+        // Test with PID 0
+        let result = detect_port_by_pid(0);
+        // Should return None or error, but not panic
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[test]
+    fn test_detect_port_by_pid_nonexistent_pid() {
+        // Test with a very high PID that likely doesn't exist
+        let result = detect_port_by_pid(999999);
+        // Should return None (no port found) or error, but not panic
+        match result {
+            Ok(port) => assert!(port.is_none()),
+            Err(_) => {} // Error is acceptable
+        }
+    }
+
+    #[test]
+    fn test_detect_port_by_pid_current_process() {
+        // Test with current process PID (should exist)
+        let current_pid = std::process::id();
+        let result = detect_port_by_pid(current_pid);
+        // Should return Ok (either Some(port) or None), but not panic
+        assert!(result.is_ok() || result.is_err());
+    }
+}

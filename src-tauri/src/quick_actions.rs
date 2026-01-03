@@ -185,3 +185,86 @@ pub fn open_in_file_manager(path: &Path) -> Result<(), AppError> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    fn create_temp_dir() -> TempDir {
+        tempfile::tempdir().expect("Failed to create temp directory")
+    }
+
+    fn create_temp_file(dir: &std::path::Path, name: &str, content: &str) -> std::path::PathBuf {
+        let file_path = dir.join(name);
+        fs::write(&file_path, content).expect("Failed to write temp file");
+        file_path
+    }
+
+    #[test]
+    fn test_open_in_editor_nonexistent_path() {
+        // Test that function handles nonexistent paths gracefully
+        let path = std::path::Path::new("/nonexistent/path/12345");
+        // Function may succeed or fail, but should not panic
+        let _ = open_in_editor(path);
+    }
+
+    #[test]
+    fn test_open_in_editor_existing_file() {
+        let temp_dir = create_temp_dir();
+        let file_path = create_temp_file(temp_dir.path(), "test.txt", "content");
+
+        // Function may succeed or fail depending on available editors, but should not panic
+        let _ = open_in_editor(&file_path);
+    }
+
+    #[test]
+    fn test_open_in_editor_existing_directory() {
+        let temp_dir = create_temp_dir();
+
+        // Function may succeed or fail depending on available editors, but should not panic
+        let _ = open_in_editor(temp_dir.path());
+    }
+
+    #[test]
+    fn test_open_in_terminal_nonexistent_path() {
+        // Test that function handles nonexistent paths gracefully
+        let path = std::path::Path::new("/nonexistent/path/12345");
+        // Function may succeed or fail, but should not panic
+        let _ = open_in_terminal(path);
+    }
+
+    #[test]
+    fn test_open_in_terminal_existing_directory() {
+        let temp_dir = create_temp_dir();
+
+        // Function may succeed or fail depending on available terminals, but should not panic
+        let _ = open_in_terminal(temp_dir.path());
+    }
+
+    #[test]
+    fn test_open_in_file_manager_nonexistent_path() {
+        // Test that function handles nonexistent paths gracefully
+        let path = std::path::Path::new("/nonexistent/path/12345");
+        // Function may succeed or fail, but should not panic
+        let _ = open_in_file_manager(path);
+    }
+
+    #[test]
+    fn test_open_in_file_manager_existing_directory() {
+        let temp_dir = create_temp_dir();
+
+        // Function may succeed or fail depending on available file managers, but should not panic
+        let _ = open_in_file_manager(temp_dir.path());
+    }
+
+    #[test]
+    fn test_open_in_file_manager_existing_file() {
+        let temp_dir = create_temp_dir();
+        let file_path = create_temp_file(temp_dir.path(), "test.txt", "content");
+
+        // Function may succeed or fail depending on available file managers, but should not panic
+        let _ = open_in_file_manager(&file_path);
+    }
+}

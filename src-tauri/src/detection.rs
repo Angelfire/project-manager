@@ -152,3 +152,246 @@ pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
 
     Ok(projects)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    fn create_temp_dir() -> TempDir {
+        tempfile::tempdir().expect("Failed to create temp directory")
+    }
+
+    fn create_temp_file(dir: &std::path::Path, name: &str, content: &str) -> PathBuf {
+        let file_path = dir.join(name);
+        fs::write(&file_path, content).expect("Failed to write temp file");
+        file_path
+    }
+
+    #[test]
+    fn test_detect_package_manager_npm() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(temp_dir.path(), "package-lock.json", "{}");
+
+        assert_eq!(detect_package_manager(&dir_path), "npm");
+    }
+
+    #[test]
+    fn test_detect_package_manager_yarn() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(temp_dir.path(), "yarn.lock", "");
+
+        assert_eq!(detect_package_manager(&dir_path), "yarn");
+    }
+
+    #[test]
+    fn test_detect_package_manager_pnpm() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(temp_dir.path(), "pnpm-lock.yaml", "");
+
+        assert_eq!(detect_package_manager(&dir_path), "pnpm");
+    }
+
+    #[test]
+    fn test_detect_package_manager_bun() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(temp_dir.path(), "bun.lockb", "");
+
+        assert_eq!(detect_package_manager(&dir_path), "bun");
+    }
+
+    #[test]
+    fn test_detect_package_manager_default() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+
+        // No lock file, should default to npm
+        assert_eq!(detect_package_manager(&dir_path), "npm");
+    }
+
+    #[test]
+    fn test_detect_package_manager_priority() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        // pnpm should take priority over npm
+        create_temp_file(temp_dir.path(), "package-lock.json", "{}");
+        create_temp_file(temp_dir.path(), "pnpm-lock.yaml", "");
+
+        assert_eq!(detect_package_manager(&dir_path), "pnpm");
+    }
+
+    #[test]
+    fn test_detect_framework_astro() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(temp_dir.path(), "astro.config.mjs", "");
+
+        assert_eq!(detect_framework(&dir_path), "astro");
+    }
+
+    #[test]
+    fn test_detect_framework_nextjs() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(temp_dir.path(), "next.config.js", "");
+
+        assert_eq!(detect_framework(&dir_path), "nextjs");
+    }
+
+    #[test]
+    fn test_detect_framework_vite() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(temp_dir.path(), "vite.config.ts", "");
+
+        assert_eq!(detect_framework(&dir_path), "vite");
+    }
+
+    #[test]
+    fn test_detect_framework_react() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        fs::create_dir(dir_path.join("src")).expect("Failed to create src dir");
+        fs::create_dir(dir_path.join("public")).expect("Failed to create public dir");
+        create_temp_file(
+            temp_dir.path(),
+            "package.json",
+            r#"{"dependencies": {"react-scripts": "^5.0.0"}}"#,
+        );
+
+        assert_eq!(detect_framework(&dir_path), "react");
+    }
+
+    #[test]
+    fn test_detect_framework_sveltekit() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(temp_dir.path(), "svelte.config.js", "");
+
+        assert_eq!(detect_framework(&dir_path), "sveltekit");
+    }
+
+    #[test]
+    fn test_detect_framework_nuxt() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        create_temp_file(temp_dir.path(), "nuxt.config.ts", "");
+
+        assert_eq!(detect_framework(&dir_path), "nuxt");
+    }
+
+    #[test]
+    fn test_detect_framework_default() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+
+        // No framework files, should default to "node"
+        assert_eq!(detect_framework(&dir_path), "node");
+    }
+
+    #[test]
+    fn test_detect_framework_priority() {
+        let temp_dir = create_temp_dir();
+        let dir_path = temp_dir.path().to_path_buf();
+        // Astro should take priority (checked first)
+        create_temp_file(temp_dir.path(), "astro.config.mjs", "");
+        create_temp_file(temp_dir.path(), "next.config.js", "");
+
+        assert_eq!(detect_framework(&dir_path), "astro");
+    }
+
+    #[test]
+    fn test_scan_directory_nonexistent() {
+        let result = scan_directory(Path::new("/nonexistent/path/12345"));
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), AppError::NotFound(_)));
+    }
+
+    #[test]
+    fn test_scan_directory_empty() {
+        let temp_dir = create_temp_dir();
+        let result = scan_directory(temp_dir.path());
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 0);
+    }
+
+    #[test]
+    fn test_scan_directory_nodejs_project() {
+        let temp_dir = create_temp_dir();
+        let project_dir = temp_dir.path().join("my-project");
+        fs::create_dir(&project_dir).expect("Failed to create project dir");
+        create_temp_file(&project_dir, "package.json", r#"{"name": "test-project"}"#);
+
+        let result = scan_directory(temp_dir.path());
+        assert!(result.is_ok());
+        let projects = result.unwrap();
+        assert_eq!(projects.len(), 1);
+        assert_eq!(projects[0].name, "my-project");
+        assert_eq!(projects[0].runtime, "Node.js");
+    }
+
+    #[test]
+    fn test_scan_directory_deno_project() {
+        let temp_dir = create_temp_dir();
+        let project_dir = temp_dir.path().join("deno-project");
+        fs::create_dir(&project_dir).expect("Failed to create project dir");
+        create_temp_file(&project_dir, "deno.json", r#"{}"#);
+
+        let result = scan_directory(temp_dir.path());
+        assert!(result.is_ok());
+        let projects = result.unwrap();
+        assert_eq!(projects.len(), 1);
+        assert_eq!(projects[0].name, "deno-project");
+        assert_eq!(projects[0].runtime, "Deno");
+    }
+
+    #[test]
+    fn test_scan_directory_bun_project() {
+        let temp_dir = create_temp_dir();
+        let project_dir = temp_dir.path().join("bun-project");
+        fs::create_dir(&project_dir).expect("Failed to create project dir");
+        create_temp_file(&project_dir, "bun.lockb", "");
+
+        let result = scan_directory(temp_dir.path());
+        assert!(result.is_ok());
+        let projects = result.unwrap();
+        assert_eq!(projects.len(), 1);
+        assert_eq!(projects[0].name, "bun-project");
+        assert_eq!(projects[0].runtime, "Bun");
+    }
+
+    #[test]
+    fn test_scan_directory_multiple_projects() {
+        let temp_dir = create_temp_dir();
+
+        // Node.js project
+        let node_dir = temp_dir.path().join("node-project");
+        fs::create_dir(&node_dir).expect("Failed to create node dir");
+        create_temp_file(&node_dir, "package.json", r#"{}"#);
+
+        // Deno project
+        let deno_dir = temp_dir.path().join("deno-project");
+        fs::create_dir(&deno_dir).expect("Failed to create deno dir");
+        create_temp_file(&deno_dir, "deno.json", r#"{}"#);
+
+        let result = scan_directory(temp_dir.path());
+        assert!(result.is_ok());
+        let projects = result.unwrap();
+        assert_eq!(projects.len(), 2);
+    }
+
+    #[test]
+    fn test_scan_directory_ignores_files() {
+        let temp_dir = create_temp_dir();
+        create_temp_file(temp_dir.path(), "not-a-project.txt", "content");
+
+        let result = scan_directory(temp_dir.path());
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 0);
+    }
+}

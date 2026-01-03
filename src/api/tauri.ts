@@ -34,6 +34,27 @@ export const tauriApi = {
    */
   processes: {
     /**
+     * Spawn a process with stdout/stderr logging
+     * @param command - Command to execute
+     * @param args - Command arguments
+     * @param cwd - Working directory
+     * @param projectPath - Project path for log routing
+     * @returns Process ID
+     */
+    spawnWithLogs: (
+      command: string,
+      args: string[],
+      cwd: string,
+      projectPath: string
+    ): Promise<number> => {
+      return invoke<number>("spawn_process_with_logs", {
+        command,
+        args,
+        cwd,
+        projectPath,
+      });
+    },
+    /**
      * Kill a process tree by PID
      * @param pid - Process ID to kill
      */
