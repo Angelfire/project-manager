@@ -60,10 +60,6 @@ const DialogContent = React.forwardRef<
           sizeClasses[size],
           className
         )}
-        onOpenAutoFocus={(e) => {
-          // Prevent auto-focus on the close button
-          e.preventDefault();
-        }}
         {...props}
       >
         {showCloseButton && (
@@ -85,19 +81,19 @@ const DialogContent = React.forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 interface DialogHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  withCloseButton?: boolean;
+  hasCloseButtonPadding?: boolean;
 }
 
 const DialogHeader = ({
   className,
-  withCloseButton = false,
+  hasCloseButtonPadding = false,
   ...props
 }: DialogHeaderProps) => (
   <div
     className={cn(
-      withCloseButton
+      hasCloseButtonPadding
         ? "flex flex-row items-center justify-between p-4 pt-14 border-b border-gray-800 pr-2"
-        : "flex flex-col space-y-1.5 text-center sm:text-left",
+        : "flex flex-col space-y-1.5 text-center sm:text-left p-4 border-b border-gray-800",
       className
     )}
     {...props}
@@ -181,7 +177,7 @@ export function Dialog({
         className={className}
         {...(!subtitle && { "aria-describedby": undefined })}
       >
-        <DialogHeader withCloseButton={showCloseButton}>
+        <DialogHeader hasCloseButtonPadding={showCloseButton}>
           <div>
             <DialogTitle>{title}</DialogTitle>
             {subtitle && (
