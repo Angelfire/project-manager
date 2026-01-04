@@ -168,7 +168,7 @@ export const ProjectLogs = memo(function ProjectLogs({
                     setAutoScroll(true);
                     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                  className="text-chart-2 hover:text-chart-1 transition-colors"
                 >
                   Scroll to bottom
                 </button>
