@@ -98,15 +98,17 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 max-w-7xl">
         <header className="mb-10">
           <div className="flex items-center gap-4">
             <img src={runstackIcon} alt="RunStack" className="size-16" />
 
             <div>
-              <h1 className="text-3xl font-semibold text-gray-100">RunStack</h1>
-              <p className="text-gray-500 text-sm mt-1">
+              <h1 className="text-3xl font-semibold text-foreground">
+                RunStack
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
                 Manage and run your Node.js, Deno and Bun projects
               </p>
             </div>
@@ -126,11 +128,13 @@ function App() {
 
         {loading && (
           <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center size-12 bg-gray-800 rounded-lg mb-4">
-              <Loader2 className="size-6 text-gray-500 animate-spin" />
+            <div className="inline-flex items-center justify-center size-12 bg-secondary rounded-lg mb-4">
+              <Loader2 className="size-6 text-muted-foreground animate-spin" />
             </div>
-            <p className="text-gray-400 font-medium">Scanning projects...</p>
-            <p className="text-gray-600 text-sm mt-1">Please wait</p>
+            <p className="text-muted-foreground font-medium">
+              Scanning projects...
+            </p>
+            <p className="text-muted-foreground text-sm mt-1">Please wait</p>
           </div>
         )}
 
@@ -139,10 +143,10 @@ function App() {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-100">
+                  <h2 className="text-xl font-semibold text-foreground">
                     Projects
                   </h2>
-                  <p className="text-gray-500 text-sm mt-1">
+                  <p className="text-muted-foreground text-sm mt-1">
                     {filteredProjects.length} of {projects.length}
                   </p>
                 </div>
@@ -156,16 +160,18 @@ function App() {
                         onChange={(e) => handleSearchChange(e.target.value)}
                         maxLength={500}
                         className={cn(
-                          "w-full py-2.5 px-4 pl-10 border rounded-lg bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:ring-1 focus:border-gray-700 transition-all text-sm leading-none",
+                          "w-full py-2.5 px-4 pl-10 border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-1 focus:border-border transition-all text-sm leading-none",
                           searchError
-                            ? "border-red-500 focus:ring-red-500"
-                            : "border-gray-800 focus:ring-gray-700"
+                            ? "border-destructive focus:ring-destructive"
+                            : "border-border focus:ring-ring"
                         )}
                       />
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-600" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     </div>
                     {searchError && (
-                      <p className="mt-1 text-xs text-red-400">{searchError}</p>
+                      <p className="mt-1 text-xs text-destructive">
+                        {searchError}
+                      </p>
                     )}
                   </div>
                   <Button
@@ -225,14 +231,14 @@ function App() {
 
             {/* No search results message */}
             {filteredProjects.length === 0 && searchTerm.length > 0 && (
-              <div className="bg-gray-900 rounded-lg border border-gray-800 p-12 text-center">
-                <div className="inline-flex items-center justify-center size-12 bg-gray-800 rounded-lg mb-4">
-                  <Search className="size-6 text-gray-600" />
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <div className="inline-flex items-center justify-center size-12 bg-secondary rounded-lg mb-4">
+                  <Search className="size-6 text-muted-foreground" />
                 </div>
-                <p className="text-gray-400 font-medium">
+                <p className="text-muted-foreground font-medium">
                   No projects found matching &quot;{searchTerm}&quot;
                 </p>
-                <p className="text-gray-600 text-sm mt-1">
+                <p className="text-muted-foreground text-sm mt-1">
                   Try adjusting your search term or filters
                 </p>
               </div>
@@ -241,24 +247,28 @@ function App() {
         )}
 
         {!loading && selectedDirectory && projects.length === 0 && (
-          <div className="bg-gray-900 rounded-lg border border-gray-800 p-12 text-center">
-            <div className="inline-flex items-center justify-center size-12 bg-gray-800 rounded-lg mb-4">
-              <FolderOpen className="size-6 text-gray-600" />
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <div className="inline-flex items-center justify-center size-12 bg-secondary rounded-lg mb-4">
+              <FolderOpen className="size-6 text-muted-foreground" />
             </div>
-            <p className="text-gray-400 font-medium">No projects found</p>
-            <p className="text-gray-600 text-sm mt-1">Try another directory</p>
+            <p className="text-muted-foreground font-medium">
+              No projects found
+            </p>
+            <p className="text-muted-foreground text-sm mt-1">
+              Try another directory
+            </p>
           </div>
         )}
 
         {!selectedDirectory && (
-          <div className="bg-gray-900 rounded-lg border border-gray-800 p-12 text-center">
-            <div className="inline-flex items-center justify-center size-14 bg-gray-800 rounded-lg mb-6">
-              <Folder className="size-7 text-gray-500" />
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <div className="inline-flex items-center justify-center size-14 bg-secondary rounded-lg mb-6">
+              <Folder className="size-7 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-100 mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               Welcome
             </h3>
-            <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+            <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
               Select a directory to start managing your projects
             </p>
           </div>
@@ -268,10 +278,12 @@ function App() {
         {openLogsFor && (
           <Suspense
             fallback={
-              <div className="fixed inset-0 bg-gray-950/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                <div className="bg-gray-900 rounded-lg border border-gray-800 p-8">
-                  <Loader2 className="size-8 text-gray-500 animate-spin mx-auto mb-4" />
-                  <p className="text-gray-400 text-sm">Loading logs...</p>
+              <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div className="bg-card rounded-lg border border-border p-8">
+                  <Loader2 className="size-8 text-muted-foreground animate-spin mx-auto mb-4" />
+                  <p className="text-muted-foreground text-sm">
+                    Loading logs...
+                  </p>
                 </div>
               </div>
             }

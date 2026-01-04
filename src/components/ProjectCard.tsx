@@ -43,7 +43,7 @@ export const ProjectCard = memo(function ProjectCard({
   }, [project]);
 
   return (
-    <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden transition-colors hover:border-gray-700">
+    <div className="bg-card rounded-lg border border-border overflow-hidden transition-colors hover:border-accent">
       <div className={cn("h-1", getRuntimeTopBar(project.runtime))} />
       <div className="p-5">
         <div className="flex items-start justify-between mb-3">
@@ -51,15 +51,15 @@ export const ProjectCard = memo(function ProjectCard({
             <div className="flex items-center gap-2 mb-1">
               <i
                 className={cn(
-                  "text-2xl text-white",
+                  "text-2xl text-foreground",
                   getRuntimeIcon(project.runtime)
                 )}
               ></i>
-              <h3 className="text-base font-semibold text-gray-100 truncate">
+              <h3 className="text-base font-semibold text-card-foreground truncate">
                 {project.name}
               </h3>
             </div>
-            <p className="text-xs text-gray-600 font-mono truncate">
+            <p className="text-xs text-muted-foreground font-mono truncate">
               {project.path}
             </p>
           </div>
@@ -76,14 +76,14 @@ export const ProjectCard = memo(function ProjectCard({
               <span
                 className={cn("relative inline-flex rounded-full size-2.5", {
                   "bg-green-500": isRunning,
-                  "bg-gray-700": !isRunning,
+                  "bg-accent": !isRunning,
                 })}
               />
             </span>
             <span
               className={cn("text-xs font-medium", {
                 "text-green-400": isRunning,
-                "text-gray-600": !isRunning,
+                "text-muted-foreground": !isRunning,
               })}
             >
               {isRunning ? "Active" : "Inactive"}
@@ -101,18 +101,18 @@ export const ProjectCard = memo(function ProjectCard({
             {project.runtime}
           </span>
           {project.package_manager && (
-            <span className="px-2.5 py-1 rounded text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700">
+            <span className="px-2.5 py-1 rounded text-xs font-medium bg-secondary text-secondary-foreground border border-border">
               {project.package_manager}
             </span>
           )}
           {isRunning && project.port ? (
-            <span className="px-2.5 py-1 rounded text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700">
+            <span className="px-2.5 py-1 rounded text-xs font-medium bg-secondary text-secondary-foreground border border-border">
               :{project.port}
             </span>
           ) : null}
         </div>
 
-        <div className="space-y-2 mb-4 text-xs text-gray-500">
+        <div className="space-y-2 mb-4 text-xs text-muted-foreground">
           {project.runtime_version && (
             <div className="flex items-center gap-2">
               <Info className="size-3.5" />

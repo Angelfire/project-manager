@@ -51,10 +51,10 @@ export const ProjectFilters = memo(function ProjectFilters({
   );
 
   return (
-    <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
+    <div className="bg-card rounded-lg border border-border p-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+          <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
             Runtime
           </label>
           <Select
@@ -71,7 +71,7 @@ export const ProjectFilters = memo(function ProjectFilters({
           </Select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+          <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
             Framework
           </label>
           <Select
@@ -88,7 +88,7 @@ export const ProjectFilters = memo(function ProjectFilters({
           </Select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+          <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
             Status
           </label>
           <Select

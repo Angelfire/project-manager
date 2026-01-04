@@ -16,26 +16,26 @@ export const getRuntimeIcon = (runtime: string): string => {
 export const getRuntimeColor = (runtime: string): string => {
   switch (runtime) {
     case "Node.js":
-      return "bg-green-900/30 text-green-200 border border-green-700";
+      return "bg-runtime-node/30 text-runtime-node-foreground border border-runtime-node";
     case "Deno":
-      return "bg-teal-900/30 text-teal-200 border border-teal-700";
+      return "bg-runtime-deno/30 text-runtime-deno-foreground border border-runtime-deno";
     case "Bun":
-      return "bg-amber-900/30 text-amber-200 border border-amber-700";
+      return "bg-runtime-bun/30 text-runtime-bun-foreground border border-runtime-bun";
     default:
-      return "bg-gray-700 text-gray-300 border border-gray-600";
+      return "bg-accent text-foreground border border-border";
   }
 };
 
 export const getRuntimeTopBar = (runtime: string): string => {
   switch (runtime) {
     case "Node.js":
-      return "bg-green-900";
+      return "bg-runtime-node";
     case "Deno":
-      return "bg-teal-900";
+      return "bg-runtime-deno";
     case "Bun":
-      return "bg-amber-900";
+      return "bg-runtime-bun";
     default:
-      return "bg-gray-700";
+      return "bg-accent";
   }
 };
 
