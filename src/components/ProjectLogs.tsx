@@ -201,7 +201,7 @@ export const ProjectLogs = memo(function ProjectLogs({
                     <span
                       className={cn("shrink-0", {
                         "text-destructive": log.type === "stderr",
-                        "text-green-500": log.type === "stdout",
+                        "text-success-foreground": log.type === "stdout",
                       })}
                     >
                       [{log.type.toUpperCase()}]
