@@ -82,7 +82,7 @@ export const ProjectCard = memo(function ProjectCard({
             </span>
             <span
               className={cn("text-xs font-medium", {
-                "text-green-400": isRunning,
+                "text-success-foreground": isRunning,
                 "text-muted-foreground": !isRunning,
               })}
             >
