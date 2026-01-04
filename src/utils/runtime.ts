@@ -1,5 +1,11 @@
 import { Project } from "@/types";
 
+/**
+ * Returns the Nerd Font icon class name for a given runtime.
+ *
+ * @param runtime - Runtime name (e.g., "Node.js", "Deno", "Bun")
+ * @returns Nerd Font icon class name
+ */
 export const getRuntimeIcon = (runtime: string): string => {
   switch (runtime) {
     case "Node.js":

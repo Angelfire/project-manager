@@ -5,6 +5,12 @@ import { getDefaultPortForFramework } from "@/utils/runtime";
 import { toastError, toastWarning } from "@/utils/toast";
 import { tauriApi } from "@/api/tauri";
 
+/**
+ * Scans a directory for projects and returns a list of detected projects.
+ *
+ * @param path - Directory path to scan
+ * @returns Array of detected projects with ports cleared
+ */
 export const scanProjects = async (path: string): Promise<Project[]> => {
   const foundProjects = await tauriApi.projects.scan(path);
   // Clear ports when scanning (they will be detected dynamically when executed)
@@ -14,6 +20,13 @@ export const scanProjects = async (path: string): Promise<Project[]> => {
   }));
 };
 
+/**
+ * Creates a Tauri Command object for running a project based on its runtime.
+ *
+ * @param project - Project object containing runtime and package manager info
+ * @returns Configured Command object
+ * @throws Error if runtime is not supported
+ */
 export const createProjectCommand = (project: Project) => {
   if (project.runtime === "Node.js") {
     const packageManager = project.package_manager || "npm";
@@ -48,6 +61,16 @@ export const createProjectCommand = (project: Project) => {
   }
 };
 
+/**
+ * Detects the port number for a running process by PID.
+ * Retries multiple times with configurable delays.
+ *
+ * @param pid - Process ID to detect port for
+ * @param attempts - Number of detection attempts (default: 10)
+ * @param initialDelay - Initial delay before first attempt in ms (default: 1000)
+ * @param intervalDelay - Delay between attempts in ms (default: 1500)
+ * @returns Detected port number or null if not found
+ */
 export const detectPort = async (
   pid: number,
   attempts: number = 10,
@@ -77,6 +100,11 @@ export const detectPort = async (
   return null;
 };
 
+/**
+ * Opens a URL in the default browser for a given port.
+ *
+ * @param port - Port number to open (opens http://localhost:{port})
+ */
 export const openInBrowser = async (port: number | null): Promise<void> => {
   if (port) {
     try {
@@ -87,6 +115,11 @@ export const openInBrowser = async (port: number | null): Promise<void> => {
   }
 };
 
+/**
+ * Kills all processes using a specific port.
+ *
+ * @param port - Port number to free
+ */
 export const killProcessByPort = async (port: number): Promise<void> => {
   try {
     const killPortCommand = Command.create("lsof", ["-ti", `:${port}`]);
@@ -102,6 +135,12 @@ export const killProcessByPort = async (port: number): Promise<void> => {
   }
 };
 
+/**
+ * Opens a project in the browser using its detected port or default port.
+ * Falls back to default port for the framework if no port is detected.
+ *
+ * @param project - Project object to open in browser
+ */
 export const openProjectInBrowser = async (project: Project): Promise<void> => {
   // If port is already detected, use it directly
   if (project.port) {

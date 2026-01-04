@@ -251,14 +251,6 @@ Coverage reports are generated in the `coverage/` directory and can be viewed in
 
 ### Technical Debt
 
-- [ ] **Code organization**: Further modularize large components
-  - Split `App.tsx` if it grows larger
-  - Extract more reusable hooks
-  - Create more utility functions
-- [ ] **Type safety**: Improve TypeScript types
-  - Add stricter types where possible
-  - Remove any `any` types
-  - Add JSDoc comments for better documentation
 - [ ] **Documentation**: Improve code documentation
   - Add JSDoc comments to all exported functions
   - Document complex logic
