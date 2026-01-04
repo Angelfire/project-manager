@@ -21,15 +21,16 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: "bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700",
+  primary: "bg-secondary hover:bg-accent text-foreground border border-border",
   secondary:
-    "bg-gray-800/50 hover:bg-gray-800 text-gray-400 hover:text-gray-300 border border-gray-800",
+    "bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border",
   success:
-    "bg-green-950/40 hover:bg-green-950/60 text-green-300 border border-green-900/30",
+    "bg-success-muted hover:bg-success/60 text-success-foreground border border-success-border",
   danger:
-    "bg-red-950/40 hover:bg-red-950/60 text-red-300 border border-red-900/30",
-  ghost: "bg-transparent hover:bg-gray-800 text-gray-400 hover:text-gray-300",
-  icon: "bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700",
+    "bg-destructive/40 hover:bg-destructive/60 text-destructive-foreground border border-destructive/50",
+  ghost:
+    "bg-transparent hover:bg-secondary text-muted-foreground hover:text-foreground",
+  icon: "bg-secondary hover:bg-accent text-foreground border border-border",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -57,7 +58,7 @@ function Button({
 }: ButtonProps) {
   const baseStyles = cn(
     "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-all",
-    "outline-none focus-visible:ring-2 focus-visible:ring-gray-600 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900",
+    "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
     "disabled:pointer-events-none disabled:opacity-50",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
   );

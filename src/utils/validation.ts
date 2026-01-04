@@ -1,9 +1,7 @@
 /**
- * Input validation utilities for user inputs
- */
-
-/**
- * Validates and sanitizes a search term
+ * Validates and sanitizes a search term.
+ * Removes dangerous characters and limits length to prevent DoS attacks.
+ *
  * @param searchTerm - The search term to validate
  * @returns Sanitized search term or null if invalid
  */
@@ -47,7 +45,8 @@ export function validateSearchTerm(searchTerm: string): string | null {
 }
 
 /**
- * Validates a file system path
+ * Validates a file system path for security and correctness.
+ *
  * @param path - The path to validate
  * @returns True if path appears valid, false otherwise
  */
@@ -120,7 +119,9 @@ export async function validateDirectoryPath(
 }
 
 /**
- * Validates a process ID
+ * Validates a process ID (PID).
+ * Ensures PID is a positive integer within reasonable bounds.
+ *
  * @param pid - The process ID to validate
  * @returns True if PID is valid, false otherwise
  */
@@ -144,7 +145,9 @@ export function validatePid(pid: number | null | undefined): boolean {
 }
 
 /**
- * Validates a port number
+ * Validates a port number.
+ * Ensures port is within valid range (0-65535).
+ *
  * @param port - The port number to validate
  * @returns True if port is valid, false otherwise
  */
