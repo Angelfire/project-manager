@@ -75,7 +75,7 @@ export const ProjectCard = memo(function ProjectCard({
               )}
               <span
                 className={cn("relative inline-flex rounded-full size-2.5", {
-                  "bg-green-500": isRunning,
+                  "bg-success": isRunning,
                   "bg-accent": !isRunning,
                 })}
               />
