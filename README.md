@@ -51,12 +51,13 @@ A desktop application built with Tauri, React, and TypeScript to manage and run 
 
 ### User Interface
 
-- **Modern Dark Theme**: Beautiful dark-themed interface
+- **Modern Dark Theme**: Beautiful dark-themed interface with CSS variables
 - **Nerd Font Icons**: Uses Nerd Fonts for runtime icons
 - **Responsive Design**: Works on different screen sizes
 - **Fast Performance**: Built with Rust backend for optimal performance
 - **Toast Notifications**: Non-intrusive toast notifications for user feedback (success, error, warning, info)
 - **Error Boundaries**: Global error handling with user-friendly error recovery UI
+- **Accessibility**: WCAG AA compliant color contrasts
 
 ## Requirements
 
@@ -147,7 +148,7 @@ Each project card displays:
 - **Package Manager**: pnpm 9+
 - **Icons**: Nerd Fonts, Lucide React
 - **Notifications**: Sonner (toast notifications)
-- **UI Components**: Radix UI primitives (Dropdown Menu, Select)
+- **UI Components**: Radix UI primitives (Dialog, Dropdown Menu, Select)
 - **Testing**: Vitest with coverage reporting
 - **Code Quality**: ESLint 9, Prettier, TypeScript strict mode
 
@@ -182,83 +183,92 @@ pnpm test:coverage:ui
 
 Coverage reports are generated in the `coverage/` directory and can be viewed in HTML format.
 
-## TODO
+## Roadmap to Beta Release
 
-### High Priority
+### 🚀 Pre-Beta (Must Have)
 
-- [ ] **Improve logo**: Get a better, more professional logo for the application
-  - Current logo is a placeholder PNG
-  - Consider SVG format for better scalability
-  - Ensure logo works well at different sizes (app icon, header, etc.)
+These items are critical for a beta release:
 
-### Medium Priority
+- [ ] **Logo & Branding**: Improve application logo
+  - [ ] Create professional SVG logo
+  - [ ] Ensure logo works at all sizes (app icon, header, etc.)
+  - [ ] Update app icons in `src-tauri/icons/`
+- [ ] **Build Verification**: Ensure production build works correctly
+  - [ ] Test `pnpm tauri build` on macOS
+  - [ ] Test `pnpm tauri build` on Linux
+  - [ ] Verify all features work in production build
+  - [ ] Test app installation and first launch
+- [ ] **Basic Accessibility**: Ensure minimum accessibility standards
+  - [ ] Add ARIA labels to interactive elements
+  - [ ] Verify keyboard navigation works
+  - [ ] Test with screen readers (basic check)
+- [ ] **Error Handling**: Verify error handling is robust
+  - [ ] Test error scenarios (invalid paths, network issues, etc.)
+  - [ ] Ensure all errors show user-friendly messages
+  - [ ] Verify error boundary works correctly
 
-- [ ] **Error handling improvements**: Expand error handling system
-  - Error types centralization
-  - Structured error logging
-  - Enhanced error messages and user feedback
-- [ ] **Accessibility improvements**: Enhance accessibility features
-  - Add ARIA labels where missing
-  - Improve keyboard navigation
-  - Add focus management
-  - Ensure screen reader compatibility
-- [ ] **Performance optimizations**: Further optimize application performance
-  - [ ] Implement virtual scrolling for large project lists
+### 📋 Post-Beta (Can Wait)
+
+These improvements can be added after beta release:
+
+#### Medium Priority
+
+- [ ] **Settings/Preferences Page**: Add user settings
+  - [ ] Configure default editor
+  - [ ] Configure default terminal
+  - [ ] Set default port ranges
+  - [ ] Theme customization (when light mode is added)
+- [ ] **Keyboard Shortcuts**: Add keyboard shortcuts for power users
+  - [ ] Run project: `Cmd/Ctrl + R`
+  - [ ] Stop project: `Cmd/Ctrl + S`
+  - [ ] Open in browser: `Cmd/Ctrl + B`
+  - [ ] Search: `Cmd/Ctrl + F`
+- [ ] **Enhanced Accessibility**: Improve accessibility features
+  - [ ] Full keyboard navigation
+  - [ ] Advanced focus management
+  - [ ] Comprehensive screen reader support
+- [ ] **Performance Optimizations**: Further optimize for large project lists
+  - [ ] Implement virtual scrolling for 100+ projects
   - [ ] Optimize bundle size
   - [ ] Image optimization
-- [ ] **Internationalization (i18n)**: Add support for multiple languages
-  - Extract all user-facing strings
-  - Implement i18n solution (e.g., react-i18next)
-  - Add language switcher in settings
-- [ ] **Settings/Preferences**: Add a settings page
-  - Allow users to configure default editor
-  - Configure default terminal
-  - Set default port ranges
-  - Customize theme (if multiple themes are added)
-- [ ] **Project templates**: Add ability to create new projects from templates
-  - Support for common frameworks (React, Vue, Svelte, etc.)
-  - Template selection UI
-  - Project initialization
 
-### Low Priority
+#### Low Priority
 
-- [ ] **Keyboard shortcuts**: Add keyboard shortcuts for common actions
-  - Run project: `Cmd/Ctrl + R`
-  - Stop project: `Cmd/Ctrl + S`
-  - Open in browser: `Cmd/Ctrl + B`
-  - Search: `Cmd/Ctrl + F`
-- [ ] **Project favorites**: Allow users to mark projects as favorites
-  - Star/favorite icon on project cards
-  - Filter by favorites
-  - Persist favorites in local storage
-- [ ] **Dark/Light theme toggle**: Add support for light theme (currently only dark theme)
-- [ ] **Export/Import configuration**: Allow users to export and import project configurations
-- [ ] **Statistics dashboard**: Add a dashboard showing project statistics
-  - Total projects
-  - Projects by runtime
-  - Projects by framework
-  - Most used package managers
-- [ ] **Recent projects**: Show recently opened/run projects
-- [ ] **Project health checks**: Add health check indicators
-  - Check if dependencies are installed
-  - Check if project builds successfully
-  - Show warnings for outdated dependencies
-- [ ] **CI/CD integration**: Add ability to run CI/CD commands from the app
-- [ ] **Git integration**: Show git status and branch information
-  - Display current branch
-  - Show uncommitted changes
-  - Quick git actions (commit, push, pull)
+- [ ] **Internationalization (i18n)**: Add multi-language support
+  - [ ] Extract all user-facing strings
+  - [ ] Implement i18n solution (e.g., react-i18next)
+  - [ ] Add language switcher
+- [ ] **Project Templates**: Create new projects from templates
+  - [ ] Support for common frameworks
+  - [ ] Template selection UI
+  - [ ] Project initialization
+- [ ] **Project Favorites**: Mark and filter favorite projects
+  - [ ] Star/favorite icon on project cards
+  - [ ] Filter by favorites
+  - [ ] Persist favorites in local storage
+- [ ] **Dark/Light Theme Toggle**: Add light theme support
+- [ ] **Statistics Dashboard**: Show project statistics
+  - [ ] Total projects
+  - [ ] Projects by runtime/framework
+  - [ ] Most used package managers
+- [ ] **Recent Projects**: Show recently opened/run projects
+- [ ] **Project Health Checks**: Add health indicators
+  - [ ] Check if dependencies are installed
+  - [ ] Check if project builds successfully
+  - [ ] Show warnings for outdated dependencies
+- [ ] **Git Integration**: Show git status and branch information
+- [ ] **CI/CD Integration**: Run CI/CD commands from the app
 
-### Technical Debt
+### 🔧 Technical Debt (Ongoing)
 
-- [ ] **Documentation**: Improve code documentation
-  - Add JSDoc comments to all exported functions
-  - Document complex logic
-  - Add inline comments where needed
-- [ ] **Dependency updates**: Keep dependencies up to date
-  - Regularly update npm packages
-  - Update Rust dependencies
-  - Monitor for security vulnerabilities
+- [ ] **Documentation**: Continue improving code documentation
+  - [ ] Document complex business logic
+  - [ ] Add inline comments where needed
+- [ ] **Dependency Management**: Keep dependencies up to date
+  - [ ] Regularly update npm packages
+  - [ ] Update Rust dependencies
+  - [ ] Monitor for security vulnerabilities
+  - [ ] Run `pnpm audit` regularly
 
 ## Development
 
@@ -317,6 +327,7 @@ src/
 - **Error Handling**: React Error Boundaries for global error catching
 - **Performance**: Optimized with React.memo, useCallback, useMemo, and lazy loading
 - **Type Safety**: Strict TypeScript configuration with path aliases
+- **Theming**: CSS variables system for easy theme customization
 
 ## Contributing
 
