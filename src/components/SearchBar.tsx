@@ -38,8 +38,7 @@ export function SearchBar({
         </label>
         <input
           id="project-search"
-          type="text"
-          role="searchbox"
+          type="search"
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
