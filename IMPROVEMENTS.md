@@ -23,7 +23,7 @@ Estos items deben completarse antes del lanzamiento de la versión beta:
   - [ ] Probar instalación y primer lanzamiento de la app
   - [ ] Verificar que los assets se cargan correctamente
 
-### 4. **Accesibilidad Básica**
+### 3. **Accesibilidad Básica**
 
 - [ ] **Navegación por teclado**: Verificar navegación básica
   - [ ] Testing manual con lectores de pantalla pendiente
