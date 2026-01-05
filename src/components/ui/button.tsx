@@ -59,7 +59,8 @@ function Button({
   ...props
 }: ButtonProps) {
   const baseStyles = cn(
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-all",
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium",
+    "transition-colors duration-150 ease-out",
     "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
     "disabled:pointer-events-none disabled:opacity-50",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
