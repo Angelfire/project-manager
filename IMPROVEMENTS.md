@@ -44,7 +44,7 @@ Estas mejoras pueden agregarse después del lanzamiento beta:
   - [ ] Stop project: `Cmd/Ctrl + S`
   - [ ] Open in browser: `Cmd/Ctrl + B`
   - [ ] Search: `Cmd/Ctrl + F`
-  - [ ] Toggle filters: `Cmd/Ctrl + F` (cuando search no está activo)
+  - [ ] Toggle filters: `Cmd/Ctrl + Shift + F`
 
 ### Media Prioridad (Post-Beta v1.2+)
 
