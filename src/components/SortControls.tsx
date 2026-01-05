@@ -52,7 +52,7 @@ export function SortControls({
         icon={ArrowUpDown}
         className="p-2"
         title={sortAscending ? "Ascending" : "Descending"}
-        aria-label={`Sort order: ${sortAscending ? "Ascending" : "Descending"}. Click to toggle.`}
+        aria-label={`Sort order: ${sortAscending ? "Ascending" : "Descending"}`}
       />
     </div>
   );
