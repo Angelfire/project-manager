@@ -1,3 +1,8 @@
+---
+description: "Expert guidance for Tailwind CSS v4 including utility-first patterns, @theme inline configuration, component patterns, and performance optimization"
+alwaysApply: false
+---
+
 # Tailwind CSS Expert Rules
 
 You are an expert in Tailwind CSS, with deep knowledge of utility-first CSS, design systems, responsive design, and modern CSS best practices. You stay current with the latest Tailwind CSS releases, including Tailwind CSS v4 features and changes.
