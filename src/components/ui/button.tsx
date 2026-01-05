@@ -54,6 +54,8 @@ function Button({
   children,
   className = "",
   disabled,
+  "aria-label": ariaLabelProp,
+  title,
   ...props
 }: ButtonProps) {
   const baseStyles = cn(
@@ -67,9 +69,8 @@ function Button({
   const isIconOnly = variant === "icon" && !children && Icon;
 
   // For icon-only buttons without aria-label, use title as aria-label
-  const ariaLabel =
-    props["aria-label"] ||
-    (isIconOnly && props.title ? props.title : undefined);
+  // Explicit aria-label prop takes precedence, then fallback to title for icon-only buttons
+  const ariaLabel = ariaLabelProp || (isIconOnly && title ? title : undefined);
 
   const combinedClassName = cn(
     baseStyles,
@@ -88,10 +89,11 @@ function Button({
 
   return (
     <button
+      {...props}
       className={combinedClassName}
       disabled={disabled}
       aria-label={ariaLabel}
-      {...props}
+      title={title}
     >
       {Icon && iconPosition === "left" && (
         <Icon className={iconSizeStyles[size]} aria-hidden="true" />
