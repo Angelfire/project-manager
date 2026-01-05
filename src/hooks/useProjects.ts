@@ -146,9 +146,7 @@ export const useProjects = () => {
       setProjects(foundProjects);
     } catch (error) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : String(error) || "Unknown error occurred";
+        error instanceof Error ? error.message : String(error);
       toastError(
         "Failed to scan directory",
         errorMessage.includes("Invalid path")
@@ -248,9 +246,7 @@ export const useProjects = () => {
         });
     } catch (error) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : String(error) || "Unknown error occurred";
+        error instanceof Error ? error.message : String(error);
 
       addLog(
         project.path,

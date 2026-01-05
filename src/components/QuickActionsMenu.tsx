@@ -28,9 +28,7 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
       await tauriApi.quickActions.openInEditor(projectPath);
     } catch (error) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : String(error) || "Unknown error occurred";
+        error instanceof Error ? error.message : String(error);
       toastError(
         "Failed to open in editor",
         errorMessage.includes("not found") ||
@@ -48,9 +46,7 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
       await tauriApi.quickActions.openInTerminal(projectPath);
     } catch (error) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : String(error) || "Unknown error occurred";
+        error instanceof Error ? error.message : String(error);
       toastError(
         "Failed to open in terminal",
         errorMessage.includes("not found") ||
@@ -68,9 +64,7 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
       await tauriApi.quickActions.openInFileManager(projectPath);
     } catch (error) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : String(error) || "Unknown error occurred";
+        error instanceof Error ? error.message : String(error);
       toastError(
         "Failed to open in file manager",
         errorMessage.includes("not found") ||
@@ -89,9 +83,7 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
       toastSuccess("Path copied to clipboard");
     } catch (error) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : String(error) || "Unknown error occurred";
+        error instanceof Error ? error.message : String(error);
       toastError(
         "Failed to copy path",
         errorMessage.includes("Permission") || errorMessage.includes("denied")

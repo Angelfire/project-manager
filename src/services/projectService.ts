@@ -111,9 +111,7 @@ export const openInBrowser = async (port: number | null): Promise<void> => {
       await openUrl(`http://localhost:${port}`);
     } catch (error) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : String(error) || "Unknown error occurred";
+        error instanceof Error ? error.message : String(error);
       toastError(
         "Failed to open in browser",
         errorMessage.includes("not found") ||

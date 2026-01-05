@@ -43,9 +43,7 @@ export function useDirectorySelection({
       }
     } catch (error) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : String(error) || "Unknown error occurred";
+        error instanceof Error ? error.message : String(error);
       toastError(
         "Failed to select directory",
         errorMessage.includes("User cancelled") ||
