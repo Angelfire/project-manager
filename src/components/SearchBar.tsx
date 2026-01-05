@@ -28,15 +28,23 @@ export function SearchBar({
   placeholder = "Search...",
   maxLength = 500,
 }: SearchBarProps) {
+  const errorId = error ? "search-error" : undefined;
+
   return (
     <div className="flex-1 sm:w-56">
       <div className="relative">
+        <label htmlFor="project-search" className="sr-only">
+          Search projects
+        </label>
         <input
-          type="text"
+          id="project-search"
+          type="search"
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           maxLength={maxLength}
+          aria-describedby={errorId}
+          aria-invalid={!!error}
           className={cn(
             "w-full py-2.5 px-4 pl-10 border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-1 focus:border-border transition-all text-sm leading-none",
             error
@@ -44,9 +52,16 @@ export function SearchBar({
               : "border-border focus:ring-ring"
           )}
         />
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <Search
+          className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"
+          aria-hidden="true"
+        />
       </div>
-      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+      {error && (
+        <p id={errorId} className="mt-1 text-xs text-destructive" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

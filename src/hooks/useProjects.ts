@@ -145,7 +145,18 @@ export const useProjects = () => {
       const foundProjects = await scanProjects(path);
       setProjects(foundProjects);
     } catch (error) {
-      toastError("Error scanning directory", String(error));
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      toastError(
+        "Failed to scan directory",
+        errorMessage.includes("Invalid path")
+          ? "The selected path is invalid or doesn't exist. Please select a valid directory."
+          : errorMessage.includes("Not found")
+            ? "The directory was not found. Please check the path and try again."
+            : errorMessage.includes("Permission")
+              ? "Permission denied. Please check directory permissions and try again."
+              : `Unable to scan directory: ${errorMessage}`
+      );
     } finally {
       setLoading(false);
     }
@@ -234,6 +245,9 @@ export const useProjects = () => {
           );
         });
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       addLog(
         project.path,
         "stderr",
@@ -242,9 +256,41 @@ export const useProjects = () => {
       addLog(
         project.path,
         "stderr",
-        `[${new Date().toLocaleTimeString()}] ${error instanceof Error ? error.message : String(error)}\n`
+        `[${new Date().toLocaleTimeString()}] ${errorMessage}\n`
       );
-      toastError("Error running project", String(error));
+
+      // Provide user-friendly error messages
+      let userMessage = "Failed to start project";
+      let userDescription = errorMessage;
+
+      // Determine the command name for error messages
+      const commandName =
+        project.runtime === "Node.js"
+          ? project.package_manager || "npm"
+          : project.runtime.toLowerCase();
+
+      if (errorMessage.includes("Unsupported runtime")) {
+        userDescription = `The runtime "${project.runtime}" is not supported.`;
+      } else if (
+        errorMessage.includes("command not found") ||
+        errorMessage.includes("not found")
+      ) {
+        userDescription = `The command "${commandName}" was not found. Please ensure ${project.runtime} is installed and available in your PATH.`;
+      } else if (
+        errorMessage.includes("Permission") ||
+        errorMessage.includes("permission")
+      ) {
+        userDescription =
+          "Permission denied. Please check file permissions and try again.";
+      } else if (errorMessage.includes("EACCES")) {
+        userDescription =
+          "Access to the requested port was denied. Try using a different port or run the application with elevated permissions.";
+      } else if (errorMessage.includes("EADDRINUSE")) {
+        userDescription =
+          "The configured port is already in use. Please stop the other process using this port or configure your project to use a different port.";
+      }
+
+      toastError(userMessage, userDescription);
       setRunningProjects((prev) => {
         const newSet = new Set(prev);
         newSet.delete(project.path);

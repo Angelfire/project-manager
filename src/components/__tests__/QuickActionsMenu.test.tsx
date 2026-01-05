@@ -215,7 +215,7 @@ describe("QuickActionsMenu", () => {
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalledWith(
         "Failed to copy path",
-        "Error: Clipboard access denied"
+        "Clipboard access denied. Please check browser permissions."
       );
     });
   });
@@ -243,7 +243,7 @@ describe("QuickActionsMenu", () => {
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalledWith(
         "Failed to open in editor",
-        "Error: Editor not found"
+        "Editor not found. Please install VS Code or configure your default editor."
       );
     });
   });
@@ -271,7 +271,7 @@ describe("QuickActionsMenu", () => {
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalledWith(
         "Failed to open in terminal",
-        "Error: Terminal command failed"
+        "Unable to open terminal: Terminal command failed"
       );
     });
   });
@@ -299,7 +299,7 @@ describe("QuickActionsMenu", () => {
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalledWith(
         "Failed to open in file manager",
-        "Error: Path not found"
+        "File manager not found. Please check your system configuration."
       );
     });
   });

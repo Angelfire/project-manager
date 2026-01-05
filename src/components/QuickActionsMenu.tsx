@@ -27,7 +27,17 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
     try {
       await tauriApi.quickActions.openInEditor(projectPath);
     } catch (error) {
-      toastError("Failed to open in editor", String(error));
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      toastError(
+        "Failed to open in editor",
+        errorMessage.includes("not found") ||
+          errorMessage.includes("Editor not found")
+          ? "Editor not found. Please install VS Code or configure your default editor."
+          : errorMessage.includes("Permission")
+            ? "Permission denied. Please check file permissions."
+            : `Unable to open editor: ${errorMessage}`
+      );
     }
   }, [projectPath]);
 
@@ -35,7 +45,17 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
     try {
       await tauriApi.quickActions.openInTerminal(projectPath);
     } catch (error) {
-      toastError("Failed to open in terminal", String(error));
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      toastError(
+        "Failed to open in terminal",
+        errorMessage.includes("not found") ||
+          errorMessage.includes("Terminal not found")
+          ? "Terminal not found. Please configure your default terminal application."
+          : errorMessage.includes("Permission")
+            ? "Permission denied. Please check file permissions."
+            : `Unable to open terminal: ${errorMessage}`
+      );
     }
   }, [projectPath]);
 
@@ -43,7 +63,17 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
     try {
       await tauriApi.quickActions.openInFileManager(projectPath);
     } catch (error) {
-      toastError("Failed to open in file manager", String(error));
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      toastError(
+        "Failed to open in file manager",
+        errorMessage.includes("not found") ||
+          errorMessage.includes("File manager not found")
+          ? "File manager not found. Please check your system configuration."
+          : errorMessage.includes("Permission")
+            ? "Permission denied. Please check file permissions."
+            : `Unable to open file manager: ${errorMessage}`
+      );
     }
   }, [projectPath]);
 
@@ -52,7 +82,14 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
       await navigator.clipboard.writeText(projectPath);
       toastSuccess("Path copied to clipboard");
     } catch (error) {
-      toastError("Failed to copy path", String(error));
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      toastError(
+        "Failed to copy path",
+        errorMessage.includes("Permission") || errorMessage.includes("denied")
+          ? "Clipboard access denied. Please check browser permissions."
+          : `Unable to copy path: ${errorMessage}`
+      );
     }
   }, [projectPath]);
 
@@ -65,6 +102,7 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
           icon={MoreVertical}
           className="px-2 py-3"
           title="Quick actions"
+          aria-label="Open quick actions menu"
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

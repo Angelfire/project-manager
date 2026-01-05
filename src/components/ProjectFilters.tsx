@@ -51,16 +51,27 @@ export const ProjectFilters = memo(function ProjectFilters({
   );
 
   return (
-    <div className="bg-card rounded-lg border border-border p-4">
+    <section
+      className="bg-card rounded-lg border border-border p-4"
+      aria-labelledby="filters-heading"
+    >
+      <h3 id="filters-heading" className="sr-only">
+        Project filters
+      </h3>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+          <label
+            htmlFor="runtime-filter"
+            className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide"
+          >
             Runtime
           </label>
           <Select
+            id="runtime-filter"
             value={filters.runtime || "__all__"}
             onChange={handleRuntimeChange}
             placeholder="All Runtimes"
+            aria-label="Filter projects by runtime"
           >
             <SelectItem value="__all__">All Runtimes</SelectItem>
             {uniqueRuntimes.map((runtime) => (
@@ -71,13 +82,18 @@ export const ProjectFilters = memo(function ProjectFilters({
           </Select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+          <label
+            htmlFor="framework-filter"
+            className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide"
+          >
             Framework
           </label>
           <Select
+            id="framework-filter"
             value={filters.framework || "__all__"}
             onChange={handleFrameworkChange}
             placeholder="All Frameworks"
+            aria-label="Filter projects by framework"
           >
             <SelectItem value="__all__">All Frameworks</SelectItem>
             {uniqueFrameworks.map((framework) => (
@@ -88,13 +104,18 @@ export const ProjectFilters = memo(function ProjectFilters({
           </Select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+          <label
+            htmlFor="status-filter"
+            className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide"
+          >
             Status
           </label>
           <Select
+            id="status-filter"
             value={filters.status}
             onChange={handleStatusChange}
             placeholder="All Status"
+            aria-label="Filter projects by status"
           >
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="running">Running</SelectItem>
@@ -102,6 +123,6 @@ export const ProjectFilters = memo(function ProjectFilters({
           </Select>
         </div>
       </div>
-    </div>
+    </section>
   );
 });
