@@ -199,9 +199,7 @@ These items are critical for a beta release:
   - [ ] Verify all features work in production build
   - [ ] Test app installation and first launch
 - [ ] **Basic Accessibility**: Ensure minimum accessibility standards
-  - [ ] Add ARIA labels to interactive elements
-  - [ ] Verify keyboard navigation works
-  - [ ] Test with screen readers (basic check)
+  - [ ] Test with screen readers (basic check - manual testing required)
 - [ ] **Error Handling**: Verify error handling is robust
   - [ ] Test error scenarios (invalid paths, network issues, etc.)
   - [ ] Ensure all errors show user-friendly messages

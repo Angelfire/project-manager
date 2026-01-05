@@ -29,12 +29,17 @@ export function SortControls({
   onSortDirectionToggle,
 }: SortControlsProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div
+      className="flex items-center gap-2"
+      role="group"
+      aria-label="Sort options"
+    >
       <Select
         value={sortBy}
         onChange={(value) => onSortChange(value as SortOption)}
         placeholder="Sort by..."
         className="w-45"
+        aria-label="Sort projects by"
       >
         <SelectItem value="name">Sort by Name</SelectItem>
         <SelectItem value="modified">Sort by Date</SelectItem>
@@ -47,6 +52,7 @@ export function SortControls({
         icon={ArrowUpDown}
         className="p-2"
         title={sortAscending ? "Ascending" : "Descending"}
+        aria-label={`Sort order: ${sortAscending ? "Ascending" : "Descending"}. Click to toggle.`}
       />
     </div>
   );

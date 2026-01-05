@@ -66,6 +66,11 @@ function Button({
   // Special handling for icon-only buttons
   const isIconOnly = variant === "icon" && !children && Icon;
 
+  // For icon-only buttons without aria-label, use title as aria-label
+  const ariaLabel =
+    props["aria-label"] ||
+    (isIconOnly && props.title ? props.title : undefined);
+
   const combinedClassName = cn(
     baseStyles,
     variantStyles[variant],
@@ -82,13 +87,18 @@ function Button({
   );
 
   return (
-    <button className={combinedClassName} disabled={disabled} {...props}>
+    <button
+      className={combinedClassName}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      {...props}
+    >
       {Icon && iconPosition === "left" && (
-        <Icon className={iconSizeStyles[size]} />
+        <Icon className={iconSizeStyles[size]} aria-hidden="true" />
       )}
       {children}
       {Icon && iconPosition === "right" && (
-        <Icon className={iconSizeStyles[size]} />
+        <Icon className={iconSizeStyles[size]} aria-hidden="true" />
       )}
     </button>
   );

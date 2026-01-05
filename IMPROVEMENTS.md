@@ -25,15 +25,8 @@ Estos items deben completarse antes del lanzamiento de la versión beta:
 
 ### 4. **Accesibilidad Básica**
 
-- [ ] **ARIA labels**: Agregar labels a elementos interactivos críticos
-  - [ ] Botones principales (Run, Stop, etc.)
-  - [ ] Inputs de búsqueda y filtros
-  - [ ] Menús y dropdowns
-  - [ ] Modales y dialogs
 - [ ] **Navegación por teclado**: Verificar navegación básica
-  - [ ] Tab navigation funciona
-  - [ ] Enter/Space activan botones
-  - [ ] Escape cierra modales
+  - [ ] Testing manual con lectores de pantalla pendiente
 
 ### 5. **Manejo de Errores**
 

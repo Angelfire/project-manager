@@ -130,6 +130,9 @@ function App() {
                     variant={showFilters ? "primary" : "secondary"}
                     size="md"
                     icon={Filter}
+                    aria-label={showFilters ? "Hide filters" : "Show filters"}
+                    aria-expanded={showFilters}
+                    aria-controls="project-filters"
                   >
                     Filters
                   </Button>
@@ -143,12 +146,14 @@ function App() {
               </div>
 
               {showFilters && (
-                <ProjectFilters
-                  filters={filters}
-                  onFiltersChange={setFilters}
-                  uniqueRuntimes={uniqueRuntimes}
-                  uniqueFrameworks={uniqueFrameworks}
-                />
+                <div id="project-filters">
+                  <ProjectFilters
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    uniqueRuntimes={uniqueRuntimes}
+                    uniqueFrameworks={uniqueFrameworks}
+                  />
+                </div>
               )}
             </div>
 

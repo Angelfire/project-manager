@@ -36,7 +36,7 @@ export function EmptyState({
   return (
     <div className="bg-card rounded-lg border border-border p-12 text-center">
       <div
-        className={`inline-flex items-center justify-center ${iconContainerSizes[iconSize]} bg-secondary rounded-lg ${marginBottom}`}
+        className={`inline-flex items-center justify-center ${iconContainerSizes[iconSize]} ${marginBottom}`}
       >
         <Icon className={`${iconSizes[iconSize]} text-muted-foreground`} />
       </div>

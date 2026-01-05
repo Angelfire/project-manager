@@ -9,6 +9,8 @@ interface SelectProps {
   placeholder?: string;
   children: React.ReactNode;
   className?: string;
+  "aria-label"?: string;
+  id?: string;
 }
 
 const SelectGroup = SelectPrimitive.Group;
@@ -159,10 +161,12 @@ export function Select({
   placeholder = "Select...",
   children,
   className = "",
+  "aria-label": ariaLabel,
+  id,
 }: SelectProps) {
   return (
     <SelectPrimitive.Root value={value} onValueChange={onChange}>
-      <SelectTrigger className={className}>
+      <SelectTrigger className={className} aria-label={ariaLabel} id={id}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

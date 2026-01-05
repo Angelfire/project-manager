@@ -43,8 +43,14 @@ export const ProjectCard = memo(function ProjectCard({
   }, [project]);
 
   return (
-    <div className="bg-card rounded-lg border border-border overflow-hidden transition-colors hover:border-accent">
-      <div className={cn("h-1", getRuntimeTopBar(project.runtime))} />
+    <article
+      className="bg-card rounded-lg border border-border overflow-hidden transition-colors hover:border-accent"
+      aria-labelledby={`project-${project.path.replace(/\//g, "-")}-name`}
+    >
+      <div
+        className={cn("h-1", getRuntimeTopBar(project.runtime))}
+        aria-hidden="true"
+      />
       <div className="p-5">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
@@ -54,8 +60,12 @@ export const ProjectCard = memo(function ProjectCard({
                   "text-2xl text-foreground",
                   getRuntimeIcon(project.runtime)
                 )}
+                aria-hidden="true"
               ></i>
-              <h3 className="text-base font-semibold text-card-foreground truncate">
+              <h3
+                id={`project-${project.path.replace(/\//g, "-")}-name`}
+                className="text-base font-semibold text-card-foreground truncate"
+              >
                 {project.name}
               </h3>
             </div>
@@ -64,7 +74,10 @@ export const ProjectCard = memo(function ProjectCard({
             </p>
           </div>
           <div className="flex items-center gap-1.5 ml-3 shrink-0">
-            <span className={cn("relative flex", { "size-2.5": true })}>
+            <span
+              className={cn("relative flex", { "size-2.5": true })}
+              aria-hidden="true"
+            >
               {isRunning && (
                 <span
                   className={cn(
@@ -85,6 +98,7 @@ export const ProjectCard = memo(function ProjectCard({
                 "text-green-500": isRunning,
                 "text-muted-foreground": !isRunning,
               })}
+              aria-label={`Status: ${isRunning ? "Active" : "Inactive"}`}
             >
               {isRunning ? "Active" : "Inactive"}
             </span>
@@ -143,7 +157,11 @@ export const ProjectCard = memo(function ProjectCard({
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div
+          className="flex gap-2"
+          role="group"
+          aria-label={`Actions for ${project.name}`}
+        >
           {isRunning ? (
             <>
               <Button
@@ -152,6 +170,7 @@ export const ProjectCard = memo(function ProjectCard({
                 size="sm"
                 icon={Square}
                 fullWidth
+                aria-label={`Stop ${project.name}`}
               >
                 Stop
               </Button>
@@ -165,6 +184,11 @@ export const ProjectCard = memo(function ProjectCard({
                     ? `Open in browser (port ${project.port})`
                     : "Open in browser (detecting port...)"
                 }
+                aria-label={
+                  project.port
+                    ? `Open ${project.name} in browser on port ${project.port}`
+                    : `Open ${project.name} in browser (detecting port...)`
+                }
               />
               <Button
                 onClick={() => onOpenLogs(project.path)}
@@ -172,6 +196,7 @@ export const ProjectCard = memo(function ProjectCard({
                 size="sm"
                 icon={FileText}
                 title="View logs"
+                aria-label={`View logs for ${project.name}`}
               />
               <QuickActionsMenu projectPath={project.path} />
             </>
@@ -183,6 +208,7 @@ export const ProjectCard = memo(function ProjectCard({
                 size="sm"
                 icon={Play}
                 fullWidth
+                aria-label={`Run ${project.name}`}
               >
                 Run
               </Button>
@@ -193,6 +219,7 @@ export const ProjectCard = memo(function ProjectCard({
                   size="sm"
                   icon={FileText}
                   title="View logs"
+                  aria-label={`View logs for ${project.name}`}
                 />
               )}
               <QuickActionsMenu projectPath={project.path} />
@@ -200,6 +227,6 @@ export const ProjectCard = memo(function ProjectCard({
           )}
         </div>
       </div>
-    </div>
+    </article>
   );
 });

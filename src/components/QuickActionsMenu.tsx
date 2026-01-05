@@ -65,6 +65,7 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
           icon={MoreVertical}
           className="px-2 py-3"
           title="Quick actions"
+          aria-label="Open quick actions menu"
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
