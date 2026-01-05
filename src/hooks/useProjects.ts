@@ -286,12 +286,12 @@ export const useProjects = () => {
       ) {
         userDescription =
           "Permission denied. Please check file permissions and try again.";
-      } else if (
-        errorMessage.includes("EACCES") ||
-        errorMessage.includes("EADDRINUSE")
-      ) {
+      } else if (errorMessage.includes("EACCES")) {
         userDescription =
-          "Port is already in use or access denied. Please check if another process is using the port.";
+          "Access to the requested port was denied. Try using a different port or run the application with elevated permissions.";
+      } else if (errorMessage.includes("EADDRINUSE")) {
+        userDescription =
+          "The configured port is already in use. Please stop the other process using this port or configure your project to use a different port.";
       }
 
       toastError(userMessage, userDescription);
