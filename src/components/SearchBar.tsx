@@ -44,7 +44,6 @@ export function SearchBar({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           maxLength={maxLength}
-          aria-label="Search projects by name"
           aria-describedby={errorId}
           aria-invalid={!!error}
           className={cn(
