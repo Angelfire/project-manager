@@ -28,14 +28,6 @@ Estos items deben completarse antes del lanzamiento de la versión beta:
 - [ ] **Navegación por teclado**: Verificar navegación básica
   - [ ] Testing manual con lectores de pantalla pendiente
 
-### 5. **Manejo de Errores**
-
-- [ ] **Verificación de errores**: Asegurar manejo robusto de errores
-  - [ ] Probar escenarios de error (paths inválidos, permisos, etc.)
-  - [ ] Verificar que todos los errores muestran mensajes amigables
-  - [ ] Confirmar que ErrorBoundary funciona correctamente
-  - [ ] Probar casos edge (proyectos corruptos, procesos que fallan, etc.)
-
 ## 📋 Post-Beta (Mejoras Futuras)
 
 Estas mejoras pueden agregarse después del lanzamiento beta:

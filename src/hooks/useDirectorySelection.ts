@@ -42,7 +42,19 @@ export function useDirectorySelection({
         onDirectorySelected(selected);
       }
     } catch (error) {
-      toastError("Error selecting directory", String(error));
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : String(error) || "Unknown error occurred";
+      toastError(
+        "Failed to select directory",
+        errorMessage.includes("User cancelled") ||
+          errorMessage.includes("canceled")
+          ? "Directory selection was cancelled."
+          : errorMessage.includes("Permission")
+            ? "Permission denied. Please check directory permissions."
+            : `Unable to select directory: ${errorMessage}`
+      );
     }
   }, [onDirectorySelected]);
 

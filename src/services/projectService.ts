@@ -57,7 +57,7 @@ export const createProjectCommand = (project: Project) => {
       cwd: project.path,
     });
   } else {
-    throw new Error("Runtime no soportado");
+    throw new Error(`Unsupported runtime: ${project.runtime}`);
   }
 };
 
@@ -110,7 +110,17 @@ export const openInBrowser = async (port: number | null): Promise<void> => {
     try {
       await openUrl(`http://localhost:${port}`);
     } catch (error) {
-      toastError("Error opening browser", String(error));
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : String(error) || "Unknown error occurred";
+      toastError(
+        "Failed to open in browser",
+        errorMessage.includes("not found") ||
+          errorMessage.includes("No application")
+          ? "No default browser found. Please configure your default browser."
+          : `Unable to open browser: ${errorMessage}`
+      );
     }
   }
 };

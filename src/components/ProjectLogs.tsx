@@ -112,8 +112,18 @@ export const ProjectLogs = memo(function ProjectLogs({
       }
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      toastError("Failed to export logs", errorMessage);
+        error instanceof Error
+          ? error.message
+          : String(error) || "Unknown error occurred";
+      toastError(
+        "Failed to export logs",
+        errorMessage.includes("Permission") || errorMessage.includes("denied")
+          ? "Permission denied. Please check file system permissions."
+          : errorMessage.includes("not found") ||
+              errorMessage.includes("No such file")
+            ? "Export location not found. Please check the path."
+            : `Unable to export logs: ${errorMessage}`
+      );
     }
   }, [logs, projectName, formatTimestamp]);
 

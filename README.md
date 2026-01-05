@@ -200,10 +200,6 @@ These items are critical for a beta release:
   - [ ] Test app installation and first launch
 - [ ] **Basic Accessibility**: Ensure minimum accessibility standards
   - [ ] Test with screen readers (basic check - manual testing required)
-- [ ] **Error Handling**: Verify error handling is robust
-  - [ ] Test error scenarios (invalid paths, network issues, etc.)
-  - [ ] Ensure all errors show user-friendly messages
-  - [ ] Verify error boundary works correctly
 
 ### 📋 Post-Beta (Can Wait)
 
