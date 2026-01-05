@@ -30,7 +30,7 @@ export const DirectorySelector = memo(function DirectorySelector({
               value={selectedDirectory || ""}
               readOnly
               placeholder="Select a directory..."
-              className="w-full py-2.5 px-4 pl-10 border text-sm leading-none border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-border transition-all"
+              className="w-full py-2.5 px-4 pl-10 border text-sm leading-none border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-border transition-colors duration-150 ease-out"
             />
             <Folder className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           </div>
