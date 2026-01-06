@@ -21,7 +21,7 @@ const DialogOverlay = React.forwardRef<
     ref={ref}
     data-testid="dialog-overlay"
     className={cn(
-      "fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:duration-200 data-[state=closed]:duration-150",
       className
     )}
     {...props}
@@ -56,6 +56,7 @@ const DialogContent = React.forwardRef<
         className={cn(
           "fixed left-1/2 top-1/2 z-50 w-full max-h-[90vh] -translate-x-1/2 -translate-y-1/2 bg-card rounded-lg border border-border flex flex-col shadow-xl p-0 overflow-hidden",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "data-[state=open]:duration-200 data-[state=closed]:duration-150",
           "focus:outline-none",
           sizeClasses[size],
           className
