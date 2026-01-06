@@ -21,11 +21,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: "bg-secondary hover:bg-accent text-foreground border border-border",
+  primary:
+    "bg-primary hover:bg-primary/90 text-primary-foreground border border-primary/20",
   secondary:
     "bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border",
   success:
-    "bg-success-muted hover:bg-success/60 text-success-foreground border border-success-border",
+    "bg-success-muted hover:bg-success text-success-foreground border border-success-border",
   danger:
     "bg-destructive/40 hover:bg-destructive/60 text-destructive-foreground border border-destructive/50",
   ghost:
