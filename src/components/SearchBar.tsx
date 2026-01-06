@@ -46,7 +46,7 @@ export function SearchBar({
           aria-describedby={errorId}
           aria-invalid={!!error}
           className={cn(
-            "w-full py-2.5 px-4 pl-10 border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-1 focus:border-border transition-colors duration-150 ease-out text-sm leading-none",
+            "w-full py-2 px-4 pl-10 border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-1 focus:border-border transition-colors duration-150 ease-out text-sm leading-none",
             error
               ? "border-destructive focus:ring-destructive"
               : "border-border focus:ring-ring"

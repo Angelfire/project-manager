@@ -163,7 +163,7 @@ export const ProjectLogs = memo(function ProjectLogs({
                 placeholder="Search logs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-border text-sm"
+                className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-border text-sm transition-colors duration-150 ease-out"
               />
             </div>
             <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
@@ -176,7 +176,7 @@ export const ProjectLogs = memo(function ProjectLogs({
                     setAutoScroll(true);
                     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className="text-chart-2 hover:text-chart-1 transition-colors"
+                  className="text-chart-2 hover:text-chart-1 transition-colors duration-150 ease-out"
                 >
                   Scroll to bottom
                 </button>

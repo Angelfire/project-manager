@@ -89,7 +89,7 @@ export const ProjectCard = memo(function ProjectCard({
               <span
                 className={cn("relative inline-flex rounded-full size-2.5", {
                   "bg-green-400": isRunning,
-                  "bg-accent": !isRunning,
+                  "bg-gray-400": !isRunning,
                 })}
               />
             </span>
@@ -204,7 +204,7 @@ export const ProjectCard = memo(function ProjectCard({
             <>
               <Button
                 onClick={() => onRun(project)}
-                variant="success"
+                variant="primary"
                 size="sm"
                 icon={Play}
                 fullWidth
