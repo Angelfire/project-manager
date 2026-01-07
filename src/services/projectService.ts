@@ -1,14 +1,14 @@
 import { Command } from "@tauri-apps/plugin-shell";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Project } from "@/types";
-import { getDefaultPortForFramework as getDefaultPortForFrameworkUtil } from "@/utils/runtime";
 import { toastError, toastWarning } from "@/utils/toast";
 import { tauriApi } from "@/api/tauri";
 
-// Re-export for convenience
-export const getDefaultPortForFramework = getDefaultPortForFrameworkUtil;
+export { getDefaultPortForFramework } from "@/utils/runtime";
 
 /**
+ * Scans a directory for projects and returns a list of detected projects.
+ *
  * Scans a directory for projects and returns a list of detected projects.
  *
  * @param path - Directory path to scan
