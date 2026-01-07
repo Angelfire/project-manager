@@ -93,8 +93,8 @@ const DialogHeader = ({
   <div
     className={cn(
       hasCloseButtonPadding
-        ? "flex flex-row items-center justify-between p-4 pt-14 border-b border-border pr-2 sticky top-0 z-10 bg-card"
-        : "flex flex-col space-y-1.5 text-center sm:text-left p-4 border-b border-border sticky top-0 z-10 bg-card",
+        ? "flex flex-row items-center justify-between p-4 pt-14 border-b border-border pr-2"
+        : "flex flex-col space-y-1.5 text-center sm:text-left p-4 border-b border-border",
       className
     )}
     {...props}
