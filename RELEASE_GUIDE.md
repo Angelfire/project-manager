@@ -65,7 +65,7 @@ Según la [documentación oficial de Tauri](https://v2.tauri.app/distribute/dmg/
 
 ```bash
 # Opción 1: Build con configuración específica de macOS (recomendado)
-pnpm tauri build --config tauri.macos.conf.json
+pnpm tauri build --config src-tauri/tauri.macos.conf.json
 
 # Opción 2: Build especificando solo el bundle DMG
 pnpm tauri build --bundles dmg
@@ -108,7 +108,7 @@ Los archivos se generarán en:
 2. **Build con Code Signing**:
 
    ```bash
-   pnpm tauri build --config tauri.macos.conf.json
+   pnpm tauri build --config src-tauri/tauri.macos.conf.json
    ```
 
 3. **Verificar Code Signing**:
@@ -297,7 +297,7 @@ pnpm run prepare-release v0.1.0
 
 # 2. Build (sin code signing para el primer release)
 # Opción A: Con configuración específica de macOS
-pnpm tauri build --config tauri.macos.conf.json
+pnpm tauri build --config src-tauri/tauri.macos.conf.json
 
 # Opción B: Especificando solo el bundle DMG
 pnpm tauri build --bundles dmg
