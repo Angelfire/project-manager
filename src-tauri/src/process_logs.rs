@@ -42,15 +42,8 @@ fn get_shells_to_try() -> Vec<(String, String)> {
                     shells.push(("/bin/bash".to_string(), "source ~/.bashrc 2>/dev/null || source ~/.bash_profile 2>/dev/null || true".to_string()));
                 }
                 "fish" => {
-                    // Prefer the user's configured fish shell path from $SHELL,
-                    // but still try common Homebrew locations as fallbacks.
+                    // Use the user's configured fish shell path from $SHELL.
                     shells.push((user_shell.clone(), "source ~/.config/fish/config.fish 2>/dev/null || true".to_string()));
-                    if user_shell != "/usr/local/bin/fish" {
-                        shells.push(("/usr/local/bin/fish".to_string(), "source ~/.config/fish/config.fish 2>/dev/null || true".to_string()));
-                    }
-                    if user_shell != "/opt/homebrew/bin/fish" {
-                        shells.push(("/opt/homebrew/bin/fish".to_string(), "source ~/.config/fish/config.fish 2>/dev/null || true".to_string()));
-                    }
                 }
                 "csh" => {
                     shells.push(("/bin/csh".to_string(), "source ~/.cshrc 2>/dev/null || true".to_string()));
