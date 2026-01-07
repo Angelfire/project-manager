@@ -5,6 +5,7 @@ import {
   scanProjects,
   detectPort,
   killProcessByPort,
+  getDefaultPortForFramework,
 } from "@/services/projectService";
 import { toastError } from "@/utils/toast";
 import { tauriApi } from "@/api/tauri";
@@ -168,22 +169,46 @@ export const useProjects = () => {
     }
 
     setRunningProjects((prev) => new Set(prev).add(project.path));
-    // Clear previous logs when starting a new run
+    // Clear previous logs and port when starting a new run
     setLogs((prev) => {
       const newMap = new Map(prev);
       newMap.set(project.path, []);
       return newMap;
     });
+    // Clear port immediately to avoid showing stale port from previous run
+    setProjects((prev) =>
+      prev.map((p) => (p.path === project.path ? { ...p, port: null } : p))
+    );
 
     try {
       // Determine command and args based on project
       let command: string;
       let args: string[];
 
+      // Get the expected port for this framework
+      const expectedPort = getDefaultPortForFramework(project);
+
       if (project.runtime === "Node.js") {
         const packageManager = project.package_manager || "npm";
         command = packageManager;
-        args = packageManager === "npm" ? ["run", "dev"] : ["dev"];
+
+        // For Astro projects, pass --port argument to ensure it uses the expected port
+        // This prevents Astro from trying multiple ports when the default is available
+        // Astro CLI accepts --port flag: astro dev --port 4321
+        if (project.framework === "astro" && expectedPort) {
+          // For npm, use -- to pass arguments to the script: npm run dev -- --port 4321
+          // For pnpm/yarn, also use -- to pass arguments: pnpm dev -- --port 4321
+          // The -- separator ensures arguments are passed to the underlying script/command
+          if (packageManager === "npm") {
+            args = ["run", "dev", "--", "--port", expectedPort.toString()];
+          } else {
+            // pnpm/yarn: pnpm dev -- --port 4321 or yarn dev -- --port 4321
+            // The -- ensures the port flag reaches the astro command
+            args = ["dev", "--", "--port", expectedPort.toString()];
+          }
+        } else {
+          args = packageManager === "npm" ? ["run", "dev"] : ["dev"];
+        }
       } else if (project.runtime === "Deno") {
         command = "deno";
         args = ["task", "dev"];
@@ -215,20 +240,24 @@ export const useProjects = () => {
       );
 
       // Start port detection in background
+      // Capture project path to avoid closure issues
+      const projectPathForPortDetection = project.path;
       detectPort(pid)
         .then((detectedPort) => {
-          // Verify that the project is still running
+          // Verify that the project is still running and matches the correct project path
           setRunningProjects((current) => {
-            if (current.has(project.path) && detectedPort) {
-              // Update the port in the project
+            if (current.has(projectPathForPortDetection) && detectedPort) {
+              // Update only the port for the specific project path
               setProjects((prev) =>
                 prev.map((p) =>
-                  p.path === project.path ? { ...p, port: detectedPort } : p
+                  p.path === projectPathForPortDetection
+                    ? { ...p, port: detectedPort }
+                    : p
                 )
               );
               // Log port detection
               addLog(
-                project.path,
+                projectPathForPortDetection,
                 "stdout",
                 `[${new Date().toLocaleTimeString()}] Server detected on port ${detectedPort}\n`
               );
@@ -239,7 +268,7 @@ export const useProjects = () => {
         .catch((_error) => {
           // Port detection failure is non-critical, log it but don't fail
           addLog(
-            project.path,
+            projectPathForPortDetection,
             "stdout",
             `[${new Date().toLocaleTimeString()}] Port detection: Unable to detect port (this is normal for some projects)\n`
           );
@@ -302,15 +331,30 @@ export const useProjects = () => {
   const stopProject = async (project: Project) => {
     // Kill using Rust process PID (primary approach)
     const rustPid = rustProcessPids.get(project.path);
+    
+    // Always try to kill by PID first
     if (rustPid) {
       try {
         await tauriApi.processes.killTree(rustPid);
-      } catch {
-        // Ignore kill errors
+        // Wait a moment to ensure the process is killed
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      } catch (error) {
+        // Log the error but continue to try killing by port
+        console.error("Failed to kill process by PID:", error);
       }
-    } else if (project.port) {
-      // Fallback: if we don't have a PID, try to kill by port
-      await killProcessByPort(project.port);
+    }
+    
+    // Also try to kill by port as a fallback/extra safety measure
+    // This ensures that even if the PID kill failed, we still free the port
+    if (project.port) {
+      try {
+        await killProcessByPort(project.port);
+        // Wait a moment to ensure the port is freed
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (error) {
+        // Log but don't fail - port might already be free
+        console.error("Failed to kill process by port:", error);
+      }
     }
 
     // Clean up Rust process PID

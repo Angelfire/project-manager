@@ -1,9 +1,12 @@
 import { Command } from "@tauri-apps/plugin-shell";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Project } from "@/types";
-import { getDefaultPortForFramework } from "@/utils/runtime";
+import { getDefaultPortForFramework as getDefaultPortForFrameworkUtil } from "@/utils/runtime";
 import { toastError, toastWarning } from "@/utils/toast";
 import { tauriApi } from "@/api/tauri";
+
+// Re-export for convenience
+export const getDefaultPortForFramework = getDefaultPortForFrameworkUtil;
 
 /**
  * Scans a directory for projects and returns a list of detected projects.
@@ -73,11 +76,11 @@ export const createProjectCommand = (project: Project) => {
  */
 export const detectPort = async (
   pid: number,
-  attempts: number = 10,
-  initialDelay: number = 1000,
-  intervalDelay: number = 1500
+  attempts: number = 15,
+  initialDelay: number = 500,
+  intervalDelay: number = 800
 ): Promise<number | null> => {
-  // Wait a moment before the first attempt
+  // Reduced initial delay for faster detection
   await new Promise((resolve) => setTimeout(resolve, initialDelay));
 
   for (let i = 0; i < attempts; i++) {
@@ -91,6 +94,7 @@ export const detectPort = async (
       // Ignore port detection errors, will retry
     }
 
+    // Reduced interval delay for faster detection
     // Wait before the next attempt (except the last one)
     if (i < attempts - 1) {
       await new Promise((resolve) => setTimeout(resolve, intervalDelay));

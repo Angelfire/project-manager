@@ -14,7 +14,13 @@
       {
         "title": "RunStack",
         "width": 1400,
-        "height": 900
+        "height": 900,
+        "visible": true,
+        "center": true,
+        "decorations": true,
+        "transparent": false,
+        "alwaysOnTop": false,
+        "skipTaskbar": false
       }
     ],
     "security": {

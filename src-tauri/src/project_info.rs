@@ -65,21 +65,25 @@ pub fn get_package_json_scripts(path: &PathBuf) -> Option<HashMap<String, String
 pub fn get_directory_size(path: &PathBuf) -> Option<u64> {
     let mut total_size = 0u64;
     
-    fn calculate_size(path: &PathBuf, total: &mut u64) {
+    // Directories to skip (common large directories that don't need to be counted)
+    let skip_dirs: &[&str] = &["node_modules", ".git", "dist", "build", ".next", ".turbo", ".cache"];
+    
+    fn calculate_size(path: &PathBuf, total: &mut u64, skip_dirs: &[&str]) {
         if let Ok(entries) = fs::read_dir(path) {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    let entry_path = entry.path();
-                    if entry_path.is_dir() {
-                        // Skip node_modules and other large directories to speed up
-                        let dir_name = entry_path.file_name().and_then(|n| n.to_str());
-                        if let Some(name) = dir_name {
-                            if name == "node_modules" || name == ".git" || name == "dist" || name == "build" {
+            for entry in entries.flatten() {
+                let entry_path = entry.path();
+                
+                // Use metadata() which is faster than separate is_dir() + metadata() calls
+                if let Ok(metadata) = entry_path.metadata() {
+                    if metadata.is_dir() {
+                        // Skip large directories to speed up calculation
+                        if let Some(name) = entry_path.file_name().and_then(|n| n.to_str()) {
+                            if skip_dirs.contains(&name) {
                                 continue;
                             }
                         }
-                        calculate_size(&entry_path, total);
-                    } else if let Ok(metadata) = entry_path.metadata() {
+                        calculate_size(&entry_path, total, skip_dirs);
+                    } else {
                         *total += metadata.len();
                     }
                 }
@@ -87,7 +91,7 @@ pub fn get_directory_size(path: &PathBuf) -> Option<u64> {
         }
     }
     
-    calculate_size(path, &mut total_size);
+    calculate_size(path, &mut total_size, skip_dirs);
     Some(total_size)
 }
 

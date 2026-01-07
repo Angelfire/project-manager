@@ -42,15 +42,17 @@ fn detect_port_from_config(path: &PathBuf, framework: &str) -> Option<u16> {
 
 fn detect_port_from_package_json(path: &PathBuf) -> Option<u16> {
     let package_json_path = path.join("package.json");
-    if !package_json_path.exists() {
+    // Use metadata check first (faster than exists())
+    if fs::metadata(&package_json_path).is_err() {
         return None;
     }
 
     if let Ok(content) = fs::read_to_string(&package_json_path) {
+        // Parse JSON once and reuse
         if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&content) {
             // Search in scripts
             if let Some(scripts) = json_value.get("scripts").and_then(|s| s.as_object()) {
-                // Search in "dev" script
+                // Search in "dev" script first (most common)
                 if let Some(dev_script) = scripts.get("dev").and_then(|s| s.as_str()) {
                     if let Some(port) = extract_port_from_string(dev_script) {
                         return Some(port);

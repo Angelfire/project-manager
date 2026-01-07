@@ -1,7 +1,6 @@
 import { useState, lazy, Suspense } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Filter, Search, FolderOpen, Folder } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
-import { ProjectFilters, type FilterOption } from "@/components/ProjectFilters";
 import { ProjectCard } from "@/components/ProjectCard";
 import { DirectorySelector } from "@/components/DirectorySelector";
 import { useSearchInput } from "@/hooks/useSearchInput";
@@ -15,12 +14,20 @@ import { EmptyState } from "@/components/EmptyState";
 import { LoadingState } from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
-import { Filter, Search, FolderOpen, Folder } from "lucide-react";
+import type { FilterOption } from "@/components/ProjectFilters";
 
-// Lazy load heavy components
+// Lazy load heavy components to improve initial load time
 const ProjectLogs = lazy(() =>
   import("@/components/ProjectLogs").then((module) => ({
     default: module.ProjectLogs,
+  }))
+);
+
+// Note: ProjectFilters is loaded on-demand to improve initial load
+// It's used conditionally (filters only when shown)
+const ProjectFilters = lazy(() =>
+  import("@/components/ProjectFilters").then((module) => ({
+    default: module.ProjectFilters,
   }))
 );
 
@@ -147,12 +154,14 @@ function App() {
 
               {showFilters && (
                 <div id="project-filters">
-                  <ProjectFilters
-                    filters={filters}
-                    onFiltersChange={setFilters}
-                    uniqueRuntimes={uniqueRuntimes}
-                    uniqueFrameworks={uniqueFrameworks}
-                  />
+                  <Suspense fallback={<div className="h-20" />}>
+                    <ProjectFilters
+                      filters={filters}
+                      onFiltersChange={setFilters}
+                      uniqueRuntimes={uniqueRuntimes}
+                      uniqueFrameworks={uniqueFrameworks}
+                    />
+                  </Suspense>
                 </div>
               )}
             </div>

@@ -1,17 +1,38 @@
 use crate::error::AppError;
 use crate::project_info::enrich_project_info;
 use crate::types::Project;
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// Helper function to check if a file exists in a HashSet of file names
+fn has_file(files: &HashSet<String>, name: &str) -> bool {
+    files.contains(name)
+}
+
+/// Builds a HashSet of file names in a directory for efficient lookups
+fn get_directory_files(path: &PathBuf) -> HashSet<String> {
+    let mut files = HashSet::new();
+    if let Ok(entries) = fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(name) = entry.file_name().to_str() {
+                files.insert(name.to_string());
+            }
+        }
+    }
+    files
+}
+
 pub fn detect_package_manager(path: &PathBuf) -> String {
-    if path.join("pnpm-lock.yaml").exists() {
+    let files = get_directory_files(path);
+    
+    if has_file(&files, "pnpm-lock.yaml") {
         "pnpm".to_string()
-    } else if path.join("yarn.lock").exists() {
+    } else if has_file(&files, "yarn.lock") {
         "yarn".to_string()
-    } else if path.join("package-lock.json").exists() {
+    } else if has_file(&files, "package-lock.json") {
         "npm".to_string()
-    } else if path.join("bun.lockb").exists() {
+    } else if has_file(&files, "bun.lockb") {
         "bun".to_string()
     } else {
         "npm".to_string() // default
@@ -19,34 +40,36 @@ pub fn detect_package_manager(path: &PathBuf) -> String {
 }
 
 pub fn detect_framework(path: &PathBuf) -> String {
+    let files = get_directory_files(path);
+    
     // Astro
-    if path.join("astro.config.mjs").exists()
-        || path.join("astro.config.js").exists()
-        || path.join("astro.config.ts").exists()
+    if has_file(&files, "astro.config.mjs")
+        || has_file(&files, "astro.config.js")
+        || has_file(&files, "astro.config.ts")
     {
         return "astro".to_string();
     }
 
     // Next.js
-    if path.join("next.config.js").exists()
-        || path.join("next.config.mjs").exists()
-        || path.join("next.config.ts").exists()
+    if has_file(&files, "next.config.js")
+        || has_file(&files, "next.config.mjs")
+        || has_file(&files, "next.config.ts")
     {
         return "nextjs".to_string();
     }
 
     // Vite (verificar vite.config.*)
-    if path.join("vite.config.js").exists()
-        || path.join("vite.config.ts").exists()
-        || path.join("vite.config.mjs").exists()
+    if has_file(&files, "vite.config.js")
+        || has_file(&files, "vite.config.ts")
+        || has_file(&files, "vite.config.mjs")
     {
         return "vite".to_string();
     }
 
     // React (Create React App)
-    if path.join("src").exists() && path.join("public").exists() {
-        let package_json = path.join("package.json");
-        if package_json.exists() {
+    if has_file(&files, "src") && has_file(&files, "public") {
+        if has_file(&files, "package.json") {
+            let package_json = path.join("package.json");
             if let Ok(content) = fs::read_to_string(&package_json) {
                 if content.contains("react-scripts") {
                     return "react".to_string();
@@ -56,12 +79,12 @@ pub fn detect_framework(path: &PathBuf) -> String {
     }
 
     // SvelteKit
-    if path.join("svelte.config.js").exists() || path.join("svelte.config.ts").exists() {
+    if has_file(&files, "svelte.config.js") || has_file(&files, "svelte.config.ts") {
         return "sveltekit".to_string();
     }
 
     // Nuxt
-    if path.join("nuxt.config.js").exists() || path.join("nuxt.config.ts").exists() {
+    if has_file(&files, "nuxt.config.js") || has_file(&files, "nuxt.config.ts") {
         return "nuxt".to_string();
     }
 
@@ -86,8 +109,11 @@ pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
         let project_path = entry.path();
 
         if project_path.is_dir() {
+            // Get directory files once for all checks
+            let dir_files = get_directory_files(&project_path);
+            
             // Check for Node.js projects
-            if project_path.join("package.json").exists() {
+            if has_file(&dir_files, "package.json") {
                 let package_manager = detect_package_manager(&project_path);
                 let framework = detect_framework(&project_path);
                 let port = crate::port::detect_port(&project_path);
@@ -107,9 +133,7 @@ pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
                 projects.push(project);
             }
             // Check for Deno projects
-            else if project_path.join("deno.json").exists()
-                || project_path.join("deno.jsonc").exists()
-            {
+            else if has_file(&dir_files, "deno.json") || has_file(&dir_files, "deno.jsonc") {
                 let port = crate::port::detect_port_deno(&project_path);
                 let mut project = Project {
                     name: entry.file_name().to_string_lossy().to_string(),
@@ -127,9 +151,7 @@ pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
                 projects.push(project);
             }
             // Check for Bun projects
-            else if project_path.join("bun.lockb").exists()
-                || project_path.join("bunfig.toml").exists()
-            {
+            else if has_file(&dir_files, "bun.lockb") || has_file(&dir_files, "bunfig.toml") {
                 let framework = detect_framework(&project_path);
                 let port = crate::port::detect_port(&project_path);
                 let mut project = Project {
