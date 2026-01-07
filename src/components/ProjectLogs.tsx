@@ -128,34 +128,34 @@ export const ProjectLogs = memo(function ProjectLogs({
   return (
     <DialogRoot open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent size="xl" className="h-[80vh]">
-        <DialogHeader hasCloseButtonPadding>
-          <div>
-            <DialogTitle>{`Logs: ${projectName}`}</DialogTitle>
-            <DialogDescription className="text-xs font-mono mt-1 truncate">
-              {projectPath}
-            </DialogDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={exportLogs}
-              variant="ghost"
-              size="sm"
-              icon={Download}
-              className="p-2"
-              title="Export logs"
-            />
-            <Button
-              onClick={onClear}
-              variant="ghost"
-              size="sm"
-              icon={Trash2}
-              className="p-2 hover:text-red-400"
-              title="Clear logs"
-            />
-          </div>
-        </DialogHeader>
-        <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-border">
+        <div className="sticky top-0 z-10 bg-card">
+          <DialogHeader hasCloseButtonPadding>
+            <div>
+              <DialogTitle>{`Logs: ${projectName}`}</DialogTitle>
+              <DialogDescription className="text-xs font-mono mt-1 truncate">
+                {projectPath}
+              </DialogDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={exportLogs}
+                variant="ghost"
+                size="sm"
+                icon={Download}
+                className="p-2"
+                title="Export logs"
+              />
+              <Button
+                onClick={onClear}
+                variant="ghost"
+                size="sm"
+                icon={Trash2}
+                className="p-2 hover:text-red-400"
+                title="Clear logs"
+              />
+            </div>
+          </DialogHeader>
+          <div className="p-4 border-b border-border bg-card">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <input
@@ -183,46 +183,45 @@ export const ProjectLogs = memo(function ProjectLogs({
               )}
             </div>
           </div>
-
-          <div
-            ref={logsContainerRef}
-            onScroll={handleScroll}
-            className="flex-1 overflow-y-auto p-4 font-mono text-xs"
-          >
-            {filteredLogs.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">
-                {searchTerm ? "No logs match your search" : "No logs yet"}
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {filteredLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className={cn("flex gap-2", {
+        </div>
+        <div
+          ref={logsContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto p-4 font-mono text-xs min-h-0"
+        >
+          {filteredLogs.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              {searchTerm ? "No logs match your search" : "No logs yet"}
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {filteredLogs.map((log) => (
+                <div
+                  key={log.id}
+                  className={cn("flex gap-2", {
+                    "text-destructive": log.type === "stderr",
+                    "text-foreground": log.type === "stdout",
+                  })}
+                >
+                  <span className="text-muted-foreground shrink-0">
+                    [{formatTimestamp(log.timestamp)}]
+                  </span>
+                  <span
+                    className={cn("shrink-0", {
                       "text-destructive": log.type === "stderr",
-                      "text-foreground": log.type === "stdout",
+                      "text-success-foreground": log.type === "stdout",
                     })}
                   >
-                    <span className="text-muted-foreground shrink-0">
-                      [{formatTimestamp(log.timestamp)}]
-                    </span>
-                    <span
-                      className={cn("shrink-0", {
-                        "text-destructive": log.type === "stderr",
-                        "text-success-foreground": log.type === "stdout",
-                      })}
-                    >
-                      [{log.type.toUpperCase()}]
-                    </span>
-                    <span className="flex-1 wrap-break-words whitespace-pre-wrap">
-                      {log.content}
-                    </span>
-                  </div>
-                ))}
-                <div ref={logsEndRef} />
-              </div>
-            )}
-          </div>
+                    [{log.type.toUpperCase()}]
+                  </span>
+                  <span className="flex-1 wrap-break-words whitespace-pre-wrap">
+                    {log.content}
+                  </span>
+                </div>
+              ))}
+              <div ref={logsEndRef} />
+            </div>
+          )}
         </div>
       </DialogContent>
     </DialogRoot>

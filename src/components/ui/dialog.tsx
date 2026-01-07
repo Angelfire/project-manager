@@ -69,7 +69,7 @@ const DialogContent = React.forwardRef<
               variant="ghost"
               size="sm"
               icon={X}
-              className="absolute right-4 top-4 p-2 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary z-10"
+              className="absolute right-4 top-4 p-2 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary z-20"
               aria-label="Close dialog"
             />
           </DialogPrimitive.Close>
@@ -93,8 +93,8 @@ const DialogHeader = ({
   <div
     className={cn(
       hasCloseButtonPadding
-        ? "flex flex-row items-center justify-between p-4 pt-14 border-b border-border pr-2"
-        : "flex flex-col space-y-1.5 text-center sm:text-left p-4 border-b border-border",
+        ? "flex flex-row items-center justify-between p-4 pt-14 border-b border-border pr-2 sticky top-0 z-10 bg-card"
+        : "flex flex-col space-y-1.5 text-center sm:text-left p-4 border-b border-border sticky top-0 z-10 bg-card",
       className
     )}
     {...props}
