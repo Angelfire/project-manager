@@ -20,11 +20,16 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
 
     // Unix (macOS/Linux): kill the process and all its children
     // First, find all child processes recursively
+    // Process tree structure: shell -> package manager -> dev server -> watchers/compilers
+    // We search up to 4 levels to cover: shell (0) -> pkg manager (1) -> dev server (2) -> children (3)
+    // The 4th level covers edge cases where dev servers spawn additional processes
     let mut all_pids = vec![pid];
     let mut current_level = vec![pid];
+    let mut seen_pids = std::collections::HashSet::new();
+    seen_pids.insert(pid);
 
-    // Search for child processes up to 3 levels
-    for _level in 0..3 {
+    // Search for child processes up to 4 levels
+    for _level in 0..4 {
         let mut next_level = Vec::new();
         for parent_pid in &current_level {
             let pgrep_output = StdCommand::new("pgrep")
@@ -34,8 +39,11 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
             let child_pids_str = String::from_utf8(pgrep_output.stdout)?;
             for child_pid_line in child_pids_str.lines() {
                 if let Ok(child_pid) = child_pid_line.trim().parse::<u32>() {
-                    all_pids.push(child_pid);
-                    next_level.push(child_pid);
+                    // Avoid duplicates
+                    if seen_pids.insert(child_pid) {
+                        all_pids.push(child_pid);
+                        next_level.push(child_pid);
+                    }
                 }
             }
         }
@@ -45,24 +53,87 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
         current_level = next_level;
     }
 
+    // Get the current process PID to avoid killing ourselves
+    let current_pid = std::process::id();
+    
+    // Get all ancestor PIDs (parent, grandparent, etc.) to avoid killing any Tauri process
+    // This is critical because the process tree might include ancestor processes
+    let mut ancestor_pids = std::collections::HashSet::new();
+    let mut current_ancestor = std::os::unix::process::parent_id();
+    
+    // Traverse up the process tree to collect all ancestors (up to init/pid 1)
+    // This ensures we don't kill any process in Tauri's process tree
+    while current_ancestor > 1 {
+        ancestor_pids.insert(current_ancestor);
+        
+        // Get the parent of the current ancestor
+        let ppid_output = StdCommand::new("ps")
+            .args(&["-o", "ppid=", "-p", &current_ancestor.to_string()])
+            .output()
+            .ok()
+            .and_then(|output| String::from_utf8(output.stdout).ok())
+            .and_then(|ppid_str| ppid_str.trim().parse::<u32>().ok());
+        
+        match ppid_output {
+            Some(ppid) if ppid != current_ancestor && ppid != 0 => {
+                // Valid parent PID, continue traversing
+                current_ancestor = ppid;
+            }
+            _ => {
+                // Invalid parent, same as current, or 0 (init) - stop traversing
+                break;
+            }
+        }
+    }
+    
     // Kill all found processes (children first, then parent)
+    // But skip if it's our own process or any ancestor (Tauri process tree)
     for process_pid in all_pids.iter().rev() {
+        // Safety check: never kill ourselves or any ancestor process (Tauri)
+        if *process_pid == current_pid || ancestor_pids.contains(process_pid) {
+            continue;
+        }
+        
         let kill_output = StdCommand::new("kill")
             .args(&["-9", &process_pid.to_string()])
-            .output()?;
+            .output();
         
-        // Verify that kill succeeded (ignore errors for child processes that may have already terminated)
-        if !kill_output.status.success() && *process_pid == pid {
-            // Only fail if we couldn't kill the main process
-            return Err(AppError::CommandError(format!("Failed to kill process with PID {}", pid)));
+        // Ignore errors for processes that may have already terminated
+        // Only fail if we couldn't kill the main process (and it's not us)
+        if let Ok(output) = kill_output {
+            if !output.status.success() && *process_pid == pid {
+                return Err(AppError::CommandError(format!("Failed to kill process with PID {}", pid)));
+            }
         }
     }
 
+    // IMPORTANT: We do NOT kill the process group here because it could kill Tauri
+    // if the shell process is in the same process group as Tauri.
+    // Instead, we rely on killing individual processes which is safer.
+    // The recursive child process discovery should catch all children.
+
+    // Wait a moment to ensure processes are terminated
+    std::thread::sleep(std::time::Duration::from_millis(100));
+
     // Verify that the main process was terminated
-    // Try to kill the process group as well
-    StdCommand::new("kill")
-        .args(&["-9", &format!("-{}", pid)])
-        .output()?;
+    // IMPORTANT: Only verify if the target PID is not our own process or any ancestor
+    // This check is consistent with the safety check in the kill loop above (line 93)
+    // If pid == current_pid or pid is an ancestor, we already skipped killing it,
+    // so we should also skip verification to maintain consistent behavior
+    if pid != current_pid && !ancestor_pids.contains(&pid) {
+        let verify_output = StdCommand::new("ps")
+            .args(&["-p", &pid.to_string()])
+            .output()?;
+        
+        if verify_output.status.success() {
+            // Process still exists, try one more time with SIGKILL
+            // Safety: This is safe because we already verified pid != current_pid 
+            // and pid is not in ancestor_pids above
+            let _ = StdCommand::new("kill")
+                .args(&["-9", &pid.to_string()])
+                .output();
+        }
+    }
 
     Ok(())
 }
@@ -146,18 +217,20 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
         let lsof_str = String::from_utf8(lsof_output.stdout)?;
         for line in lsof_str.lines().skip(1) {
             let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() >= 9 {
-                let name_part = parts[8];
-                if name_part.contains(':') {
-                    if let Some(port_str) = name_part.split(':').last() {
-                        let port_str = port_str.split(' ').next().unwrap_or(port_str);
-                        if let Ok(port) = port_str.parse::<u16>() {
-                            if port > 0 {
-                                return Ok(Some(port));
-                            }
-                        }
-                    }
-                }
+            if parts.len() < 9 {
+                continue;
+            }
+            
+            let name_part = parts[8];
+            let port = name_part
+                .split(':')
+                .last()
+                .and_then(|port_str| port_str.split(' ').next())
+                .and_then(|port_str| port_str.parse::<u16>().ok())
+                .filter(|&port| port > 0);
+            
+            if let Some(port) = port {
+                return Ok(Some(port));
             }
         }
     }
@@ -193,14 +266,15 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
                         .output()?;
 
                     let ppid_str = String::from_utf8(ppid_output.stdout)?;
-                    if let Ok(ppid) = ppid_str.trim().parse::<u32>() {
-                        if ppid == pid || child_pids_for_check.contains(&ppid) {
-                            return Ok(Some(test_port));
-                        }
-                        current_pid = ppid;
-                    } else {
-                        break;
+                    let ppid = match ppid_str.trim().parse::<u32>() {
+                        Ok(ppid) => ppid,
+                        Err(_) => break,
+                    };
+                    
+                    if ppid == pid || child_pids_for_check.contains(&ppid) {
+                        return Ok(Some(test_port));
                     }
+                    current_pid = ppid;
                 }
             }
         }
@@ -246,6 +320,89 @@ mod tests {
         // The result should be None since this test process doesn't listen on a port
         if let Ok(port) = result {
             assert!(port.is_none(), "Test process should not be listening on a port");
+        }
+    }
+
+    #[test]
+    fn test_kill_process_tree_safety_checks() {
+        // Test that we don't kill our own process
+        // The function should detect that we're trying to kill ourselves and skip it
+        let current_pid = std::process::id();
+        
+        // Verify the process exists (should pass)
+        let ps_check = StdCommand::new("ps")
+            .args(&["-p", &current_pid.to_string()])
+            .output()
+            .expect("Failed to check if current process exists");
+        assert!(ps_check.status.success(), "Current process should exist");
+        
+        // Call kill_process_tree on ourselves
+        // The function should skip killing the current_pid when it finds it in the process tree
+        let result = kill_process_tree(current_pid);
+        
+        // The function should either:
+        // 1. Return Ok(()) if it successfully skipped all processes (including ourselves)
+        // 2. Return an error if it couldn't verify the process (unlikely for current PID)
+        // But importantly, it should NOT have killed the current process
+        // We verify this by checking the process still exists and has the same PID
+        assert!(std::process::id() == current_pid, "Current process should still be alive");
+        
+        // Verify the process still exists after the call
+        let ps_check_after = StdCommand::new("ps")
+            .args(&["-p", &current_pid.to_string()])
+            .output()
+            .expect("Failed to check if current process still exists");
+        assert!(ps_check_after.status.success(), "Current process should still exist after kill attempt");
+        
+        // The result doesn't matter as much as the fact that we're still alive
+        // But we log it for debugging
+        if let Err(e) = result {
+            // It's okay if it returns an error, as long as we didn't kill ourselves
+            eprintln!("kill_process_tree returned error (expected): {}", e);
+        }
+    }
+
+    #[test]
+    fn test_kill_process_tree_parent_safety() {
+        // Test that we don't kill the parent process (Tauri)
+        // The function should detect that we're trying to kill our parent and skip it
+        let parent_pid = std::os::unix::process::parent_id();
+        
+        // Verify the parent process exists (should pass)
+        let ps_check = StdCommand::new("ps")
+            .args(&["-p", &parent_pid.to_string()])
+            .output()
+            .expect("Failed to check if parent process exists");
+        assert!(ps_check.status.success(), "Parent process should exist");
+        
+        // Call kill_process_tree on our parent
+        // The function should skip killing the parent_pid when it finds it in the process tree
+        let result = kill_process_tree(parent_pid);
+        
+        // The function should either:
+        // 1. Return Ok(()) if it successfully skipped all processes (including parent)
+        // 2. Return an error if it couldn't verify the process
+        // But importantly, it should NOT have killed the parent process
+        // We verify this by checking the parent PID hasn't changed
+        let new_parent_pid = std::os::unix::process::parent_id();
+        assert_eq!(
+            new_parent_pid,
+            parent_pid,
+            "Parent process should still be alive and unchanged"
+        );
+        
+        // Verify the parent process still exists after the call
+        let ps_check_after = StdCommand::new("ps")
+            .args(&["-p", &parent_pid.to_string()])
+            .output()
+            .expect("Failed to check if parent process still exists");
+        assert!(ps_check_after.status.success(), "Parent process should still exist after kill attempt");
+        
+        // The result doesn't matter as much as the fact that the parent is still alive
+        // But we log it for debugging
+        if let Err(e) = result {
+            // It's okay if it returns an error, as long as we didn't kill the parent
+            eprintln!("kill_process_tree returned error (expected): {}", e);
         }
     }
 }
