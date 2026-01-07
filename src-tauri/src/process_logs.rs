@@ -20,8 +20,15 @@ fn get_shells_to_try() -> Vec<(String, String)> {
                     shells.push(("/bin/bash".to_string(), "source ~/.bashrc 2>/dev/null || source ~/.bash_profile 2>/dev/null || true".to_string()));
                 }
                 "fish" => {
-                    shells.push(("/usr/local/bin/fish".to_string(), "source ~/.config/fish/config.fish 2>/dev/null || true".to_string()));
-                    shells.push(("/opt/homebrew/bin/fish".to_string(), "source ~/.config/fish/config.fish 2>/dev/null || true".to_string()));
+                    // Prefer the user's configured fish shell path from $SHELL,
+                    // but still try common Homebrew locations as fallbacks.
+                    shells.push((user_shell.clone(), "source ~/.config/fish/config.fish 2>/dev/null || true".to_string()));
+                    if user_shell != "/usr/local/bin/fish" {
+                        shells.push(("/usr/local/bin/fish".to_string(), "source ~/.config/fish/config.fish 2>/dev/null || true".to_string()));
+                    }
+                    if user_shell != "/opt/homebrew/bin/fish" {
+                        shells.push(("/opt/homebrew/bin/fish".to_string(), "source ~/.config/fish/config.fish 2>/dev/null || true".to_string()));
+                    }
                 }
                 "csh" => {
                     shells.push(("/bin/csh".to_string(), "source ~/.cshrc 2>/dev/null || true".to_string()));
@@ -97,11 +104,13 @@ pub async fn spawn_process_with_logs(
     
     // Build the command string to execute through a login shell
     // This ensures all environment variables (FNM, NVM, Volta, asdf, etc.) are available
+    // Escape and quote each argument to handle spaces and special characters safely
     let args_str: String = args
         .iter()
         .map(|arg| {
-            // Escape single quotes in arguments
-            arg.replace('\'', "'\"'\"'")
+            // Escape single quotes in arguments and wrap in single quotes
+            let escaped = arg.replace('\'', "'\"'\"'");
+            format!("'{}'", escaped)
         })
         .collect::<Vec<_>>()
         .join(" ");
@@ -110,10 +119,11 @@ pub async fn spawn_process_with_logs(
     let shells = get_shells_to_try();
     
     // Build the command to execute (cd to directory and run the command)
-    // Escape path and command only once
+    // Escape single quotes in path and command, then wrap in single quotes for shell safety
+    // This prevents issues with paths/commands containing spaces or special characters
     let escaped_path = validated_path_str.replace('\'', "'\"'\"'");
     let escaped_command = command.replace('\'', "'\"'\"'");
-    let command_part = format!("cd {} && {} {}", escaped_path, escaped_command, args_str);
+    let command_part = format!("cd '{}' && '{}' {}", escaped_path, escaped_command, args_str);
     
     // Try each shell until one works
     // We source shell config files to ensure all version managers (FNM, NVM, Volta, asdf) are loaded
@@ -125,10 +135,12 @@ pub async fn spawn_process_with_logs(
         let shell_command = format!("{}; {}", source_command, command_part);
         
         // Determine shell flags based on shell type
-        let shell_flags = if shell_path.contains("fish") {
+        // Extract shell name from path to avoid substring matching issues (e.g., "fish" contains "sh")
+        let shell_name = shell_path.split('/').last().unwrap_or(shell_path);
+        let shell_flags = if shell_name == "fish" {
             // Fish doesn't support -l (login), use -c instead
             vec!["-c"]
-        } else if shell_path.contains("sh") && !shell_path.contains("bash") && !shell_path.contains("zsh") {
+        } else if shell_name == "sh" {
             // POSIX sh doesn't support -l, use -c
             vec!["-c"]
         } else {

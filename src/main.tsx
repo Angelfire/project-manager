@@ -9,15 +9,10 @@ const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 
-// Only use StrictMode in development to avoid double renders in production
-const AppWithProviders = (
-  <ErrorBoundary>
-    <App />
-  </ErrorBoundary>
+root.render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </React.StrictMode>
 );
-
-if (import.meta.env.DEV) {
-  root.render(<React.StrictMode>{AppWithProviders}</React.StrictMode>);
-} else {
-  root.render(AppWithProviders);
-}

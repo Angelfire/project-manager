@@ -46,7 +46,6 @@ export default defineConfig({
     // Optimize chunk size warning limit
     chunkSizeWarningLimit: 1000,
     // Use esbuild for minification (20-40x faster than terser, only 1-2% worse compression)
-    // esbuild automatically removes console.logs and debugger statements in production
     minify: "esbuild",
     // Rollup options for better code splitting
     rollupOptions: {

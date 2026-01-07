@@ -23,52 +23,56 @@ fn get_directory_files(path: &PathBuf) -> HashSet<String> {
     files
 }
 
-pub fn detect_package_manager(path: &PathBuf) -> String {
-    let files = get_directory_files(path);
-    
-    if has_file(&files, "pnpm-lock.yaml") {
+/// Detects the package manager from a directory's file list
+/// 
+/// This function accepts a HashSet of file names to avoid redundant directory reads.
+pub fn detect_package_manager(files: &HashSet<String>) -> String {
+    if has_file(files, "pnpm-lock.yaml") {
         "pnpm".to_string()
-    } else if has_file(&files, "yarn.lock") {
+    } else if has_file(files, "yarn.lock") {
         "yarn".to_string()
-    } else if has_file(&files, "package-lock.json") {
+    } else if has_file(files, "package-lock.json") {
         "npm".to_string()
-    } else if has_file(&files, "bun.lockb") {
+    } else if has_file(files, "bun.lockb") {
         "bun".to_string()
     } else {
         "npm".to_string() // default
     }
 }
 
-pub fn detect_framework(path: &PathBuf) -> String {
-    let files = get_directory_files(path);
-    
+
+/// Detects the framework from a directory's file list
+/// 
+/// This function accepts a HashSet of file names to avoid redundant directory reads.
+/// For convenience, use `detect_framework_from_path()` which reads the directory.
+pub fn detect_framework(files: &HashSet<String>, path: &PathBuf) -> String {
     // Astro
-    if has_file(&files, "astro.config.mjs")
-        || has_file(&files, "astro.config.js")
-        || has_file(&files, "astro.config.ts")
+    if has_file(files, "astro.config.mjs")
+        || has_file(files, "astro.config.js")
+        || has_file(files, "astro.config.ts")
     {
         return "astro".to_string();
     }
 
     // Next.js
-    if has_file(&files, "next.config.js")
-        || has_file(&files, "next.config.mjs")
-        || has_file(&files, "next.config.ts")
+    if has_file(files, "next.config.js")
+        || has_file(files, "next.config.mjs")
+        || has_file(files, "next.config.ts")
     {
         return "nextjs".to_string();
     }
 
-    // Vite (verificar vite.config.*)
-    if has_file(&files, "vite.config.js")
-        || has_file(&files, "vite.config.ts")
-        || has_file(&files, "vite.config.mjs")
+    // Vite (check for vite.config.*)
+    if has_file(files, "vite.config.js")
+        || has_file(files, "vite.config.ts")
+        || has_file(files, "vite.config.mjs")
     {
         return "vite".to_string();
     }
 
     // React (Create React App)
-    if has_file(&files, "src") && has_file(&files, "public") {
-        if has_file(&files, "package.json") {
+    if has_file(files, "src") && has_file(files, "public") {
+        if has_file(files, "package.json") {
             let package_json = path.join("package.json");
             if let Ok(content) = fs::read_to_string(&package_json) {
                 if content.contains("react-scripts") {
@@ -79,17 +83,26 @@ pub fn detect_framework(path: &PathBuf) -> String {
     }
 
     // SvelteKit
-    if has_file(&files, "svelte.config.js") || has_file(&files, "svelte.config.ts") {
+    if has_file(files, "svelte.config.js") || has_file(files, "svelte.config.ts") {
         return "sveltekit".to_string();
     }
 
     // Nuxt
-    if has_file(&files, "nuxt.config.js") || has_file(&files, "nuxt.config.ts") {
+    if has_file(files, "nuxt.config.js") || has_file(files, "nuxt.config.ts") {
         return "nuxt".to_string();
     }
 
     // Default
     "node".to_string()
+}
+
+/// Convenience wrapper that reads the directory and calls `detect_framework()`
+/// 
+/// Use this for standalone calls. In `scan_directory()`, use `detect_framework()` 
+/// directly with the pre-read HashSet to avoid redundant directory reads.
+pub fn detect_framework_from_path(path: &PathBuf) -> String {
+    let files = get_directory_files(path);
+    detect_framework(&files, path)
 }
 
 pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
@@ -114,8 +127,8 @@ pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
             
             // Check for Node.js projects
             if has_file(&dir_files, "package.json") {
-                let package_manager = detect_package_manager(&project_path);
-                let framework = detect_framework(&project_path);
+                let package_manager = detect_package_manager(&dir_files);
+                let framework = detect_framework(&dir_files, &project_path);
                 let port = crate::port::detect_port(&project_path);
                 let mut project = Project {
                     name: entry.file_name().to_string_lossy().to_string(),
@@ -152,7 +165,7 @@ pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
             }
             // Check for Bun projects
             else if has_file(&dir_files, "bun.lockb") || has_file(&dir_files, "bunfig.toml") {
-                let framework = detect_framework(&project_path);
+                let framework = detect_framework(&dir_files, &project_path);
                 let port = crate::port::detect_port(&project_path);
                 let mut project = Project {
                     name: entry.file_name().to_string_lossy().to_string(),
@@ -197,7 +210,8 @@ mod tests {
         let dir_path = temp_dir.path().to_path_buf();
         create_temp_file(temp_dir.path(), "package-lock.json", "{}");
 
-        assert_eq!(detect_package_manager(&dir_path), "npm");
+        let files = get_directory_files(&dir_path);
+        assert_eq!(detect_package_manager(&files), "npm");
     }
 
     #[test]
@@ -206,7 +220,8 @@ mod tests {
         let dir_path = temp_dir.path().to_path_buf();
         create_temp_file(temp_dir.path(), "yarn.lock", "");
 
-        assert_eq!(detect_package_manager(&dir_path), "yarn");
+        let files = get_directory_files(&dir_path);
+        assert_eq!(detect_package_manager(&files), "yarn");
     }
 
     #[test]
@@ -215,7 +230,8 @@ mod tests {
         let dir_path = temp_dir.path().to_path_buf();
         create_temp_file(temp_dir.path(), "pnpm-lock.yaml", "");
 
-        assert_eq!(detect_package_manager(&dir_path), "pnpm");
+        let files = get_directory_files(&dir_path);
+        assert_eq!(detect_package_manager(&files), "pnpm");
     }
 
     #[test]
@@ -224,7 +240,8 @@ mod tests {
         let dir_path = temp_dir.path().to_path_buf();
         create_temp_file(temp_dir.path(), "bun.lockb", "");
 
-        assert_eq!(detect_package_manager(&dir_path), "bun");
+        let files = get_directory_files(&dir_path);
+        assert_eq!(detect_package_manager(&files), "bun");
     }
 
     #[test]
@@ -233,7 +250,8 @@ mod tests {
         let dir_path = temp_dir.path().to_path_buf();
 
         // No lock file, should default to npm
-        assert_eq!(detect_package_manager(&dir_path), "npm");
+        let files = get_directory_files(&dir_path);
+        assert_eq!(detect_package_manager(&files), "npm");
     }
 
     #[test]
@@ -244,7 +262,8 @@ mod tests {
         create_temp_file(temp_dir.path(), "package-lock.json", "{}");
         create_temp_file(temp_dir.path(), "pnpm-lock.yaml", "");
 
-        assert_eq!(detect_package_manager(&dir_path), "pnpm");
+        let files = get_directory_files(&dir_path);
+        assert_eq!(detect_package_manager(&files), "pnpm");
     }
 
     #[test]
@@ -253,7 +272,7 @@ mod tests {
         let dir_path = temp_dir.path().to_path_buf();
         create_temp_file(temp_dir.path(), "astro.config.mjs", "");
 
-        assert_eq!(detect_framework(&dir_path), "astro");
+        assert_eq!(detect_framework_from_path(&dir_path), "astro");
     }
 
     #[test]
@@ -262,7 +281,7 @@ mod tests {
         let dir_path = temp_dir.path().to_path_buf();
         create_temp_file(temp_dir.path(), "next.config.js", "");
 
-        assert_eq!(detect_framework(&dir_path), "nextjs");
+        assert_eq!(detect_framework_from_path(&dir_path), "nextjs");
     }
 
     #[test]
@@ -271,7 +290,7 @@ mod tests {
         let dir_path = temp_dir.path().to_path_buf();
         create_temp_file(temp_dir.path(), "vite.config.ts", "");
 
-        assert_eq!(detect_framework(&dir_path), "vite");
+        assert_eq!(detect_framework_from_path(&dir_path), "vite");
     }
 
     #[test]
@@ -286,7 +305,7 @@ mod tests {
             r#"{"dependencies": {"react-scripts": "^5.0.0"}}"#,
         );
 
-        assert_eq!(detect_framework(&dir_path), "react");
+        assert_eq!(detect_framework_from_path(&dir_path), "react");
     }
 
     #[test]
@@ -295,7 +314,7 @@ mod tests {
         let dir_path = temp_dir.path().to_path_buf();
         create_temp_file(temp_dir.path(), "svelte.config.js", "");
 
-        assert_eq!(detect_framework(&dir_path), "sveltekit");
+        assert_eq!(detect_framework_from_path(&dir_path), "sveltekit");
     }
 
     #[test]
@@ -304,7 +323,7 @@ mod tests {
         let dir_path = temp_dir.path().to_path_buf();
         create_temp_file(temp_dir.path(), "nuxt.config.ts", "");
 
-        assert_eq!(detect_framework(&dir_path), "nuxt");
+        assert_eq!(detect_framework_from_path(&dir_path), "nuxt");
     }
 
     #[test]
@@ -313,7 +332,7 @@ mod tests {
         let dir_path = temp_dir.path().to_path_buf();
 
         // No framework files, should default to "node"
-        assert_eq!(detect_framework(&dir_path), "node");
+        assert_eq!(detect_framework_from_path(&dir_path), "node");
     }
 
     #[test]
@@ -324,7 +343,7 @@ mod tests {
         create_temp_file(temp_dir.path(), "astro.config.mjs", "");
         create_temp_file(temp_dir.path(), "next.config.js", "");
 
-        assert_eq!(detect_framework(&dir_path), "astro");
+        assert_eq!(detect_framework_from_path(&dir_path), "astro");
     }
 
     #[test]

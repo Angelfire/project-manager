@@ -54,7 +54,6 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
     let current_pid = std::process::id();
     
     // Get the parent process ID to avoid killing our parent (Tauri)
-    // Note: parent_id() may not be available in all Rust versions, so we'll use a safer approach
     let parent_pid = std::os::unix::process::parent_id();
     
     // Kill all found processes (children first, then parent)
@@ -289,27 +288,83 @@ mod tests {
     #[test]
     fn test_kill_process_tree_safety_checks() {
         // Test that we don't kill our own process
+        // The function should detect that we're trying to kill ourselves and skip it
         let current_pid = std::process::id();
+        
+        // Verify the process exists (should pass)
+        let ps_check = StdCommand::new("ps")
+            .args(&["-p", &current_pid.to_string()])
+            .output()
+            .expect("Failed to check if current process exists");
+        assert!(ps_check.status.success(), "Current process should exist");
+        
+        // Call kill_process_tree on ourselves
+        // The function should skip killing the current_pid when it finds it in the process tree
         let result = kill_process_tree(current_pid);
-        // This should either succeed (if the process check fails) or return an error
-        // But importantly, it should NOT kill the current process
-        // The function should detect that it's trying to kill itself and skip it
-        // Since we skip killing ourselves, the function might succeed or fail depending on implementation
-        // The key is that the process should still be alive after this call
+        
+        // The function should either:
+        // 1. Return Ok(()) if it successfully skipped all processes (including ourselves)
+        // 2. Return an error if it couldn't verify the process (unlikely for current PID)
+        // But importantly, it should NOT have killed the current process
+        // We verify this by checking the process still exists and has the same PID
         assert!(std::process::id() == current_pid, "Current process should still be alive");
+        
+        // Verify the process still exists after the call
+        let ps_check_after = StdCommand::new("ps")
+            .args(&["-p", &current_pid.to_string()])
+            .output()
+            .expect("Failed to check if current process still exists");
+        assert!(ps_check_after.status.success(), "Current process should still exist after kill attempt");
+        
+        // The result doesn't matter as much as the fact that we're still alive
+        // But we log it for debugging
+        if let Err(e) = result {
+            // It's okay if it returns an error, as long as we didn't kill ourselves
+            eprintln!("kill_process_tree returned error (expected): {}", e);
+        }
     }
 
     #[test]
     fn test_kill_process_tree_parent_safety() {
         // Test that we don't kill the parent process (Tauri)
+        // The function should detect that we're trying to kill our parent and skip it
         let parent_pid = std::os::unix::process::parent_id();
+        
+        // Verify the parent process exists (should pass)
+        let ps_check = StdCommand::new("ps")
+            .args(&["-p", &parent_pid.to_string()])
+            .output()
+            .expect("Failed to check if parent process exists");
+        assert!(ps_check.status.success(), "Parent process should exist");
+        
+        // Call kill_process_tree on our parent
+        // The function should skip killing the parent_pid when it finds it in the process tree
         let result = kill_process_tree(parent_pid);
-        // This should either succeed (if the process check fails) or return an error
-        // But importantly, it should NOT kill the parent process
-        // The function should detect that it's trying to kill the parent and skip it
-        // Since we skip killing the parent, the function might succeed or fail depending on implementation
-        // The key is that the parent process should still be alive after this call
-        // We verify this by checking that our parent PID hasn't changed
-        assert!(std::os::unix::process::parent_id() == parent_pid, "Parent process should still be alive");
+        
+        // The function should either:
+        // 1. Return Ok(()) if it successfully skipped all processes (including parent)
+        // 2. Return an error if it couldn't verify the process
+        // But importantly, it should NOT have killed the parent process
+        // We verify this by checking the parent PID hasn't changed
+        let new_parent_pid = std::os::unix::process::parent_id();
+        assert_eq!(
+            new_parent_pid,
+            parent_pid,
+            "Parent process should still be alive and unchanged"
+        );
+        
+        // Verify the parent process still exists after the call
+        let ps_check_after = StdCommand::new("ps")
+            .args(&["-p", &parent_pid.to_string()])
+            .output()
+            .expect("Failed to check if parent process still exists");
+        assert!(ps_check_after.status.success(), "Parent process should still exist after kill attempt");
+        
+        // The result doesn't matter as much as the fact that the parent is still alive
+        // But we log it for debugging
+        if let Err(e) = result {
+            // It's okay if it returns an error, as long as we didn't kill the parent
+            eprintln!("kill_process_tree returned error (expected): {}", e);
+        }
     }
 }
