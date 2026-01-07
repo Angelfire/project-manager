@@ -134,6 +134,95 @@ pub fn validate_pid(pid: u32) -> Result<u32, AppError> {
     Ok(pid)
 }
 
+/// Whitelist of allowed commands to prevent command injection
+/// Only package managers and runtime executables are allowed
+const ALLOWED_COMMANDS: &[&str] = &[
+    "npm", "pnpm", "yarn", "bun", "deno",
+];
+
+/// Validates that a command is in the whitelist of allowed commands
+/// 
+/// This prevents command injection by only allowing specific, safe commands.
+/// Commands must match exactly (case-sensitive) to prevent bypass attempts.
+pub fn validate_command(command: &str) -> Result<(), AppError> {
+    if command.is_empty() {
+        return Err(AppError::CommandError(
+            "Command cannot be empty".to_string(),
+        ));
+    }
+
+    // Check for path separators (prevents path-based command injection like "/bin/sh" or "../evil")
+    if command.contains('/') || command.contains('\\') {
+        return Err(AppError::CommandError(
+            format!("Invalid command: '{}' contains path separators. Only command names are allowed.", command)
+        ));
+    }
+
+    // Check for shell metacharacters that could be used for injection
+    // These characters could allow command chaining or redirection
+    let dangerous_chars = [';', '&', '|', '`', '$', '(', ')', '<', '>', '\n', '\r'];
+    if command.chars().any(|c| dangerous_chars.contains(&c)) {
+        return Err(AppError::CommandError(
+            format!("Invalid command: '{}' contains dangerous characters", command)
+        ));
+    }
+
+    // Validate against whitelist
+    if !ALLOWED_COMMANDS.contains(&command) {
+        return Err(AppError::CommandError(
+            format!("Invalid command: '{}' is not in the allowed list. Allowed commands: {}", 
+                command, 
+                ALLOWED_COMMANDS.join(", "))
+        ));
+    }
+
+    Ok(())
+}
+
+/// Validates command arguments to prevent injection attacks
+/// 
+/// Arguments are checked for dangerous shell metacharacters that could allow
+/// command injection when passed through a shell interpreter.
+pub fn validate_command_args(args: &[String]) -> Result<(), AppError> {
+    // Limit number of arguments to prevent DoS
+    if args.len() > 100 {
+        return Err(AppError::CommandError(
+            format!("Too many arguments: {} (maximum 100 allowed)", args.len())
+        ));
+    }
+
+    // Characters that could be used for command injection in shell context
+    // Note: We allow some characters that are legitimate in arguments (like '=' for --port=4321)
+    // but block those that could chain commands or redirect I/O
+    let dangerous_chars = [';', '&', '|', '`', '$', '(', ')', '<', '>', '\n', '\r', '\0'];
+    
+    for (index, arg) in args.iter().enumerate() {
+        // Limit individual argument length
+        if arg.len() > 1024 {
+            return Err(AppError::CommandError(
+                format!("Argument {} is too long: {} characters (maximum 1024)", index, arg.len())
+            ));
+        }
+
+        // Check for dangerous characters
+        if let Some(dangerous_char) = arg.chars().find(|c| dangerous_chars.contains(c)) {
+            let char_name = match dangerous_char {
+                '\n' => "newline",
+                '\r' => "carriage return",
+                '\0' => "null byte",
+                c => return Err(AppError::CommandError(
+                    format!("Invalid argument {}: contains dangerous character '{}'", index, c)
+                )),
+            };
+            return Err(AppError::CommandError(
+                format!("Invalid argument {}: contains dangerous character '{}'", index, char_name)
+            ));
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -291,5 +380,86 @@ mod tests {
         assert!(matches!(err, AppError::CommandError(_)));
         assert!(err.to_string().contains("not a directory"));
         // `temp_file` is automatically cleaned up when it is dropped.
+    }
+
+    #[test]
+    fn test_validate_command_rejects_empty() {
+        assert!(validate_command("").is_err());
+        let err = validate_command("").unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("cannot be empty"));
+    }
+
+    #[test]
+    fn test_validate_command_rejects_path_separators() {
+        assert!(validate_command("/bin/sh").is_err());
+        assert!(validate_command("../evil").is_err());
+        assert!(validate_command("command\\path").is_err());
+    }
+
+    #[test]
+    fn test_validate_command_rejects_dangerous_chars() {
+        assert!(validate_command("cmd;rm").is_err());
+        assert!(validate_command("cmd&evil").is_err());
+        assert!(validate_command("cmd|hack").is_err());
+        assert!(validate_command("cmd`backtick`").is_err());
+        assert!(validate_command("cmd$var").is_err());
+    }
+
+    #[test]
+    fn test_validate_command_rejects_not_in_whitelist() {
+        assert!(validate_command("rm").is_err());
+        assert!(validate_command("sh").is_err());
+        assert!(validate_command("cat").is_err());
+        let err = validate_command("rm").unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("not in the allowed list"));
+    }
+
+    #[test]
+    fn test_validate_command_accepts_whitelisted() {
+        assert!(validate_command("npm").is_ok());
+        assert!(validate_command("pnpm").is_ok());
+        assert!(validate_command("yarn").is_ok());
+        assert!(validate_command("bun").is_ok());
+        assert!(validate_command("deno").is_ok());
+    }
+
+    #[test]
+    fn test_validate_command_args_rejects_too_many() {
+        let many_args: Vec<String> = (0..101).map(|i| format!("arg{}", i)).collect();
+        assert!(validate_command_args(&many_args).is_err());
+        let err = validate_command_args(&many_args).unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("Too many arguments"));
+    }
+
+    #[test]
+    fn test_validate_command_args_rejects_too_long() {
+        let long_arg = "a".repeat(1025);
+        assert!(validate_command_args(&[long_arg]).is_err());
+        let err = validate_command_args(&[long_arg]).unwrap_err();
+        assert!(matches!(err, AppError::CommandError(_)));
+        assert!(err.to_string().contains("too long"));
+    }
+
+    #[test]
+    fn test_validate_command_args_rejects_dangerous_chars() {
+        assert!(validate_command_args(&["arg;rm".to_string()]).is_err());
+        assert!(validate_command_args(&["arg&evil".to_string()]).is_err());
+        assert!(validate_command_args(&["arg|hack".to_string()]).is_err());
+        assert!(validate_command_args(&["arg`backtick`".to_string()]).is_err());
+        assert!(validate_command_args(&["arg$var".to_string()]).is_err());
+        assert!(validate_command_args(&["arg\nnewline".to_string()]).is_err());
+        assert!(validate_command_args(&["arg\0null".to_string()]).is_err());
+    }
+
+    #[test]
+    fn test_validate_command_args_accepts_safe_args() {
+        assert!(validate_command_args(&[]).is_ok());
+        assert!(validate_command_args(&["dev".to_string()]).is_ok());
+        assert!(validate_command_args(&["run".to_string(), "dev".to_string()]).is_ok());
+        assert!(validate_command_args(&["--port".to_string(), "4321".to_string()]).is_ok());
+        assert!(validate_command_args(&["--port=4321".to_string()]).is_ok());
     }
 }

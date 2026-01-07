@@ -1,3 +1,5 @@
+import { tauriApi } from "@/api/tauri";
+
 /**
  * Validates and sanitizes a search term.
  * Removes dangerous characters and limits length to prevent DoS attacks.
@@ -110,9 +112,6 @@ export async function validateDirectoryPath(
   if (typeof path !== "string") {
     throw new Error("Invalid path format");
   }
-
-  // Import dynamically to avoid issues in test environment
-  const { tauriApi } = await import("@/api/tauri");
 
   // Call backend to validate that path exists and is a directory
   await tauriApi.projects.validateDirectoryPath(path);

@@ -2,7 +2,9 @@
 
 A desktop application built with Tauri, React, and TypeScript to manage and run Node.js, Deno, and Bun projects from a single place.
 
-<img width="1512" height="1012" alt="Screenshot 2025-12-28 at 15 12 35" src="https://github.com/user-attachments/assets/a91e5d32-f716-484e-9849-7f93ad15b915" />
+<img width="1512" height="1041" alt="RunStack" src="https://github.com/user-attachments/assets/340c49d8-cdc8-46c9-9a6a-84f673ee4c1c" />
+
+<img width="1512" height="1041" alt="RunStack logs" src="https://github.com/user-attachments/assets/25d47f79-6e49-48a0-a085-51977be8fef2" />
 
 ## Features
 

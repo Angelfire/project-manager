@@ -5,7 +5,11 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 import "@/index.css";
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+const root = ReactDOM.createRoot(
+  document.getElementById("root") as HTMLElement
+);
+
+root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <App />
