@@ -3,8 +3,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { Project } from "@/types";
 import { toastError, toastWarning } from "@/utils/toast";
 import { tauriApi } from "@/api/tauri";
-
-export { getDefaultPortForFramework } from "@/utils/runtime";
+import { getDefaultPortForFramework } from "@/utils/runtime";
 
 /**
  * Scans a directory for projects and returns a list of detected projects.
@@ -162,8 +161,10 @@ export const openProjectInBrowser = async (project: Project): Promise<void> => {
 
   // If no port, try to use the default port for the framework
   const defaultPort = getDefaultPortForFramework(project);
+
   if (defaultPort) {
     await openInBrowser(defaultPort);
+
     return;
   }
 

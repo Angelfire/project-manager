@@ -5,8 +5,8 @@ import {
   scanProjects,
   detectPort,
   killProcessByPort,
-  getDefaultPortForFramework,
 } from "@/services/projectService";
+import { getDefaultPortForFramework } from "@/utils/runtime";
 import { toastError } from "@/utils/toast";
 import { tauriApi } from "@/api/tauri";
 import { validateDirectoryPath } from "@/utils/validation";
