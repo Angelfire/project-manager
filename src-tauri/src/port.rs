@@ -47,24 +47,34 @@ fn detect_port_from_package_json(path: &PathBuf) -> Option<u16> {
         return None;
     }
 
-    if let Ok(content) = fs::read_to_string(&package_json_path) {
-        // Parse JSON once and reuse
-        if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&content) {
-            // Search in scripts
-            if let Some(scripts) = json_value.get("scripts").and_then(|s| s.as_object()) {
-                // Search in "dev" script first (most common)
-                if let Some(dev_script) = scripts.get("dev").and_then(|s| s.as_str()) {
-                    if let Some(port) = extract_port_from_string(dev_script) {
-                        return Some(port);
-                    }
-                }
-                // If not in dev, search in start
-                if let Some(start_script) = scripts.get("start").and_then(|s| s.as_str()) {
-                    if let Some(port) = extract_port_from_string(start_script) {
-                        return Some(port);
-                    }
-                }
-            }
+    let content = match fs::read_to_string(&package_json_path) {
+        Ok(content) => content,
+        Err(_) => return None,
+    };
+    
+    // Parse JSON once and reuse
+    let json_value = match serde_json::from_str::<serde_json::Value>(&content) {
+        Ok(value) => value,
+        Err(_) => return None,
+    };
+    
+    // Search in scripts
+    let scripts = match json_value.get("scripts").and_then(|s| s.as_object()) {
+        Some(scripts) => scripts,
+        None => return None,
+    };
+    
+    // Search in "dev" script first (most common)
+    if let Some(dev_script) = scripts.get("dev").and_then(|s| s.as_str()) {
+        if let Some(port) = extract_port_from_string(dev_script) {
+            return Some(port);
+        }
+    }
+    
+    // If not in dev, search in start
+    if let Some(start_script) = scripts.get("start").and_then(|s| s.as_str()) {
+        if let Some(port) = extract_port_from_string(start_script) {
+            return Some(port);
         }
     }
 
@@ -80,13 +90,14 @@ fn detect_astro_port(path: &PathBuf) -> Option<u16> {
     ];
 
     for config_path in config_files {
-        if config_path.exists() {
-            if let Ok(content) = fs::read_to_string(&config_path) {
-                // Search for server: { port: 4321 } or port: 4321
-                if let Some(port) = extract_port_from_config_file(&content, "port") {
-                    return Some(port);
-                }
-            }
+        let content = match (config_path.exists(), fs::read_to_string(&config_path)) {
+            (true, Ok(content)) => content,
+            _ => continue,
+        };
+        
+        // Search for server: { port: 4321 } or port: 4321
+        if let Some(port) = extract_port_from_config_file(&content, "port") {
+            return Some(port);
         }
     }
 
@@ -165,16 +176,23 @@ fn extract_port_from_config_file(content: &str, key: &str) -> Option<u16> {
             // Check the next few lines for a port declaration (multi-line format)
             let search_range = std::cmp::min(i + 4, lines.len());
             for j in (i + 1)..search_range {
-                if let Some(next_line) = lines.get(j) {
-                    // Skip commented lines
-                    let next_trimmed = next_line.trim();
-                    if next_trimmed.starts_with("//") || next_trimmed.starts_with("#") || next_trimmed.starts_with("/*") || next_trimmed.starts_with("*") {
-                        continue;
-                    }
-                    if next_line.contains(key) && next_line.contains(':') {
-                        if let Some(port) = extract_port_from_line(next_line, key) {
-                            return Some(port);
-                        }
+                let next_line = match lines.get(j) {
+                    Some(line) => line,
+                    None => continue,
+                };
+                
+                // Skip commented lines
+                let next_trimmed = next_line.trim();
+                if next_trimmed.starts_with("//") 
+                    || next_trimmed.starts_with("#") 
+                    || next_trimmed.starts_with("/*") 
+                    || next_trimmed.starts_with("*") {
+                    continue;
+                }
+                
+                if next_line.contains(key) && next_line.contains(':') {
+                    if let Some(port) = extract_port_from_line(next_line, key) {
+                        return Some(port);
                     }
                 }
             }
@@ -186,34 +204,32 @@ fn extract_port_from_config_file(content: &str, key: &str) -> Option<u16> {
 fn extract_port_from_line(line: &str, key: &str) -> Option<u16> {
     // Find the position of "port:" in the line (must be followed by colon)
     let search_pattern = format!("{}:", key);
-    if let Some(key_pos) = line.find(&search_pattern) {
-        let value_start = key_pos + search_pattern.len();
-        if value_start < line.len() {
-            // Extract everything after "port:"
-            let value_part = &line[value_start..];
-            // Split by whitespace, comma, or closing brace to get the number
-            // Filter out empty strings and find the first non-empty part
-            let port_str = value_part
-                .split(|c: char| c.is_whitespace() || c == ',' || c == '}' || c == ')' || c == ']')
-                .find(|s| !s.is_empty())
-                .unwrap_or("")
-                .trim()
-                .trim_matches('"')
-                .trim_matches('\'')
-                .trim_matches('{')
-                .trim_matches('[')
-                .trim_matches('(');
-            
-            if !port_str.is_empty() {
-                if let Ok(port) = port_str.parse::<u16>() {
-                    if port > 0 {
-                        return Some(port);
-                    }
-                }
-            }
-        }
+    let key_pos = line.find(&search_pattern)?;
+    let value_start = key_pos + search_pattern.len();
+    
+    if value_start >= line.len() {
+        return None;
     }
-    None
+    
+    // Extract everything after "port:"
+    let value_part = &line[value_start..];
+    // Split by whitespace, comma, or closing brace to get the number
+    // Filter out empty strings and find the first non-empty part
+    let port_str = value_part
+        .split(|c: char| c.is_whitespace() || c == ',' || c == '}' || c == ')' || c == ']')
+        .find(|s| !s.is_empty())
+        .unwrap_or("")
+        .trim()
+        .trim_matches('"')
+        .trim_matches('\'')
+        .trim_matches('{')
+        .trim_matches('[')
+        .trim_matches('(');
+    
+    port_str
+        .parse::<u16>()
+        .ok()
+        .filter(|&port| port > 0)
 }
 
 pub fn detect_port_deno(_path: &PathBuf) -> Option<u16> {
@@ -233,47 +249,28 @@ fn extract_port_from_string(s: &str) -> Option<u16> {
             }
         }
 
-        // Search for PORT=3000 or PORT:3000
-        if word.starts_with("PORT=") {
-            if let Some(port_str) = word.strip_prefix("PORT=") {
-                if let Ok(port) = port_str.parse::<u16>() {
-                    return Some(port);
-                }
-            }
-        }
-
-        // Search for --port=3000 or -p=3000
-        if word.starts_with("--port=") {
-            if let Some(port_str) = word.strip_prefix("--port=") {
-                if let Ok(port) = port_str.parse::<u16>() {
-                    return Some(port);
-                }
-            }
-        }
-
-        // Search for -p=3000 (short form)
-        if word.starts_with("-p=") {
-            if let Some(port_str) = word.strip_prefix("-p=") {
-                if let Ok(port) = port_str.parse::<u16>() {
-                    return Some(port);
-                }
-            }
+        // Search for PORT=3000, --port=3000, or -p=3000
+        let port = word
+            .strip_prefix("PORT=")
+            .or_else(|| word.strip_prefix("--port="))
+            .or_else(|| word.strip_prefix("-p="))
+            .and_then(|port_str| port_str.parse::<u16>().ok());
+        
+        if let Some(port) = port {
+            return Some(port);
         }
 
         // Search for :3000 or localhost:3000 (only if it looks like a valid port)
         if word.contains(':') {
-            let parts: Vec<&str> = word.split(':').collect();
-            if parts.len() >= 2 {
-                if let Some(port_str) = parts.last() {
-                    // Filter only valid numbers (not full URLs)
-                    if port_str.len() <= 5 && port_str.chars().all(|c| c.is_ascii_digit()) {
-                        if let Ok(port) = port_str.parse::<u16>() {
-                            if port > 0 {
-                                return Some(port);
-                            }
-                        }
-                    }
-                }
+            let port = word
+                .split(':')
+                .last()
+                .filter(|port_str| port_str.len() <= 5 && port_str.chars().all(|c| c.is_ascii_digit()))
+                .and_then(|port_str| port_str.parse::<u16>().ok())
+                .filter(|&port| port > 0);
+            
+            if let Some(port) = port {
+                return Some(port);
             }
         }
     }

@@ -3,6 +3,28 @@ use std::process::{Command as StdCommand, Stdio};
 use std::env;
 use tauri::{AppHandle, Emitter};
 
+/// Escapes a string for safe use in single-quoted shell context
+/// 
+/// This function properly escapes single quotes by ending the quoted string,
+/// adding an escaped single quote, and starting a new quoted string.
+/// This is the POSIX-compliant way to include single quotes in single-quoted strings.
+/// 
+/// Example: "it's" becomes "'it'\"'\"'s'"
+fn escape_shell_single_quote(s: &str) -> String {
+    // In single quotes, the only character that needs escaping is the single quote itself
+    // The pattern is: end quote, add escaped quote (\'), start new quote
+    s.replace('\'', "'\"'\"'")
+}
+
+/// Escapes and quotes a string for safe use in shell command
+/// 
+/// Wraps the string in single quotes after escaping any single quotes within it.
+/// Single quotes in shell prevent all interpretation of special characters,
+/// making this safer than double quotes or unquoted strings.
+fn shell_quote(s: &str) -> String {
+    format!("'{}'", escape_shell_single_quote(s))
+}
+
 /// Detects the user's preferred shell and returns a list of shells to try
 /// Priority: 1) User's $SHELL, 2) Platform defaults, 3) Common alternatives
 fn get_shells_to_try() -> Vec<(String, String)> {
@@ -96,6 +118,14 @@ pub async fn spawn_process_with_logs(
     cwd: String,
     project_path: String,
 ) -> Result<u32, String> {
+    // SECURITY: Validate command and arguments before processing
+    // This prevents command injection by ensuring only whitelisted commands
+    // and safe arguments are used.
+    crate::validation::validate_command(&command)
+        .map_err(|e| format!("Command validation failed: {}", e))?;
+    crate::validation::validate_command_args(&args)
+        .map_err(|e| format!("Argument validation failed: {}", e))?;
+    
     let validated_path = crate::validation::validate_directory_path(&cwd)
         .map_err(|e| e.to_string())?;
     
@@ -103,34 +133,42 @@ pub async fn spawn_process_with_logs(
     let validated_path_str = validated_path.to_string_lossy();
     
     // Build the command string to execute through a login shell
-    // This ensures all environment variables (FNM, NVM, Volta, asdf, etc.) are available
-    // Escape and quote each argument to handle spaces and special characters safely
+    // SECURITY NOTE: We use a shell because we need to source shell config files
+    // to load environment variables from version managers (FNM, NVM, Volta, asdf).
+    // This is a necessary trade-off, but we mitigate risks by:
+    // 1. Validating commands against a whitelist
+    // 2. Validating arguments for dangerous characters
+    // 3. Properly escaping all user-controlled data with single quotes
+    // 4. Using single quotes which prevent shell interpretation of special characters
+    
+    // Escape and quote each argument using robust escaping
     let args_str: String = args
         .iter()
-        .map(|arg| {
-            // Escape single quotes in arguments and wrap in single quotes
-            let escaped = arg.replace('\'', "'\"'\"'");
-            format!("'{}'", escaped)
-        })
+        .map(|arg| shell_quote(arg))
         .collect::<Vec<_>>()
         .join(" ");
     
     // Get list of shells to try (user's shell first, then fallbacks)
     let shells = get_shells_to_try();
     
+    // Track the preferred shell (first in list) to detect fallback usage
+    let preferred_shell = shells.first().map(|(path, _)| path.clone());
+    
     // Build the command to execute (cd to directory and run the command)
-    // Escape single quotes in path and command, then wrap in single quotes for shell safety
-    // This prevents issues with paths/commands containing spaces or special characters
-    let escaped_path = validated_path_str.replace('\'', "'\"'\"'");
-    let escaped_command = command.replace('\'', "'\"'\"'");
-    let command_part = format!("cd '{}' && '{}' {}", escaped_path, escaped_command, args_str);
+    // SECURITY: All user-controlled data (path, command, args) is properly quoted
+    // Single quotes prevent shell interpretation, and we've validated inputs above
+    let quoted_path = shell_quote(&validated_path_str);
+    let quoted_command = shell_quote(&command);
+    let command_part = format!("cd {} && {} {}", quoted_path, quoted_command, args_str);
     
     // Try each shell until one works
     // We source shell config files to ensure all version managers (FNM, NVM, Volta, asdf) are loaded
     let mut child = None;
     let mut last_error = None;
+    let mut used_shell = None;
+    let mut preferred_shell_failed = false;
     
-    for (shell_path, source_command) in shells.iter() {
+    for (index, (shell_path, source_command)) in shells.iter().enumerate() {
         // Construct full shell command: source config + execute command
         let shell_command = format!("{}; {}", source_command, command_part);
         
@@ -157,10 +195,19 @@ pub async fn spawn_process_with_logs(
         {
             Ok(c) => {
                 child = Some(c);
+                used_shell = Some(shell_path.clone());
+                // If we're not using the first shell (preferred), mark that preferred failed
+                if index > 0 {
+                    preferred_shell_failed = true;
+                }
                 break;
             }
             Err(e) => {
                 last_error = Some(format!("Failed to spawn with {}: {}", shell_path, e));
+                // If this is the preferred shell, mark it as failed
+                if index == 0 {
+                    preferred_shell_failed = true;
+                }
                 continue;
             }
         }
@@ -169,6 +216,40 @@ pub async fn spawn_process_with_logs(
     let mut child = child.ok_or_else(|| {
         last_error.unwrap_or_else(|| format!("Failed to spawn process '{}': No suitable shell found", command))
     })?;
+    
+    // Notify user if preferred shell failed and a fallback was used
+    if preferred_shell_failed {
+        let preferred = preferred_shell.as_deref().unwrap_or("unknown");
+        let used = used_shell.as_deref().unwrap_or("unknown");
+        let warning_message = format!(
+            "Warning: Preferred shell '{}' failed to spawn. Using fallback shell '{}'. This may result in different PATH settings, aliases, or environment variables.",
+            preferred, used
+        );
+        
+        // Emit warning event to frontend
+        let _ = app.emit(
+            "process-shell-fallback",
+            serde_json::json!({
+                "projectPath": project_path.clone(),
+                "preferredShell": preferred,
+                "usedShell": used,
+                "message": warning_message
+            }),
+        );
+        
+        // Also log to stderr so it appears in the project logs
+        let app_clone = app.clone();
+        let project_path_clone = project_path.clone();
+        std::thread::spawn(move || {
+            let _ = app_clone.emit(
+                "process-stderr",
+                serde_json::json!({
+                    "projectPath": project_path_clone,
+                    "content": format!("[WARNING] {}", warning_message)
+                }),
+            );
+        });
+    }
 
     let pid = child.id();
 

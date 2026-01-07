@@ -53,6 +53,7 @@ export const useProjects = () => {
     let unlistenStderr: (() => void) | null = null;
     let unlistenExit: (() => void) | null = null;
     let unlistenExitError: (() => void) | null = null;
+    let unlistenShellFallback: (() => void) | null = null;
 
     const setupEventListeners = async () => {
       unlistenStdout = await listen<{
@@ -119,6 +120,25 @@ export const useProjects = () => {
           return newMap;
         });
       });
+
+      unlistenShellFallback = await listen<{
+        projectPath: string;
+        preferredShell: string;
+        usedShell: string;
+        message: string;
+      }>("process-shell-fallback", (event) => {
+        // Log the warning to the project logs
+        addLog(
+          event.payload.projectPath,
+          "stderr",
+          event.payload.message + "\n"
+        );
+        // Show a toast notification to alert the user
+        toastError(
+          `Shell fallback used: ${event.payload.preferredShell} → ${event.payload.usedShell}`,
+          "Your preferred shell failed to spawn. Commands may run with different environment settings."
+        );
+      });
     };
 
     const setupPromise = setupEventListeners();
@@ -130,6 +150,7 @@ export const useProjects = () => {
           if (unlistenStderr) unlistenStderr();
           if (unlistenExit) unlistenExit();
           if (unlistenExitError) unlistenExitError();
+          if (unlistenShellFallback) unlistenShellFallback();
         })
         .catch(() => {
           // Optionally handle or log setup errors; ignore here to avoid unmount-time noise
@@ -194,8 +215,56 @@ export const useProjects = () => {
 
         // For Astro projects, pass --port argument to ensure it uses the expected port
         // This prevents Astro from trying multiple ports when the default is available
-        // Astro CLI accepts --port flag: astro dev --port 4321
-        if (project.framework === "astro" && expectedPort) {
+        //
+        // SECURITY NOTE: We only apply --port if the dev script is "simple" (just "astro dev"
+        // or basic variations). Complex scripts (using concurrently, &&, |, etc.) may not
+        // properly forward the --port flag to the Astro CLI, or could cause errors.
+        //
+        // Examples of scripts where --port should NOT be applied:
+        // - "concurrently \"astro dev\" \"other-command\""
+        // - "astro dev && other-command"
+        // - "node scripts/dev.js"
+        // - Any script with shell operators or complex logic
+        const canSafelyApplyPortFlag = (): boolean => {
+          if (project.framework !== "astro" || !expectedPort) {
+            return false;
+          }
+
+          // If scripts are not available, be conservative and don't apply the flag
+          if (!project.scripts || !project.scripts.dev) {
+            return false;
+          }
+
+          const devScript = project.scripts.dev.trim();
+
+          // Check for complex script patterns that could break with --port
+          const complexPatterns = [
+            /&&/, // Command chaining
+            /\|/, // Pipe
+            /concurrently/i, // Concurrently tool
+            /npm-run-all/i, // npm-run-all tool
+            /parallel/i, // Parallel execution
+            /;/, // Sequential commands
+            /\$\(/, // Command substitution
+            /`/, // Backtick substitution
+            /node\s+.*\.js/, // Custom node scripts
+            /tsx\s+.*\.ts/, // Custom tsx scripts
+            /ts-node/, // ts-node scripts
+          ];
+
+          // If script contains complex patterns, don't apply --port
+          if (complexPatterns.some((pattern) => pattern.test(devScript))) {
+            return false;
+          }
+
+          // Only apply if script is a simple "astro dev" or basic variation
+          // Allow: "astro dev", "astro dev --host", "astro dev --port 3000", etc.
+          // But only if it starts with "astro dev" (with optional flags before)
+          const astroDevPattern = /^\s*(astro\s+dev|npx\s+astro\s+dev)/i;
+          return astroDevPattern.test(devScript);
+        };
+
+        if (canSafelyApplyPortFlag() && expectedPort) {
           // For npm, use -- to pass arguments to the script: npm run dev -- --port 4321
           // For pnpm/yarn, also use -- to pass arguments: pnpm dev -- --port 4321
           // The -- separator ensures arguments are passed to the underlying script/command

@@ -19,14 +19,17 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
     }
 
     // Unix (macOS/Linux): kill the process and all its children
-    // First, find all child processes recursively (up to 5 levels to catch shell children)
+    // First, find all child processes recursively
+    // Process tree structure: shell -> package manager -> dev server -> watchers/compilers
+    // We search up to 4 levels to cover: shell (0) -> pkg manager (1) -> dev server (2) -> children (3)
+    // The 4th level covers edge cases where dev servers spawn additional processes
     let mut all_pids = vec![pid];
     let mut current_level = vec![pid];
     let mut seen_pids = std::collections::HashSet::new();
     seen_pids.insert(pid);
 
-    // Search for child processes up to 5 levels (shell -> package manager -> dev server)
-    for _level in 0..5 {
+    // Search for child processes up to 4 levels
+    for _level in 0..4 {
         let mut next_level = Vec::new();
         for parent_pid in &current_level {
             let pgrep_output = StdCommand::new("pgrep")
@@ -53,14 +56,41 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
     // Get the current process PID to avoid killing ourselves
     let current_pid = std::process::id();
     
-    // Get the parent process ID to avoid killing our parent (Tauri)
-    let parent_pid = std::os::unix::process::parent_id();
+    // Get all ancestor PIDs (parent, grandparent, etc.) to avoid killing any Tauri process
+    // This is critical because the process tree might include ancestor processes
+    let mut ancestor_pids = std::collections::HashSet::new();
+    let mut current_ancestor = std::os::unix::process::parent_id();
+    
+    // Traverse up the process tree to collect all ancestors (up to init/pid 1)
+    // This ensures we don't kill any process in Tauri's process tree
+    while current_ancestor > 1 {
+        ancestor_pids.insert(current_ancestor);
+        
+        // Get the parent of the current ancestor
+        let ppid_output = StdCommand::new("ps")
+            .args(&["-o", "ppid=", "-p", &current_ancestor.to_string()])
+            .output()
+            .ok()
+            .and_then(|output| String::from_utf8(output.stdout).ok())
+            .and_then(|ppid_str| ppid_str.trim().parse::<u32>().ok());
+        
+        match ppid_output {
+            Some(ppid) if ppid != current_ancestor && ppid != 0 => {
+                // Valid parent PID, continue traversing
+                current_ancestor = ppid;
+            }
+            _ => {
+                // Invalid parent, same as current, or 0 (init) - stop traversing
+                break;
+            }
+        }
+    }
     
     // Kill all found processes (children first, then parent)
-    // But skip if it's our own process or our parent (Tauri)
+    // But skip if it's our own process or any ancestor (Tauri process tree)
     for process_pid in all_pids.iter().rev() {
-        // Safety check: never kill ourselves or our parent (Tauri)
-        if *process_pid == current_pid || *process_pid == parent_pid {
+        // Safety check: never kill ourselves or any ancestor process (Tauri)
+        if *process_pid == current_pid || ancestor_pids.contains(process_pid) {
             continue;
         }
         
@@ -69,9 +99,9 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
             .output();
         
         // Ignore errors for processes that may have already terminated
+        // Only fail if we couldn't kill the main process (and it's not us)
         if let Ok(output) = kill_output {
             if !output.status.success() && *process_pid == pid {
-                // Only fail if we couldn't kill the main process (and it's not us)
                 return Err(AppError::CommandError(format!("Failed to kill process with PID {}", pid)));
             }
         }
@@ -85,8 +115,8 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
     // Wait a moment to ensure processes are terminated
     std::thread::sleep(std::time::Duration::from_millis(100));
 
-    // Verify that the main process was terminated (only if it's not us or our parent)
-    if pid != current_pid && pid != parent_pid {
+    // Verify that the main process was terminated (only if it's not us or any ancestor)
+    if pid != current_pid && !ancestor_pids.contains(&pid) {
         let verify_output = StdCommand::new("ps")
             .args(&["-p", &pid.to_string()])
             .output()?;
@@ -182,18 +212,20 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
         let lsof_str = String::from_utf8(lsof_output.stdout)?;
         for line in lsof_str.lines().skip(1) {
             let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() >= 9 {
-                let name_part = parts[8];
-                if name_part.contains(':') {
-                    if let Some(port_str) = name_part.split(':').last() {
-                        let port_str = port_str.split(' ').next().unwrap_or(port_str);
-                        if let Ok(port) = port_str.parse::<u16>() {
-                            if port > 0 {
-                                return Ok(Some(port));
-                            }
-                        }
-                    }
-                }
+            if parts.len() < 9 {
+                continue;
+            }
+            
+            let name_part = parts[8];
+            let port = name_part
+                .split(':')
+                .last()
+                .and_then(|port_str| port_str.split(' ').next())
+                .and_then(|port_str| port_str.parse::<u16>().ok())
+                .filter(|&port| port > 0);
+            
+            if let Some(port) = port {
+                return Ok(Some(port));
             }
         }
     }
@@ -229,14 +261,15 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
                         .output()?;
 
                     let ppid_str = String::from_utf8(ppid_output.stdout)?;
-                    if let Ok(ppid) = ppid_str.trim().parse::<u32>() {
-                        if ppid == pid || child_pids_for_check.contains(&ppid) {
-                            return Ok(Some(test_port));
-                        }
-                        current_pid = ppid;
-                    } else {
-                        break;
+                    let ppid = match ppid_str.trim().parse::<u32>() {
+                        Ok(ppid) => ppid,
+                        Err(_) => break,
+                    };
+                    
+                    if ppid == pid || child_pids_for_check.contains(&ppid) {
+                        return Ok(Some(test_port));
                     }
+                    current_pid = ppid;
                 }
             }
         }

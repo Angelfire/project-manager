@@ -59,10 +59,8 @@ export default defineConfig({
           ) {
             return "vendor-react";
           }
-          if (
-            id.includes("node_modules/@tauri-apps") ||
-            id.includes("node_modules/@tauri-apps/plugin")
-          ) {
+          // Tauri core and plugins (all @tauri-apps packages)
+          if (id.includes("node_modules/@tauri-apps")) {
             return "vendor-tauri";
           }
           if (
