@@ -239,8 +239,11 @@ export const useProjects = () => {
 
           // Check for complex script patterns that could break with --port
           const complexPatterns = [
-            /&&/, // Command chaining
-            /\|/, // Pipe
+            /&&/, // Command chaining (logical AND)
+            /(?<!\|)\|(?!\|)/, // Pipe (|) but not logical OR (||)
+            // This pattern uses negative lookbehind and lookahead to distinguish:
+            // - "cmd1 | cmd2" matches (pipe for command chaining)
+            // - "cmd1 || cmd2" does NOT match (logical OR, different use case)
             /concurrently/i, // Concurrently tool
             /npm-run-all/i, // npm-run-all tool
             /parallel/i, // Parallel execution
@@ -264,16 +267,17 @@ export const useProjects = () => {
           return astroDevPattern.test(devScript);
         };
 
-        if (canSafelyApplyPortFlag() && expectedPort) {
+        if (canSafelyApplyPortFlag()) {
           // For npm, use -- to pass arguments to the script: npm run dev -- --port 4321
           // For pnpm/yarn, also use -- to pass arguments: pnpm dev -- --port 4321
           // The -- separator ensures arguments are passed to the underlying script/command
+          // Note: expectedPort is guaranteed to be truthy here because canSafelyApplyPortFlag() validates it
           if (packageManager === "npm") {
-            args = ["run", "dev", "--", "--port", expectedPort.toString()];
+            args = ["run", "dev", "--", "--port", expectedPort!.toString()];
           } else {
             // pnpm/yarn: pnpm dev -- --port 4321 or yarn dev -- --port 4321
             // The -- ensures the port flag reaches the astro command
-            args = ["dev", "--", "--port", expectedPort.toString()];
+            args = ["dev", "--", "--port", expectedPort!.toString()];
           }
         } else {
           args = packageManager === "npm" ? ["run", "dev"] : ["dev"];

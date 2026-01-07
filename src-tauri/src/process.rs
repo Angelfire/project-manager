@@ -115,7 +115,11 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
     // Wait a moment to ensure processes are terminated
     std::thread::sleep(std::time::Duration::from_millis(100));
 
-    // Verify that the main process was terminated (only if it's not us or any ancestor)
+    // Verify that the main process was terminated
+    // IMPORTANT: Only verify if the target PID is not our own process or any ancestor
+    // This check is consistent with the safety check in the kill loop above (line 93)
+    // If pid == current_pid or pid is an ancestor, we already skipped killing it,
+    // so we should also skip verification to maintain consistent behavior
     if pid != current_pid && !ancestor_pids.contains(&pid) {
         let verify_output = StdCommand::new("ps")
             .args(&["-p", &pid.to_string()])
@@ -123,7 +127,8 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
         
         if verify_output.status.success() {
             // Process still exists, try one more time with SIGKILL
-            // But only if it's safe (not us or our parent)
+            // Safety: This is safe because we already verified pid != current_pid 
+            // and pid is not in ancestor_pids above
             let _ = StdCommand::new("kill")
                 .args(&["-9", &pid.to_string()])
                 .output();

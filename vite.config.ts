@@ -52,6 +52,11 @@ export default defineConfig({
       output: {
         // Manual chunk splitting for better caching (function form is more flexible)
         manualChunks: (id) => {
+          // Only split vendor dependencies (node_modules)
+          if (!id.includes("node_modules")) {
+            return;
+          }
+
           // Vendor chunks for better caching
           if (
             id.includes("node_modules/react") ||
@@ -76,6 +81,11 @@ export default defineConfig({
           ) {
             return "vendor-utils";
           }
+
+          // Default: group all other node_modules into a separate chunk
+          // This prevents them from being bundled with application code
+          // and allows better caching of vendor dependencies
+          return "vendor-other";
         },
       },
     },

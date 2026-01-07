@@ -5,14 +5,23 @@ use tauri::{AppHandle, Emitter};
 
 /// Escapes a string for safe use in single-quoted shell context
 /// 
-/// This function properly escapes single quotes by ending the quoted string,
-/// adding an escaped single quote, and starting a new quoted string.
-/// This is the POSIX-compliant way to include single quotes in single-quoted strings.
+/// This function properly escapes single quotes using the POSIX-compliant method:
+/// When a single quote is encountered inside a single-quoted string, we:
+/// 1. End the current quoted string with a single quote: '
+/// 2. Add an escaped single quote in double quotes: "'"
+/// 3. Start a new quoted string with a single quote: '
 /// 
-/// Example: "it's" becomes "'it'\"'\"'s'"
+/// This results in the pattern: '...'\''...' which the shell interprets as:
+/// - A single-quoted string ending at the first '
+/// - An escaped single quote "'" (the ' is literal)
+/// - A new single-quoted string starting at the second '
+/// 
+/// Example: "it's" becomes "it'\"'\"'s" which, when wrapped in quotes, becomes "'it'\"'\"'s'"
+/// In shell: 'it'\''s' is interpreted as the string "it's"
 fn escape_shell_single_quote(s: &str) -> String {
-    // In single quotes, the only character that needs escaping is the single quote itself
-    // The pattern is: end quote, add escaped quote (\'), start new quote
+    // Replace each single quote with: ' (end quote) + "'" (escaped quote) + ' (start quote)
+    // The pattern "'\"'\"'" means: ' + "'" + '
+    // When this is inside a single-quoted string, it correctly escapes the quote
     s.replace('\'', "'\"'\"'")
 }
 
@@ -32,30 +41,35 @@ fn get_shells_to_try() -> Vec<(String, String)> {
     
     // First, try to get the user's shell from $SHELL environment variable
     if let Ok(user_shell) = env::var("SHELL") {
-        // Extract shell name from path (e.g., "/bin/zsh" -> "zsh")
+        // Extract shell name from path (e.g., "/bin/zsh" -> "zsh" or "/opt/homebrew/bin/zsh" -> "zsh")
         if let Some(shell_name) = user_shell.split('/').last() {
             match shell_name {
                 "zsh" => {
-                    shells.push(("/bin/zsh".to_string(), "source ~/.zshrc 2>/dev/null || source ~/.zprofile 2>/dev/null || true".to_string()));
+                    // Use the user's actual zsh path (could be /bin/zsh, /opt/homebrew/bin/zsh, etc.)
+                    shells.push((user_shell.clone(), "source ~/.zshrc 2>/dev/null || source ~/.zprofile 2>/dev/null || true".to_string()));
                 }
                 "bash" => {
-                    shells.push(("/bin/bash".to_string(), "source ~/.bashrc 2>/dev/null || source ~/.bash_profile 2>/dev/null || true".to_string()));
+                    // Use the user's actual bash path (could be /bin/bash, /usr/local/bin/bash, etc.)
+                    shells.push((user_shell.clone(), "source ~/.bashrc 2>/dev/null || source ~/.bash_profile 2>/dev/null || true".to_string()));
                 }
                 "fish" => {
-                    // Use the user's configured fish shell path from $SHELL.
+                    // Use the user's configured fish shell path from $SHELL
                     shells.push((user_shell.clone(), "source ~/.config/fish/config.fish 2>/dev/null || true".to_string()));
                 }
                 "csh" => {
-                    shells.push(("/bin/csh".to_string(), "source ~/.cshrc 2>/dev/null || true".to_string()));
+                    // Use the user's actual csh path
+                    shells.push((user_shell.clone(), "source ~/.cshrc 2>/dev/null || true".to_string()));
                 }
                 "tcsh" => {
-                    shells.push(("/bin/tcsh".to_string(), "source ~/.tcshrc 2>/dev/null || source ~/.cshrc 2>/dev/null || true".to_string()));
+                    // Use the user's actual tcsh path
+                    shells.push((user_shell.clone(), "source ~/.tcshrc 2>/dev/null || source ~/.cshrc 2>/dev/null || true".to_string()));
                 }
                 "ksh" => {
-                    shells.push(("/bin/ksh".to_string(), "source ~/.kshrc 2>/dev/null || source ~/.profile 2>/dev/null || true".to_string()));
+                    // Use the user's actual ksh path
+                    shells.push((user_shell.clone(), "source ~/.kshrc 2>/dev/null || source ~/.profile 2>/dev/null || true".to_string()));
                 }
                 _ => {
-                    // Unknown shell, try to use it as-is
+                    // Unknown shell, try to use it as-is with the user's configured path
                     shells.push((user_shell.clone(), "true".to_string()));
                 }
             }
@@ -339,4 +353,125 @@ pub async fn spawn_process_with_logs(
         .expect("Failed to spawn process wait thread");
 
     Ok(pid)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_escape_shell_single_quote_no_quotes() {
+        // String without single quotes should remain unchanged
+        assert_eq!(escape_shell_single_quote("hello"), "hello");
+        assert_eq!(escape_shell_single_quote("path/to/file"), "path/to/file");
+        assert_eq!(escape_shell_single_quote("npm"), "npm");
+    }
+
+    #[test]
+    fn test_escape_shell_single_quote_single_quote() {
+        // Single quote should be escaped
+        let result = escape_shell_single_quote("it's");
+        assert_eq!(result, "it'\"'\"'s");
+        
+        // Verify the pattern: 'it' + "'" + 's'
+        // This should be: it'\"'\"'s
+        assert!(result.contains("'\"'\"'"), "Should contain escaped quote pattern");
+    }
+
+    #[test]
+    fn test_escape_shell_single_quote_multiple_quotes() {
+        // Multiple single quotes should all be escaped
+        let result = escape_shell_single_quote("don't won't can't");
+        // Each ' becomes '\''
+        assert_eq!(result, "don'\"'\"'t won'\"'\"'t can'\"'\"'t");
+    }
+
+    #[test]
+    fn test_escape_shell_single_quote_only_quotes() {
+        // String with only quotes
+        let result = escape_shell_single_quote("'''");
+        assert_eq!(result, "'\"'\"''\"'\"''\"'\"'");
+    }
+
+    #[test]
+    fn test_escape_shell_single_quote_empty_string() {
+        // Empty string should remain empty
+        assert_eq!(escape_shell_single_quote(""), "");
+    }
+
+    #[test]
+    fn test_escape_shell_single_quote_quote_at_start() {
+        // Quote at the start
+        let result = escape_shell_single_quote("'hello");
+        assert_eq!(result, "'\"'\"'hello");
+    }
+
+    #[test]
+    fn test_escape_shell_single_quote_quote_at_end() {
+        // Quote at the end
+        let result = escape_shell_single_quote("hello'");
+        assert_eq!(result, "hello'\"'\"'");
+    }
+
+    #[test]
+    fn test_shell_quote_no_quotes() {
+        // String without quotes should be wrapped in single quotes
+        assert_eq!(shell_quote("hello"), "'hello'");
+        assert_eq!(shell_quote("path/to/file"), "'path/to/file'");
+    }
+
+    #[test]
+    fn test_shell_quote_with_quotes() {
+        // String with quotes should be escaped and wrapped
+        let result = shell_quote("it's");
+        assert_eq!(result, "'it'\"'\"'s'");
+        
+        // Verify it starts and ends with single quotes
+        assert!(result.starts_with('\''), "Should start with single quote");
+        assert!(result.ends_with('\''), "Should end with single quote");
+    }
+
+    #[test]
+    fn test_shell_quote_complex_path() {
+        // Test with a path that might have special characters
+        let result = shell_quote("/path/to/project's files");
+        assert_eq!(result, "'/path/to/project'\"'\"'s files'");
+    }
+
+    #[test]
+    fn test_shell_quote_empty_string() {
+        // Empty string should be wrapped in quotes
+        assert_eq!(shell_quote(""), "''");
+    }
+
+    #[test]
+    fn test_shell_quote_special_characters() {
+        // Test that special characters (other than single quotes) are preserved
+        // Single quotes prevent shell interpretation, so these should be safe
+        let result = shell_quote("path with spaces & symbols");
+        assert_eq!(result, "'path with spaces & symbols'");
+        
+        // Verify special characters are preserved
+        assert!(result.contains(" "), "Spaces should be preserved");
+        assert!(result.contains("&"), "Ampersand should be preserved");
+    }
+
+    #[test]
+    fn test_shell_quote_unicode() {
+        // Test with unicode characters
+        let result = shell_quote("café");
+        assert_eq!(result, "'café'");
+    }
+
+    #[test]
+    fn test_shell_quote_command_injection_attempt() {
+        // Test that command injection attempts are neutralized
+        // Single quotes prevent shell interpretation
+        let result = shell_quote("; rm -rf /");
+        assert_eq!(result, "'; rm -rf /'");
+        
+        // The semicolon should be inside quotes, making it literal
+        assert!(result.starts_with('\''), "Should start with quote");
+        assert!(result.ends_with('\''), "Should end with quote");
+    }
 }
