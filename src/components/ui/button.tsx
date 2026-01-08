@@ -36,7 +36,7 @@ const variantStyles: Record<ButtonVariant, string> = {
 
 const sizeStyles: Record<ButtonSize, string> = {
   sm: "py-2 px-3 text-sm leading-none has-[>svg]:px-2.5",
-  md: "py-2.75 px-4 text-sm leading-none has-[>svg]:px-3",
+  md: "py-2.5 px-4 text-sm leading-none has-[>svg]:px-3",
   lg: "py-3 px-6 text-base leading-none has-[>svg]:px-4",
 };
 
