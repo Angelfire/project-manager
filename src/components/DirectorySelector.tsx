@@ -20,7 +20,7 @@ export const DirectorySelector = memo(function DirectorySelector({
     <div className="bg-card border border-border rounded-lg p-6 mb-8">
       <div className="flex flex-col sm:flex-row gap-6">
         <div className="flex-1">
-          <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+          <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
             <FolderOpen className="size-4" />
             Directory
           </label>

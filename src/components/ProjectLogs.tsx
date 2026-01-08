@@ -196,18 +196,27 @@ export const ProjectLogs = memo(function ProjectLogs({
           ) : (
             <div className="space-y-1">
               {filteredLogs.map((log) => (
-                <div
-                  key={log.id}
-                  className={cn("flex gap-2", {
-                    "text-destructive": log.type === "stderr",
-                    "text-foreground": log.type === "stdout",
-                  })}
-                >
+                <div key={log.id} className="flex gap-2 leading-relaxed">
                   <span className="text-muted-foreground shrink-0">
                     [{formatTimestamp(log.timestamp)}]
                   </span>
-                  <span className="shrink-0">[{log.type.toUpperCase()}]</span>
-                  <span className="flex-1 wrap-break-words whitespace-pre-wrap">
+                  <span
+                    className={cn("shrink-0 font-medium", {
+                      "text-destructive": log.type === "stderr",
+                      "text-success": log.type === "stdout",
+                    })}
+                  >
+                    [{log.type.toUpperCase()}]
+                  </span>
+                  <span
+                    className={cn(
+                      "flex-1 wrap-break-words whitespace-pre-wrap",
+                      {
+                        "text-destructive/90": log.type === "stderr",
+                        "text-foreground": log.type === "stdout",
+                      }
+                    )}
+                  >
                     {log.content}
                   </span>
                 </div>
