@@ -3,7 +3,6 @@ use std::path::PathBuf;
 
 pub fn detect_port(path: &PathBuf) -> Option<u16> {
     // Detect specific framework and its default port
-    // Use the cached detection from scan_directory when possible
     let framework = crate::detection::detect_framework_from_path(path);
 
     // Try to read port from framework configuration files
