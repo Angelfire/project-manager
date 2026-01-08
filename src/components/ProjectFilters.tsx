@@ -52,17 +52,17 @@ export const ProjectFilters = memo(function ProjectFilters({
 
   return (
     <section
-      className="bg-card rounded-lg border border-border p-4"
+      className="bg-card rounded-lg border border-border p-6"
       aria-labelledby="filters-heading"
     >
       <h3 id="filters-heading" className="sr-only">
         Project filters
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div>
           <label
             htmlFor="runtime-filter"
-            className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide"
+            className="block text-xs font-semibold text-muted-foreground mb-2.5 uppercase tracking-wider"
           >
             Runtime
           </label>
@@ -84,7 +84,7 @@ export const ProjectFilters = memo(function ProjectFilters({
         <div>
           <label
             htmlFor="framework-filter"
-            className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide"
+            className="block text-xs font-semibold text-muted-foreground mb-2.5 uppercase tracking-wider"
           >
             Framework
           </label>
@@ -106,7 +106,7 @@ export const ProjectFilters = memo(function ProjectFilters({
         <div>
           <label
             htmlFor="status-filter"
-            className="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide"
+            className="block text-xs font-semibold text-muted-foreground mb-2.5 uppercase tracking-wider"
           >
             Status
           </label>

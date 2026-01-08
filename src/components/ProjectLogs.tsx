@@ -150,7 +150,7 @@ export const ProjectLogs = memo(function ProjectLogs({
                 variant="ghost"
                 size="sm"
                 icon={Trash2}
-                className="p-2 hover:text-red-400"
+                className="p-2 hover:text-destructive transition-colors duration-200"
                 title="Clear logs"
               />
             </div>
@@ -163,10 +163,10 @@ export const ProjectLogs = memo(function ProjectLogs({
                 placeholder="Search logs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-border text-sm transition-colors duration-150 ease-out"
+                className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-ring text-sm leading-relaxed transition-all duration-200 ease-out"
               />
             </div>
-            <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+            <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground leading-relaxed">
               <span>
                 {filteredLogs.length} of {logs.length} log entries
               </span>
@@ -176,7 +176,7 @@ export const ProjectLogs = memo(function ProjectLogs({
                     setAutoScroll(true);
                     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className="text-chart-2 hover:text-chart-1 transition-colors duration-150 ease-out"
+                  className="text-chart-2 hover:text-chart-1 transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded px-1.5 py-0.5"
                 >
                   Scroll to bottom
                 </button>
@@ -206,14 +206,7 @@ export const ProjectLogs = memo(function ProjectLogs({
                   <span className="text-muted-foreground shrink-0">
                     [{formatTimestamp(log.timestamp)}]
                   </span>
-                  <span
-                    className={cn("shrink-0", {
-                      "text-destructive": log.type === "stderr",
-                      "text-foreground": log.type === "stdout",
-                    })}
-                  >
-                    [{log.type.toUpperCase()}]
-                  </span>
+                  <span className="shrink-0">[{log.type.toUpperCase()}]</span>
                   <span className="flex-1 wrap-break-words whitespace-pre-wrap">
                     {log.content}
                   </span>

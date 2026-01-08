@@ -44,15 +44,15 @@ export const ProjectCard = memo(function ProjectCard({
 
   return (
     <article
-      className="bg-card rounded-lg border border-border overflow-hidden transition-colors duration-150 ease-out hover:border-accent"
+      className="bg-card rounded-lg border border-border overflow-hidden transition-all duration-200 ease-out hover:border-accent hover:shadow-sm"
       aria-labelledby={`project-${project.path.replace(/\//g, "-")}-name`}
     >
       <div
         className={cn("h-1", getRuntimeTopBar(project.runtime))}
         aria-hidden="true"
       />
-      <div className="p-5">
-        <div className="flex items-start justify-between mb-3">
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <i
@@ -64,12 +64,12 @@ export const ProjectCard = memo(function ProjectCard({
               ></i>
               <h3
                 id={`project-${project.path.replace(/\//g, "-")}-name`}
-                className="text-base font-semibold text-card-foreground truncate"
+                className="text-base font-semibold text-card-foreground truncate tracking-tight"
               >
                 {project.name}
               </h3>
             </div>
-            <p className="text-xs text-muted-foreground font-mono truncate">
+            <p className="text-xs text-muted-foreground font-mono truncate leading-relaxed">
               {project.path}
             </p>
           </div>
@@ -82,20 +82,20 @@ export const ProjectCard = memo(function ProjectCard({
                 <span
                   className={cn(
                     "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-                    "bg-green-400"
+                    "bg-success"
                   )}
                 />
               )}
               <span
                 className={cn("relative inline-flex rounded-full size-2.5", {
-                  "bg-green-400": isRunning,
-                  "bg-gray-400": !isRunning,
+                  "bg-success": isRunning,
+                  "bg-muted-foreground": !isRunning,
                 })}
               />
             </span>
             <span
               className={cn("text-xs font-medium", {
-                "text-green-500": isRunning,
+                "text-success": isRunning,
                 "text-muted-foreground": !isRunning,
               })}
               aria-label={`Status: ${isRunning ? "Active" : "Inactive"}`}
@@ -105,7 +105,7 @@ export const ProjectCard = memo(function ProjectCard({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 mb-4">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           <span
             className={cn(
               "px-2.5 py-1 rounded text-xs font-medium",
@@ -126,7 +126,7 @@ export const ProjectCard = memo(function ProjectCard({
           ) : null}
         </div>
 
-        <div className="space-y-2 mb-4 text-xs text-muted-foreground">
+        <div className="space-y-2.5 mb-4 text-xs text-muted-foreground leading-relaxed">
           {project.runtime_version && (
             <div className="flex items-center gap-2">
               <Info className="size-3.5" />

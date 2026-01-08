@@ -46,10 +46,12 @@ export function SearchBar({
           aria-describedby={errorId}
           aria-invalid={!!error}
           className={cn(
-            "w-full py-2 px-4 pl-10 border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-1 focus:border-border transition-colors duration-150 ease-out text-sm leading-none",
+            "w-full py-2 px-4 pl-10 border rounded-lg bg-input text-foreground placeholder:text-muted-foreground",
+            "focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-ring",
+            "transition-all duration-200 ease-out text-sm leading-relaxed",
             error
-              ? "border-destructive focus:ring-destructive"
-              : "border-border focus:ring-ring"
+              ? "border-destructive focus:ring-destructive focus:border-destructive"
+              : "border-border"
           )}
         />
         <Search

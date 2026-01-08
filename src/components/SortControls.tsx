@@ -38,7 +38,7 @@ export function SortControls({
         value={sortBy}
         onChange={(value) => onSortChange(value as SortOption)}
         placeholder="Sort by..."
-        className="w-45"
+        className="w-40"
         aria-label="Sort projects by"
       >
         <SelectItem value="name">Sort by Name</SelectItem>
@@ -50,7 +50,7 @@ export function SortControls({
         variant="ghost"
         size="sm"
         icon={ArrowUpDown}
-        className="p-2"
+        className="shrink-0"
         title={sortAscending ? "Ascending" : "Descending"}
         aria-label={`Sort order: ${sortAscending ? "Ascending" : "Descending"}`}
       />
