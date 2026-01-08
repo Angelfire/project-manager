@@ -263,15 +263,15 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
         8000, 8001, 8002, 8003, 8004, // Deno
     ];
 
-    // child_pids_for_check is already cloned above
+    // Optimize: create HashSet once before the loop to avoid redundant allocations
+    // Use HashSet for O(1) lookup instead of Vec.contains() which is O(n)
+    let child_pids_set: std::collections::HashSet<u32> = child_pids_for_check.iter().copied().collect();
 
     for test_port in test_ports {
         let lsof_output = StdCommand::new("lsof")
             .args(&["-ti", &format!(":{}", test_port)])
             .output()?;
 
-        // Optimize: use HashSet for O(1) lookup instead of Vec.contains() which is O(n)
-        let child_pids_set: std::collections::HashSet<u32> = child_pids_for_check.iter().copied().collect();
         let pid_str = String::from_utf8(lsof_output.stdout)?;
         for pid_line in pid_str.lines() {
             if let Ok(listening_pid) = pid_line.trim().parse::<u32>() {
@@ -280,8 +280,6 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
                     return Ok(Some(test_port));
                 }
                 // Verify recursively the PPID (up to 5 levels)
-                // Optimize: use HashSet for O(1) lookup instead of Vec.contains() which is O(n)
-                let child_pids_set: std::collections::HashSet<u32> = child_pids_for_check.iter().copied().collect();
                 let mut current_pid = listening_pid;
                 for _depth in 0..5 {
                     let ppid_output = StdCommand::new("ps")

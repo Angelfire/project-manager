@@ -13,15 +13,36 @@ fn get_runtime_version_cache() -> &'static std::sync::Mutex<HashMap<String, Opti
 }
 
 pub fn get_runtime_version(runtime: &str, _path: &PathBuf) -> Option<String> {
-    // Check cache first
     let cache = get_runtime_version_cache();
-    if let Ok(cache_guard) = cache.lock() {
-        if let Some(cached_version) = cache_guard.get(runtime) {
-            return cached_version.clone();
+    let mut cache_guard = match cache.lock() {
+        Ok(guard) => guard,
+        Err(_) => {
+            // If lock is poisoned, fall back to direct execution without caching
+            return execute_version_command(runtime);
+        }
+    };
+    
+    // Use entry API to atomically check and insert, preventing race conditions
+    // This ensures only one thread executes the command for the same runtime
+    let runtime_key = runtime.to_string();
+    match cache_guard.entry(runtime_key) {
+        std::collections::hash_map::Entry::Occupied(entry) => {
+            // Cache hit - return cached value
+            entry.get().clone()
+        }
+        std::collections::hash_map::Entry::Vacant(entry) => {
+            // Cache miss - execute command and insert result atomically
+            let version = execute_version_command(runtime);
+            entry.insert(version.clone());
+            version
         }
     }
-    
-    let version = match runtime {
+}
+
+/// Executes the version detection command for a given runtime
+/// This is separated to avoid code duplication and improve readability
+fn execute_version_command(runtime: &str) -> Option<String> {
+    match runtime {
         "Node.js" => {
             // Try to get Node.js version
             StdCommand::new("node")
@@ -56,14 +77,7 @@ pub fn get_runtime_version(runtime: &str, _path: &PathBuf) -> Option<String> {
                 .map(|v| v.trim().to_string())
         }
         _ => None,
-    };
-    
-    // Cache the result
-    if let Ok(mut cache_guard) = cache.lock() {
-        cache_guard.insert(runtime.to_string(), version.clone());
     }
-    
-    version
 }
 
 pub fn get_package_json_scripts(path: &PathBuf) -> Option<HashMap<String, String>> {
