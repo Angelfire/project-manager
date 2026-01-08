@@ -44,7 +44,7 @@ export const ProjectCard = memo(function ProjectCard({
 
   return (
     <article
-      className="bg-card rounded-lg border border-border overflow-hidden transition-all duration-200 ease-out hover:border-accent hover:shadow-sm"
+      className="bg-card rounded-lg border border-border overflow-hidden transition-[border-color,box-shadow] duration-200 ease-out hover:border-accent hover:shadow-sm"
       aria-labelledby={`project-${project.path.replace(/\//g, "-")}-name`}
     >
       <div
