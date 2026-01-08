@@ -29,24 +29,33 @@ pub fn kill_process_tree(pid: u32) -> Result<(), AppError> {
     seen_pids.insert(pid);
 
     // Search for child processes up to 4 levels
+    // Optimize: batch pgrep calls when possible
     for _level in 0..4 {
+        if current_level.is_empty() {
+            break;
+        }
+        
+        // Batch process: collect all PIDs to query in one go if possible
+        // For now, we still need individual pgrep calls, but we can optimize the parsing
         let mut next_level = Vec::new();
         for parent_pid in &current_level {
             let pgrep_output = StdCommand::new("pgrep")
                 .args(&["-P", &parent_pid.to_string()])
                 .output()?;
 
-            let child_pids_str = String::from_utf8(pgrep_output.stdout)?;
-            for child_pid_line in child_pids_str.lines() {
-                if let Ok(child_pid) = child_pid_line.trim().parse::<u32>() {
-                    // Avoid duplicates
-                    if seen_pids.insert(child_pid) {
-                        all_pids.push(child_pid);
-                        next_level.push(child_pid);
-                    }
-                }
+            // Use iterator chain for more efficient parsing
+            let child_pids: Vec<u32> = String::from_utf8(pgrep_output.stdout)?
+                .lines()
+                .filter_map(|line| line.trim().parse::<u32>().ok())
+                .filter(|&child_pid| seen_pids.insert(child_pid))
+                .collect();
+            
+            for child_pid in child_pids {
+                all_pids.push(child_pid);
+                next_level.push(child_pid);
             }
         }
+        
         if next_level.is_empty() {
             break;
         }
@@ -174,36 +183,44 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
 
     // If we didn't find it with the direct PID, search for child processes recursively
     // using pgrep to find all child processes (up to 3 levels)
-    let mut all_child_pids = Vec::new();
+    // Optimize: use HashSet to avoid duplicates and improve lookup performance
+    let mut all_child_pids = std::collections::HashSet::new();
     let mut current_level_pids = vec![pid];
 
     // Search up to 3 levels of child processes
     for _level in 0..3 {
+        if current_level_pids.is_empty() {
+            break;
+        }
+        
         let mut next_level_pids = Vec::new();
         for parent_pid in &current_level_pids {
             let pgrep_output = StdCommand::new("pgrep")
                 .args(&["-P", &parent_pid.to_string()])
                 .output()?;
 
-            let child_pids_str = String::from_utf8(pgrep_output.stdout)?;
-            for child_pid_line in child_pids_str.lines() {
-                if let Ok(child_pid) = child_pid_line.trim().parse::<u32>() {
-                    all_child_pids.push(child_pid);
-                    next_level_pids.push(child_pid);
-                }
-            }
+            // Use iterator chain for more efficient parsing
+            let child_pids: Vec<u32> = String::from_utf8(pgrep_output.stdout)?
+                .lines()
+                .filter_map(|line| line.trim().parse::<u32>().ok())
+                .filter(|&child_pid| all_child_pids.insert(child_pid))
+                .collect();
+            
+            next_level_pids.extend(child_pids);
         }
+        
         if next_level_pids.is_empty() {
             break;
         }
         current_level_pids = next_level_pids;
     }
 
-    // Clone the list before using it in the loop (to be able to use it later too)
-    let child_pids_for_check = all_child_pids.clone();
+    // Convert to Vec for iteration (HashSet already ensures uniqueness)
+    let child_pids_for_check: Vec<u32> = all_child_pids.iter().copied().collect();
 
     // Search for ports in all found child processes
-    for child_pid in &all_child_pids {
+    // Optimize: use iterator chain for better performance
+    for child_pid in &child_pids_for_check {
         let lsof_output = StdCommand::new("lsof")
             .args(&[
                 "-Pan",
@@ -214,24 +231,26 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
             ])
             .output()?;
 
-        let lsof_str = String::from_utf8(lsof_output.stdout)?;
-        for line in lsof_str.lines().skip(1) {
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() < 9 {
-                continue;
-            }
-            
-            let name_part = parts[8];
-            let port = name_part
-                .split(':')
-                .last()
-                .and_then(|port_str| port_str.split(' ').next())
-                .and_then(|port_str| port_str.parse::<u16>().ok())
-                .filter(|&port| port > 0);
-            
-            if let Some(port) = port {
-                return Ok(Some(port));
-            }
+        // Use iterator chain for more efficient parsing
+        let port = String::from_utf8(lsof_output.stdout)?
+            .lines()
+            .skip(1)
+            .find_map(|line| {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() < 9 {
+                    return None;
+                }
+                
+                parts[8]
+                    .split(':')
+                    .last()
+                    .and_then(|port_str| port_str.split(' ').next())
+                    .and_then(|port_str| port_str.parse::<u16>().ok())
+                    .filter(|&port| port > 0)
+            });
+        
+        if let Some(port) = port {
+            return Ok(Some(port));
         }
     }
 
@@ -244,7 +263,9 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
         8000, 8001, 8002, 8003, 8004, // Deno
     ];
 
-    // child_pids_for_check is already cloned above
+    // Optimize: create HashSet once before the loop to avoid redundant allocations
+    // Use HashSet for O(1) lookup instead of Vec.contains() which is O(n)
+    let child_pids_set: std::collections::HashSet<u32> = child_pids_for_check.iter().copied().collect();
 
     for test_port in test_ports {
         let lsof_output = StdCommand::new("lsof")
@@ -255,7 +276,7 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
         for pid_line in pid_str.lines() {
             if let Ok(listening_pid) = pid_line.trim().parse::<u32>() {
                 // Verify if this PID is the same or is in the list of child processes
-                if listening_pid == pid || child_pids_for_check.contains(&listening_pid) {
+                if listening_pid == pid || child_pids_set.contains(&listening_pid) {
                     return Ok(Some(test_port));
                 }
                 // Verify recursively the PPID (up to 5 levels)
@@ -265,13 +286,15 @@ pub fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, AppError> {
                         .args(&["-o", "ppid=", "-p", &current_pid.to_string()])
                         .output()?;
 
-                    let ppid_str = String::from_utf8(ppid_output.stdout)?;
-                    let ppid = match ppid_str.trim().parse::<u32>() {
-                        Ok(ppid) => ppid,
-                        Err(_) => break,
+                    let ppid = match String::from_utf8(ppid_output.stdout)
+                        .ok()
+                        .and_then(|s| s.trim().parse::<u32>().ok())
+                    {
+                        Some(ppid) => ppid,
+                        None => break,
                     };
                     
-                    if ppid == pid || child_pids_for_check.contains(&ppid) {
+                    if ppid == pid || child_pids_set.contains(&ppid) {
                         return Ok(Some(test_port));
                     }
                     current_pid = ppid;

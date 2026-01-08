@@ -1,12 +1,20 @@
+use serde::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", content = "message")]
 pub enum AppError {
+    #[serde(rename = "io_error")]
     IoError(String),
+    #[serde(rename = "process_error")]
     ProcessError(String),
+    #[serde(rename = "command_error")]
     CommandError(String),
+    #[serde(rename = "parse_error")]
     ParseError(String),
+    #[serde(rename = "not_found")]
     NotFound(String),
+    #[serde(rename = "utf8_error")]
     Utf8Error(String),
 }
 
@@ -43,7 +51,8 @@ impl From<std::num::ParseIntError> for AppError {
     }
 }
 
-// Convert AppError to String for Tauri commands
+// AppError is now serializable, so we can return it directly from Tauri commands
+// For backward compatibility, we keep the String conversion
 impl From<AppError> for String {
     fn from(err: AppError) -> Self {
         err.to_string()

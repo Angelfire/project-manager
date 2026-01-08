@@ -11,32 +11,34 @@ fn has_file(files: &HashSet<String>, name: &str) -> bool {
 }
 
 /// Builds a HashSet of file names in a directory for efficient lookups
+/// Uses iterator chains for better performance
 fn get_directory_files(path: &PathBuf) -> HashSet<String> {
-    let mut files = HashSet::new();
-    if let Ok(entries) = fs::read_dir(path) {
-        for entry in entries.flatten() {
-            if let Some(name) = entry.file_name().to_str() {
-                files.insert(name.to_string());
-            }
-        }
-    }
-    files
+    fs::read_dir(path)
+        .ok()
+        .map(|entries| {
+            entries
+                .filter_map(|entry| entry.ok())
+                .filter_map(|entry| entry.file_name().to_str().map(|s| s.to_string()))
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 /// Detects the package manager from a directory's file list
 /// 
 /// This function accepts a HashSet of file names to avoid redundant directory reads.
-pub fn detect_package_manager(files: &HashSet<String>) -> String {
+/// Returns a string slice to avoid unnecessary allocations.
+pub fn detect_package_manager(files: &HashSet<String>) -> &'static str {
     if has_file(files, "pnpm-lock.yaml") {
-        "pnpm".to_string()
+        "pnpm"
     } else if has_file(files, "yarn.lock") {
-        "yarn".to_string()
+        "yarn"
     } else if has_file(files, "package-lock.json") {
-        "npm".to_string()
+        "npm"
     } else if has_file(files, "bun.lockb") {
-        "bun".to_string()
+        "bun"
     } else {
-        "npm".to_string() // default
+        "npm" // default
     }
 }
 
@@ -45,13 +47,14 @@ pub fn detect_package_manager(files: &HashSet<String>) -> String {
 /// 
 /// This function accepts a HashSet of file names to avoid redundant directory reads.
 /// For convenience, use `detect_framework_from_path()` which reads the directory.
-pub fn detect_framework(files: &HashSet<String>, path: &PathBuf) -> String {
+/// Returns a string slice to avoid unnecessary allocations.
+pub fn detect_framework(files: &HashSet<String>, path: &PathBuf) -> &'static str {
     // Astro
     if has_file(files, "astro.config.mjs")
         || has_file(files, "astro.config.js")
         || has_file(files, "astro.config.ts")
     {
-        return "astro".to_string();
+        return "astro";
     }
 
     // Next.js
@@ -59,7 +62,7 @@ pub fn detect_framework(files: &HashSet<String>, path: &PathBuf) -> String {
         || has_file(files, "next.config.mjs")
         || has_file(files, "next.config.ts")
     {
-        return "nextjs".to_string();
+        return "nextjs";
     }
 
     // Vite (check for vite.config.*)
@@ -67,7 +70,7 @@ pub fn detect_framework(files: &HashSet<String>, path: &PathBuf) -> String {
         || has_file(files, "vite.config.ts")
         || has_file(files, "vite.config.mjs")
     {
-        return "vite".to_string();
+        return "vite";
     }
 
     // React (Create React App)
@@ -76,7 +79,7 @@ pub fn detect_framework(files: &HashSet<String>, path: &PathBuf) -> String {
             let package_json = path.join("package.json");
             if let Ok(content) = fs::read_to_string(&package_json) {
                 if content.contains("react-scripts") {
-                    return "react".to_string();
+                    return "react";
                 }
             }
         }
@@ -84,51 +87,75 @@ pub fn detect_framework(files: &HashSet<String>, path: &PathBuf) -> String {
 
     // SvelteKit
     if has_file(files, "svelte.config.js") || has_file(files, "svelte.config.ts") {
-        return "sveltekit".to_string();
+        return "sveltekit";
     }
 
     // Nuxt
     if has_file(files, "nuxt.config.js") || has_file(files, "nuxt.config.ts") {
-        return "nuxt".to_string();
+        return "nuxt";
     }
 
     // Default
-    "node".to_string()
+    "node"
 }
 
 /// Convenience wrapper that reads the directory and calls `detect_framework()`
 /// 
 /// Use this for standalone calls. In `scan_directory()`, use `detect_framework()` 
 /// directly with the pre-read HashSet to avoid redundant directory reads.
-pub fn detect_framework_from_path(path: &PathBuf) -> String {
+pub fn detect_framework_from_path(path: &PathBuf) -> &'static str {
     let files = get_directory_files(path);
     detect_framework(&files, path)
 }
 
 pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
-    if !path.exists() || !path.is_dir() {
+    // Use metadata() for faster existence check (single syscall)
+    // This will return IoError if path doesn't exist, NotFound if not a directory
+    let metadata = fs::metadata(path).map_err(|e| {
+        if e.kind() == std::io::ErrorKind::NotFound {
+            AppError::NotFound(format!(
+                "Directory does not exist: {}",
+                path.display()
+            ))
+        } else {
+            AppError::IoError(e.to_string())
+        }
+    })?;
+    
+    if !metadata.is_dir() {
         return Err(AppError::NotFound(format!(
-            "Directory does not exist: {}",
+            "Path is not a directory: {}",
             path.display()
         )));
     }
 
-    let mut projects = Vec::new();
-
-    let entries = fs::read_dir(path)?;
-
-    for entry in entries {
-        let entry = entry?;
-        let project_path = entry.path();
-
-        if project_path.is_dir() {
+    // Use iterator chain for better performance and early filtering
+    let projects: Result<Vec<Project>, AppError> = fs::read_dir(path)?
+        .filter_map(|entry| {
+            let entry = match entry {
+                Ok(e) => e,
+                Err(_) => return None,
+            };
+            
+            let project_path = entry.path();
+            
+            // Fast check: use metadata() instead of is_dir() to avoid extra syscall
+            let metadata = match project_path.metadata() {
+                Ok(m) => m,
+                Err(_) => return None,
+            };
+            
+            if !metadata.is_dir() {
+                return None;
+            }
+            
             // Get directory files once for all checks
             let dir_files = get_directory_files(&project_path);
             
             // Check for Node.js projects
             if has_file(&dir_files, "package.json") {
-                let package_manager = detect_package_manager(&dir_files);
-                let framework = detect_framework(&dir_files, &project_path);
+                let package_manager = detect_package_manager(&dir_files).to_string();
+                let framework = detect_framework(&dir_files, &project_path).to_string();
                 let port = crate::port::detect_port(&project_path);
                 let mut project = Project {
                     name: entry.file_name().to_string_lossy().to_string(),
@@ -143,7 +170,7 @@ pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
                     modified: None,
                 };
                 project = enrich_project_info(project);
-                projects.push(project);
+                Some(Ok(project))
             }
             // Check for Deno projects
             else if has_file(&dir_files, "deno.json") || has_file(&dir_files, "deno.jsonc") {
@@ -161,11 +188,11 @@ pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
                     modified: None,
                 };
                 project = enrich_project_info(project);
-                projects.push(project);
+                Some(Ok(project))
             }
             // Check for Bun projects
             else if has_file(&dir_files, "bun.lockb") || has_file(&dir_files, "bunfig.toml") {
-                let framework = detect_framework(&dir_files, &project_path);
+                let framework = detect_framework(&dir_files, &project_path).to_string();
                 let port = crate::port::detect_port(&project_path);
                 let mut project = Project {
                     name: entry.file_name().to_string_lossy().to_string(),
@@ -180,12 +207,14 @@ pub fn scan_directory(path: &Path) -> Result<Vec<Project>, AppError> {
                     modified: None,
                 };
                 project = enrich_project_info(project);
-                projects.push(project);
+                Some(Ok(project))
+            } else {
+                None
             }
-        }
-    }
-
-    Ok(projects)
+        })
+        .collect();
+    
+    projects
 }
 
 #[cfg(test)]

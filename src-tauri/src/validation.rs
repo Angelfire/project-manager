@@ -437,7 +437,7 @@ mod tests {
     #[test]
     fn test_validate_command_args_rejects_too_long() {
         let long_arg = "a".repeat(1025);
-        assert!(validate_command_args(&[long_arg]).is_err());
+        assert!(validate_command_args(&[long_arg.clone()]).is_err());
         let err = validate_command_args(&[long_arg]).unwrap_err();
         assert!(matches!(err, AppError::CommandError(_)));
         assert!(err.to_string().contains("too long"));

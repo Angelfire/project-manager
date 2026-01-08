@@ -62,6 +62,7 @@ function App() {
     projects,
     loading,
     runningProjects,
+    rustProcessPids,
     getProjectLogs,
     clearProjectLogs,
     loadProjects,
@@ -176,6 +177,7 @@ function App() {
                   onRun={runProject}
                   onStop={stopProject}
                   onOpenLogs={setOpenLogsFor}
+                  projectPid={rustProcessPids.get(project.path)}
                 />
               ))}
             </div>

@@ -28,6 +28,7 @@ interface ProjectCardProps {
   onRun: (project: Project) => void;
   onStop: (project: Project) => void;
   onOpenLogs: (projectPath: string) => void;
+  projectPid?: number;
 }
 
 export const ProjectCard = memo(function ProjectCard({
@@ -37,10 +38,11 @@ export const ProjectCard = memo(function ProjectCard({
   onRun,
   onStop,
   onOpenLogs,
+  projectPid,
 }: ProjectCardProps) {
   const handleOpenInBrowser = useCallback(async () => {
-    await openProjectInBrowser(project);
-  }, [project]);
+    await openProjectInBrowser(project, projectPid);
+  }, [project, projectPid]);
 
   return (
     <article
