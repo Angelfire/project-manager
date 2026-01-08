@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react";
+import { cn } from "@/utils/cn";
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -36,12 +37,21 @@ export function EmptyState({
   return (
     <div className="bg-card rounded-lg border border-border p-12 text-center">
       <div
-        className={`inline-flex items-center justify-center ${iconContainerSizes[iconSize]} ${marginBottom}`}
+        className={cn(
+          "inline-flex items-center justify-center",
+          iconContainerSizes[iconSize],
+          marginBottom
+        )}
       >
-        <Icon className={`${iconSizes[iconSize]} text-muted-foreground`} />
+        <Icon
+          className={cn(iconSizes[iconSize], "text-muted-foreground")}
+          aria-hidden="true"
+        />
       </div>
       <TitleComponent className={titleClassName}>{title}</TitleComponent>
-      <p className="text-muted-foreground text-sm mt-1">{description}</p>
+      <p className="text-muted-foreground text-sm mt-2 leading-relaxed max-w-md mx-auto">
+        {description}
+      </p>
     </div>
   );
 }

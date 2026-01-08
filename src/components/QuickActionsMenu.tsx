@@ -100,7 +100,7 @@ export const QuickActionsMenu = memo(function QuickActionsMenu({
           variant="icon"
           size="sm"
           icon={MoreVertical}
-          className="px-2 py-3"
+          className="shrink-0"
           title="Quick actions"
           aria-label="Open quick actions menu"
         />

@@ -36,7 +36,7 @@ const variantStyles: Record<ButtonVariant, string> = {
 
 const sizeStyles: Record<ButtonSize, string> = {
   sm: "py-2 px-3 text-sm leading-none has-[>svg]:px-2.5",
-  md: "py-[10px] px-4 text-sm leading-none has-[>svg]:px-3",
+  md: "py-2.5 px-4 text-sm leading-none has-[>svg]:px-3",
   lg: "py-3 px-6 text-base leading-none has-[>svg]:px-4",
 };
 
@@ -61,7 +61,7 @@ function Button({
 }: ButtonProps) {
   const baseStyles = cn(
     "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium",
-    "transition-colors duration-150 ease-out",
+    "transition-colors duration-200 ease-out",
     "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
     "disabled:pointer-events-none disabled:opacity-50",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
@@ -78,9 +78,9 @@ function Button({
     baseStyles,
     variantStyles[variant],
     {
-      "p-[9px]": isIconOnly && size === "md",
+      "p-2.5": isIconOnly && size === "md",
       "p-2": isIconOnly && size === "sm",
-      "p-2.5": isIconOnly && size === "lg",
+      "p-3": isIconOnly && size === "lg",
       [sizeStyles[size]]: !isIconOnly && variant !== "icon",
     },
     {
