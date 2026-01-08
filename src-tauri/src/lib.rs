@@ -10,73 +10,61 @@ mod types;
 pub mod validation;
 
 #[tauri::command]
-fn scan_directory(path: String) -> Result<Vec<types::Project>, String> {
+fn scan_directory(path: String) -> Result<Vec<types::Project>, error::AppError> {
     // Validate path before processing
-    let validated_path = validation::validate_directory_path(&path)
-        .map_err(|e| e.to_string())?;
+    let validated_path = validation::validate_directory_path(&path)?;
     
     // Pass PathBuf directly to maintain type safety
     detection::scan_directory(&validated_path)
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn kill_process_tree(pid: u32) -> Result<(), String> {
+fn kill_process_tree(pid: u32) -> Result<(), error::AppError> {
     // Validate PID before processing
-    let validated_pid = validation::validate_pid(pid)
-        .map_err(|e| e.to_string())?;
+    let validated_pid = validation::validate_pid(pid)?;
     
-    process::kill_process_tree(validated_pid).map_err(|e| e.to_string())
+    process::kill_process_tree(validated_pid)
 }
 
 #[tauri::command]
-fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, String> {
+fn detect_port_by_pid(pid: u32) -> Result<Option<u16>, error::AppError> {
     // Validate PID before processing
-    let validated_pid = validation::validate_pid(pid)
-        .map_err(|e| e.to_string())?;
+    let validated_pid = validation::validate_pid(pid)?;
     
-    process::detect_port_by_pid(validated_pid).map_err(|e| e.to_string())
+    process::detect_port_by_pid(validated_pid)
 }
 
 #[tauri::command]
-fn open_in_editor(path: String) -> Result<(), String> {
+fn open_in_editor(path: String) -> Result<(), error::AppError> {
     // Validate path before processing
-    let validated_path = validation::validate_file_path(&path)
-        .map_err(|e| e.to_string())?;
+    let validated_path = validation::validate_file_path(&path)?;
     
     // Pass PathBuf directly to maintain type safety
     quick_actions::open_in_editor(&validated_path)
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn open_in_terminal(path: String) -> Result<(), String> {
+fn open_in_terminal(path: String) -> Result<(), error::AppError> {
     // Validate path before processing
-    let validated_path = validation::validate_file_path(&path)
-        .map_err(|e| e.to_string())?;
+    let validated_path = validation::validate_file_path(&path)?;
     
     // Pass PathBuf directly to maintain type safety
     quick_actions::open_in_terminal(&validated_path)
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn open_in_file_manager(path: String) -> Result<(), String> {
+fn open_in_file_manager(path: String) -> Result<(), error::AppError> {
     // Validate path before processing
-    let validated_path = validation::validate_file_path(&path)
-        .map_err(|e| e.to_string())?;
+    let validated_path = validation::validate_file_path(&path)?;
     
     // Pass PathBuf directly to maintain type safety
     quick_actions::open_in_file_manager(&validated_path)
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn validate_directory_path_command(path: String) -> Result<(), String> {
+fn validate_directory_path_command(path: String) -> Result<(), error::AppError> {
     // Validate that the path exists and is a directory
-    validation::validate_directory_path(&path)
-        .map(|_| ())
-        .map_err(|e| e.to_string())
+    validation::validate_directory_path(&path).map(|_| ())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

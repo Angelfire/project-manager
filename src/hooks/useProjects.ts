@@ -476,6 +476,7 @@ export const useProjects = () => {
     setProjects,
     loading,
     runningProjects,
+    rustProcessPids,
     logs,
     loadProjects,
     runProject,

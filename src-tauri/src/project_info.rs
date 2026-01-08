@@ -3,41 +3,67 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command as StdCommand;
+use std::sync::OnceLock;
+
+// Cache runtime versions to avoid repeated command executions
+static RUNTIME_VERSION_CACHE: OnceLock<std::sync::Mutex<HashMap<String, Option<String>>>> = OnceLock::new();
+
+fn get_runtime_version_cache() -> &'static std::sync::Mutex<HashMap<String, Option<String>>> {
+    RUNTIME_VERSION_CACHE.get_or_init(|| std::sync::Mutex::new(HashMap::new()))
+}
 
 pub fn get_runtime_version(runtime: &str, _path: &PathBuf) -> Option<String> {
-    match runtime {
+    // Check cache first
+    let cache = get_runtime_version_cache();
+    if let Ok(cache_guard) = cache.lock() {
+        if let Some(cached_version) = cache_guard.get(runtime) {
+            return cached_version.clone();
+        }
+    }
+    
+    let version = match runtime {
         "Node.js" => {
             // Try to get Node.js version
-            if let Ok(output) = StdCommand::new("node").arg("--version").output() {
-                if let Ok(version) = String::from_utf8(output.stdout) {
-                    return Some(version.trim().to_string());
-                }
-            }
+            StdCommand::new("node")
+                .arg("--version")
+                .output()
+                .ok()
+                .and_then(|output| String::from_utf8(output.stdout).ok())
+                .map(|v| v.trim().to_string())
         }
         "Deno" => {
             // Try to get Deno version
-            if let Ok(output) = StdCommand::new("deno").args(&["--version"]).output() {
-                if let Ok(version_str) = String::from_utf8(output.stdout) {
-                    // Deno version output format: "deno 1.x.x"
-                    if let Some(line) = version_str.lines().next() {
-                        if let Some(version) = line.split_whitespace().nth(1) {
-                            return Some(version.to_string());
-                        }
-                    }
-                }
-            }
+            StdCommand::new("deno")
+                .args(&["--version"])
+                .output()
+                .ok()
+                .and_then(|output| String::from_utf8(output.stdout).ok())
+                .and_then(|version_str| {
+                    version_str
+                        .lines()
+                        .next()
+                        .and_then(|line| line.split_whitespace().nth(1))
+                        .map(|v| v.to_string())
+                })
         }
         "Bun" => {
             // Try to get Bun version
-            if let Ok(output) = StdCommand::new("bun").args(&["--version"]).output() {
-                if let Ok(version) = String::from_utf8(output.stdout) {
-                    return Some(version.trim().to_string());
-                }
-            }
+            StdCommand::new("bun")
+                .args(&["--version"])
+                .output()
+                .ok()
+                .and_then(|output| String::from_utf8(output.stdout).ok())
+                .map(|v| v.trim().to_string())
         }
-        _ => {}
+        _ => None,
+    };
+    
+    // Cache the result
+    if let Ok(mut cache_guard) = cache.lock() {
+        cache_guard.insert(runtime.to_string(), version.clone());
     }
-    None
+    
+    version
 }
 
 pub fn get_package_json_scripts(path: &PathBuf) -> Option<HashMap<String, String>> {

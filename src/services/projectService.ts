@@ -3,7 +3,6 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { Project } from "@/types";
 import { toastError, toastWarning } from "@/utils/toast";
 import { tauriApi } from "@/api/tauri";
-import { getDefaultPortForFramework } from "@/utils/runtime";
 
 /**
  * Scans a directory for projects and returns a list of detected projects.
@@ -151,26 +150,31 @@ export const killProcessByPort = async (port: number): Promise<void> => {
  * Falls back to default port for the framework if no port is detected.
  *
  * @param project - Project object to open in browser
+ * @param runningPid - Optional PID of the running process to detect port if not available
  */
-export const openProjectInBrowser = async (project: Project): Promise<void> => {
+export const openProjectInBrowser = async (
+  project: Project,
+  runningPid?: number
+): Promise<void> => {
   // If port is already detected, use it directly
   if (project.port) {
     await openInBrowser(project.port);
     return;
   }
 
-  // If no port, try to use the default port for the framework
-  const defaultPort = getDefaultPortForFramework(project);
-
-  if (defaultPort) {
-    await openInBrowser(defaultPort);
-
-    return;
+  // If no port but we have a PID, try to detect it first
+  if (!project.port && runningPid) {
+    const detectedPort = await detectPort(runningPid, 5, 200, 300);
+    if (detectedPort) {
+      await openInBrowser(detectedPort);
+      return;
+    }
   }
 
-  // Fallback: show warning
+  // If no port detected, show warning instead of using default port
+  // Using default port can lead to opening wrong port (e.g., 4321 when server is on 4326)
   toastWarning(
     "Port not detected",
-    "Unable to determine the server port. Please check if the server is running."
+    "The server port has not been detected yet. Please wait a moment and try again, or check the project logs to see which port the server is using."
   );
 };
