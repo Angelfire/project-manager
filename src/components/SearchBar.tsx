@@ -48,7 +48,7 @@ export function SearchBar({
           className={cn(
             "w-full py-2 px-4 pl-10 border rounded-lg bg-input text-foreground placeholder:text-muted-foreground",
             "focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-ring",
-            "transition-all duration-200 ease-out text-sm leading-relaxed",
+            "transition-[border-color,box-shadow] duration-200 ease-out text-sm leading-relaxed",
             error
               ? "border-destructive focus:ring-destructive focus:border-destructive"
               : "border-border"
