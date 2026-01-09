@@ -87,7 +87,23 @@ Download the latest release from the [Releases page](https://github.com/Angelfir
 3. Open the DMG and drag RunStack to your Applications folder
 4. Launch RunStack from Applications
 
-**Note**: If you see a security warning on macOS, right-click the app and select "Open" the first time, or go to System Settings → Privacy & Security → Allow the app.
+**⚠️ macOS Security Warning**
+
+When opening RunStack for the first time, macOS will show a security warning because the app is not signed with an Apple Developer certificate. To open the app:
+
+**Method 1 (Recommended):**
+
+1. **Right-click** (or Control + click) on RunStack.app
+2. Select **"Open"**
+3. Click **"Open"** again in the dialog
+
+**Method 2:**
+
+1. Go to **System Settings** → **Privacy & Security**
+2. Find the message about RunStack being blocked
+3. Click **"Open Anyway"**
+
+You only need to do this once. After that, the app will open normally.
 
 ### Build from Source
 
