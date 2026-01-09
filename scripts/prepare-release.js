@@ -193,8 +193,8 @@ async function prepareRelease() {
       console.log("📤 Pushing to remote...");
       exec(`git push origin ${currentBranch} --tags`);
 
-       console.log(`\n🎊 Release ${tagVersion} has been published!`);
-       console.log(
+      console.log(`\n🎊 Release ${tagVersion} has been published!`);
+      console.log(
          `📦 Build the release: pnpm tauri build --config src-tauri/tauri.macos.conf.json`
        );
       console.log(
