@@ -99,6 +99,9 @@ When opening RunStack for the first time, macOS will show a security warning bec
 
 **Method 2:**
 
+<img width="827" height="827" alt="Security warning" src="https://github.com/user-attachments/assets/48314258-8b80-407b-8097-2a03788f9e38" />
+
+
 1. Go to **System Settings** → **Privacy & Security**
 2. Find the message about RunStack being blocked
 3. Click **"Open Anyway"**
