@@ -2,6 +2,21 @@
 
 This guide outlines the complete process for creating and distributing RunStack releases for macOS using **GitHub Actions only**.
 
+## Overview
+
+Releases are automatically built and published using GitHub Actions. All releases are automated:
+
+- **Build**: Universal binary for macOS (Intel + Apple Silicon)
+- **Package**: DMG file for easy installation
+- **Publish**: Automatically creates GitHub Release with release notes from CHANGELOG.md
+
+**To create a new release:**
+
+1. Update version numbers using `pnpm run prepare-release vX.Y.Z`
+2. Update CHANGELOG.md with release date
+3. Commit and push tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin main --tags`
+4. GitHub Actions automatically builds and publishes the release
+
 ## Prerequisites
 
 ### Required Files
