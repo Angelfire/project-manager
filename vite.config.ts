@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Use relative paths for Tauri production builds (file:// protocol)
+  // Use a relative base path for Tauri production builds
   base: "./",
   plugins: [react()],
   resolve: {
