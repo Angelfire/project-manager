@@ -8,6 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Use a relative base path for Tauri production builds
+  base: "./",
   plugins: [react()],
   resolve: {
     alias: {
@@ -37,43 +39,37 @@ export default defineConfig({
     },
   },
 
-  // Build optimizations for production
   build: {
-    // Disable source maps in production for faster builds
     sourcemap: false,
-    // Disable compressed size reporting for faster builds
     reportCompressedSize: false,
-    // Optimize chunk size warning limit
     chunkSizeWarningLimit: 1000,
-    // Use esbuild for minification (20-40x faster than terser, only 1-2% worse compression)
     minify: "esbuild",
-    // Rollup options for better code splitting
     rollupOptions: {
       output: {
-        // Manual chunk splitting for better caching (function form is more flexible)
         manualChunks: (id) => {
-          // Only split vendor dependencies (node_modules)
           if (!id.includes("node_modules")) {
             return;
           }
 
-          // Vendor chunks for better caching
+          // React in main bundle to avoid loading order issues
           if (
             id.includes("node_modules/react") ||
             id.includes("node_modules/react-dom")
           ) {
-            return "vendor-react";
+            return undefined;
           }
-          // Tauri core and plugins (all @tauri-apps packages)
+
           if (id.includes("node_modules/@tauri-apps")) {
             return "vendor-tauri";
           }
+
           if (
             id.includes("node_modules/@radix-ui") ||
             id.includes("node_modules/lucide-react")
           ) {
             return "vendor-ui";
           }
+
           if (
             id.includes("node_modules/clsx") ||
             id.includes("node_modules/tailwind-merge") ||
@@ -82,20 +78,15 @@ export default defineConfig({
             return "vendor-utils";
           }
 
-          // Default: group all other node_modules into a separate chunk
-          // This prevents them from being bundled with application code
-          // and allows better caching of vendor dependencies
           return "vendor-other";
         },
       },
     },
-    // Optimize dependencies
     commonjsOptions: {
       include: [/node_modules/],
     },
   },
 
-  // Optimize dependencies - explicitly prebundle these deps
   optimizeDeps: {
     include: [
       "react",
@@ -111,7 +102,6 @@ export default defineConfig({
       "tailwind-merge",
     ],
   },
-  // Vitest configuration (only used when running tests)
   // @ts-expect-error - test is a valid property for Vitest but not in Vite types
   test: {
     globals: true,

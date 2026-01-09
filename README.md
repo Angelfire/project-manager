@@ -78,10 +78,23 @@ fnm default lts-latest
 
 ## Installation
 
+### Download Pre-built Release (Recommended)
+
+Download the latest release from the [Releases page](https://github.com/Angelfire/runstack/releases):
+
+1. Go to the [Releases page](https://github.com/Angelfire/runstack/releases)
+2. Download the `.dmg` file for macOS
+3. Open the DMG and drag RunStack to your Applications folder
+4. Launch RunStack from Applications
+
+**Note**: If you see a security warning on macOS, right-click the app and select "Open" the first time, or go to System Settings → Privacy & Security → Allow the app.
+
+### Build from Source
+
 1. Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Angelfire/runstack.git
 cd runstack
 ```
 
@@ -146,8 +159,9 @@ Each project card displays:
 
 - **Frontend**: React 19, TypeScript, Tailwind CSS 4
 - **Backend**: Rust, Tauri 2
-- **Build**: Vite
+- **Build**: Vite 7
 - **Package Manager**: pnpm 9+
+- **CI/CD**: GitHub Actions (automated releases)
 - **Icons**: Nerd Fonts, Lucide React
 - **Notifications**: Sonner (toast notifications)
 - **UI Components**: Radix UI primitives (Dialog, Dropdown Menu, Select)
@@ -324,6 +338,25 @@ src/
 - **Performance**: Optimized with React.memo, useCallback, useMemo, and lazy loading
 - **Type Safety**: Strict TypeScript configuration with path aliases
 - **Theming**: CSS variables system for easy theme customization
+
+## Releases
+
+Releases are automatically built and published using GitHub Actions. See [RELEASE.md](RELEASE.md) for details on the release process.
+
+### Release Process
+
+All releases are automated:
+
+- **Build**: Universal binary for macOS (Intel + Apple Silicon)
+- **Package**: DMG file for easy installation
+- **Publish**: Automatically creates GitHub Release with release notes from CHANGELOG.md
+
+To create a new release:
+
+1. Update version numbers using `pnpm run prepare-release vX.Y.Z`
+2. Update CHANGELOG.md with release date
+3. Commit and push tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin main --tags`
+4. GitHub Actions automatically builds and publishes the release
 
 ## Contributing
 
