@@ -164,10 +164,10 @@ async function prepareRelease() {
     );
     console.log(`   4. Create tag: git tag ${tagVersion}`);
     console.log(`   5. Push: git push origin ${currentBranch} --tags`);
-     console.log(`\n🚀 After pushing:`);
-     console.log(
-       `   • Build macOS release: pnpm tauri build --config src-tauri/tauri.macos.conf.json`
-     );
+    console.log(`\n🚀 After pushing:`);
+    console.log(
+      `   • Build macOS release: pnpm tauri build --config src-tauri/tauri.macos.conf.json`
+    );
     console.log(
       `   • Create GitHub release: https://github.com/Angelfire/runstack/releases/new?tag=${tagVersion}`
     );
@@ -193,10 +193,10 @@ async function prepareRelease() {
       console.log("📤 Pushing to remote...");
       exec(`git push origin ${currentBranch} --tags`);
 
-       console.log(`\n🎊 Release ${tagVersion} has been published!`);
-       console.log(
-         `📦 Build the release: pnpm tauri build --config src-tauri/tauri.macos.conf.json`
-       );
+      console.log(`\n🎊 Release ${tagVersion} has been published!`);
+      console.log(
+        `📦 Build the release: pnpm tauri build --config src-tauri/tauri.macos.conf.json`
+      );
       console.log(
         `📱 Create GitHub release: https://github.com/Angelfire/runstack/releases/new?tag=${tagVersion}`
       );
