@@ -18,9 +18,9 @@ export const DirectorySelector = memo(function DirectorySelector({
 }: DirectorySelectorProps) {
   return (
     <div className="bg-card border border-border rounded-lg p-6 mb-8">
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-6">
         <div className="flex-1">
-          <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+          <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
             <FolderOpen className="size-4" />
             Directory
           </label>
@@ -30,7 +30,7 @@ export const DirectorySelector = memo(function DirectorySelector({
               value={selectedDirectory || ""}
               readOnly
               placeholder="Select a directory..."
-              className="w-full py-2.5 px-4 pl-10 border text-sm leading-none border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-border transition-colors duration-150 ease-out"
+              className="w-full py-2 px-4 pl-10 border text-sm leading-relaxed border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-ring transition-[border-color,box-shadow] duration-200 ease-out"
             />
             <Folder className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           </div>

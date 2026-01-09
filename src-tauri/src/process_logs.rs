@@ -124,17 +124,14 @@ pub async fn spawn_process_with_logs(
     args: Vec<String>,
     cwd: String,
     project_path: String,
-) -> Result<u32, String> {
+) -> Result<u32, crate::error::AppError> {
     // SECURITY: Validate command and arguments before processing
     // This prevents command injection by ensuring only whitelisted commands
     // and safe arguments are used.
-    crate::validation::validate_command(&command)
-        .map_err(|e| format!("Command validation failed: {}", e))?;
-    crate::validation::validate_command_args(&args)
-        .map_err(|e| format!("Argument validation failed: {}", e))?;
+    crate::validation::validate_command(&command)?;
+    crate::validation::validate_command_args(&args)?;
     
-    let validated_path = crate::validation::validate_directory_path(&cwd)
-        .map_err(|e| e.to_string())?;
+    let validated_path = crate::validation::validate_directory_path(&cwd)?;
     
     // Convert PathBuf to String for shell command construction (only once)
     let validated_path_str = validated_path.to_string_lossy();
@@ -221,7 +218,9 @@ pub async fn spawn_process_with_logs(
     }
     
     let mut child = child.ok_or_else(|| {
-        last_error.unwrap_or_else(|| format!("Failed to spawn process '{}': No suitable shell found", command))
+        crate::error::AppError::ProcessError(
+            last_error.unwrap_or_else(|| format!("Failed to spawn process '{}': No suitable shell found", command))
+        )
     })?;
     
     // Notify user if preferred shell failed and a fallback was used
