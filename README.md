@@ -199,86 +199,9 @@ pnpm test:coverage:ui
 
 Coverage reports are generated in the `coverage/` directory and can be viewed in HTML format.
 
-## Roadmap to Beta Release
+## Roadmap
 
-### 🚀 Pre-Beta (Must Have)
-
-These items are critical for a beta release:
-
-- [ ] **Logo & Branding**: Improve application logo
-  - [ ] Create professional SVG logo
-  - [ ] Ensure logo works at all sizes (app icon, header, etc.)
-  - [ ] Update app icons in `src-tauri/icons/`
-- [ ] **Build Verification**: Ensure production build works correctly
-  - [ ] Test `pnpm tauri build` on macOS
-  - [ ] Test `pnpm tauri build` on Linux
-  - [ ] Verify all features work in production build
-  - [ ] Test app installation and first launch
-- [ ] **Basic Accessibility**: Ensure minimum accessibility standards
-  - [ ] Test with screen readers (basic check - manual testing required)
-
-### 📋 Post-Beta (Can Wait)
-
-These improvements can be added after beta release:
-
-#### Medium Priority
-
-- [ ] **Settings/Preferences Page**: Add user settings
-  - [ ] Configure default editor
-  - [ ] Configure default terminal
-  - [ ] Set default port ranges
-  - [ ] Theme customization (when light mode is added)
-- [ ] **Keyboard Shortcuts**: Add keyboard shortcuts for power users
-  - [ ] Run project: `Cmd/Ctrl + R`
-  - [ ] Stop project: `Cmd/Ctrl + S`
-  - [ ] Open in browser: `Cmd/Ctrl + B`
-  - [ ] Search: `Cmd/Ctrl + F`
-- [ ] **Enhanced Accessibility**: Improve accessibility features
-  - [ ] Full keyboard navigation
-  - [ ] Advanced focus management
-  - [ ] Comprehensive screen reader support
-- [ ] **Performance Optimizations**: Further optimize for large project lists
-  - [ ] Implement virtual scrolling for 100+ projects
-  - [ ] Optimize bundle size
-  - [ ] Image optimization
-
-#### Low Priority
-
-- [ ] **Internationalization (i18n)**: Add multi-language support
-  - [ ] Extract all user-facing strings
-  - [ ] Implement i18n solution (e.g., react-i18next)
-  - [ ] Add language switcher
-- [ ] **Project Templates**: Create new projects from templates
-  - [ ] Support for common frameworks
-  - [ ] Template selection UI
-  - [ ] Project initialization
-- [ ] **Project Favorites**: Mark and filter favorite projects
-  - [ ] Star/favorite icon on project cards
-  - [ ] Filter by favorites
-  - [ ] Persist favorites in local storage
-- [ ] **Dark/Light Theme Toggle**: Add light theme support
-- [ ] **Statistics Dashboard**: Show project statistics
-  - [ ] Total projects
-  - [ ] Projects by runtime/framework
-  - [ ] Most used package managers
-- [ ] **Recent Projects**: Show recently opened/run projects
-- [ ] **Project Health Checks**: Add health indicators
-  - [ ] Check if dependencies are installed
-  - [ ] Check if project builds successfully
-  - [ ] Show warnings for outdated dependencies
-- [ ] **Git Integration**: Show git status and branch information
-- [ ] **CI/CD Integration**: Run CI/CD commands from the app
-
-### 🔧 Technical Debt (Ongoing)
-
-- [ ] **Documentation**: Continue improving code documentation
-  - [ ] Document complex business logic
-  - [ ] Add inline comments where needed
-- [ ] **Dependency Management**: Keep dependencies up to date
-  - [ ] Regularly update npm packages
-  - [ ] Update Rust dependencies
-  - [ ] Monitor for security vulnerabilities
-  - [ ] Run `pnpm audit` regularly
+For the complete roadmap, including pre-beta requirements and post-beta improvements, see [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md).
 
 ## Development
 
@@ -341,22 +264,7 @@ src/
 
 ## Releases
 
-Releases are automatically built and published using GitHub Actions. See [RELEASE.md](RELEASE.md) for details on the release process.
-
-### Release Process
-
-All releases are automated:
-
-- **Build**: Universal binary for macOS (Intel + Apple Silicon)
-- **Package**: DMG file for easy installation
-- **Publish**: Automatically creates GitHub Release with release notes from CHANGELOG.md
-
-To create a new release:
-
-1. Update version numbers using `pnpm run prepare-release vX.Y.Z`
-2. Update CHANGELOG.md with release date
-3. Commit and push tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin main --tags`
-4. GitHub Actions automatically builds and publishes the release
+Releases are automatically built and published using GitHub Actions. For detailed information on the release process, see [docs/RELEASE.md](docs/RELEASE.md).
 
 ## Contributing
 
